@@ -1,0 +1,18 @@
+[project]
+name = "resume-agent"
+version = "0.1.0"
+description = "Codex CLI-driven resume and application drafting pipeline"
+requires-python = ">=3.10"
+
+[project.scripts]
+resume-agent = "resume_agent.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

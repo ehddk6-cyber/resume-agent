@@ -1,0 +1,195 @@
+{
+  "project": {
+    "company_name": "샘플 공공기관",
+    "job_title": "민원 응대 담당",
+    "career_stage": "ENTRY",
+    "company_type": "공공",
+    "research_notes": "정확한 응대, 기록 습관, 민원 상황에서의 침착함을 중요하게 본다는 공개 자료를 읽었습니다.",
+    "tone_style": "정확하고 차분한 톤",
+    "priority_experience_order": [
+      "응급실 접수 대기 흐름 정리",
+      "보호자 설명 실수 재발 방지"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "order_no": 1,
+        "question_text": "지원 동기와 해당 직무에 적합한 이유를 작성해 주세요.",
+        "char_limit": 500,
+        "detected_type": "TYPE_A"
+      },
+      {
+        "id": "q2",
+        "order_no": 2,
+        "question_text": "협업 과정에서 갈등이나 반복 문의를 해결한 경험을 작성해 주세요.",
+        "char_limit": 600,
+        "detected_type": "TYPE_C"
+      },
+      {
+        "id": "q3",
+        "order_no": 3,
+        "question_text": "실패 경험과 그 경험을 통해 배운 점을 작성해 주세요.",
+        "char_limit": 500,
+        "detected_type": "TYPE_G"
+      }
+    ]
+  },
+  "accepted_artifacts": [
+    {
+      "id": "coach-20260309_064010",
+      "artifact_type": "COACH",
+      "accepted": true,
+      "input_snapshot": {
+        "project": {
+          "company_name": "샘플 공공기관",
+          "job_title": "민원 응대 담당",
+          "career_stage": "ENTRY",
+          "company_type": "공공",
+          "research_notes": "정확한 응대, 기록 습관, 민원 상황에서의 침착함을 중요하게 본다는 공개 자료를 읽었습니다.",
+          "tone_style": "정확하고 차분한 톤",
+          "priority_experience_order": [
+            "응급실 접수 대기 흐름 정리",
+            "보호자 설명 실수 재발 방지"
+          ],
+          "questions": [
+            {
+              "id": "q1",
+              "order_no": 1,
+              "question_text": "지원 동기와 해당 직무에 적합한 이유를 작성해 주세요.",
+              "char_limit": 500,
+              "detected_type": "TYPE_A"
+            },
+            {
+              "id": "q2",
+              "order_no": 2,
+              "question_text": "협업 과정에서 갈등이나 반복 문의를 해결한 경험을 작성해 주세요.",
+              "char_limit": 600,
+              "detected_type": "TYPE_C"
+            },
+            {
+              "id": "q3",
+              "order_no": 3,
+              "question_text": "실패 경험과 그 경험을 통해 배운 점을 작성해 주세요.",
+              "char_limit": 500,
+              "detected_type": "TYPE_G"
+            }
+          ]
+        },
+        "experience_count": 4
+      },
+      "output_path": "artifacts/coach.md",
+      "raw_output_path": "artifacts/coach.md",
+      "validation": {
+        "passed": true,
+        "missing": []
+      },
+      "created_at": "2026-03-09T06:40:10.253115+00:00"
+    },
+    {
+      "id": "writer-20260309_064413",
+      "artifact_type": "WRITER",
+      "accepted": true,
+      "input_snapshot": {
+        "project": {
+          "company_name": "샘플 공공기관",
+          "job_title": "민원 응대 담당",
+          "career_stage": "ENTRY",
+          "company_type": "공공",
+          "research_notes": "정확한 응대, 기록 습관, 민원 상황에서의 침착함을 중요하게 본다는 공개 자료를 읽었습니다.",
+          "tone_style": "정확하고 차분한 톤",
+          "priority_experience_order": [
+            "응급실 접수 대기 흐름 정리",
+            "보호자 설명 실수 재발 방지"
+          ],
+          "questions": [
+            {
+              "id": "q1",
+              "order_no": 1,
+              "question_text": "지원 동기와 해당 직무에 적합한 이유를 작성해 주세요.",
+              "char_limit": 500,
+              "detected_type": "TYPE_A"
+            },
+            {
+              "id": "q2",
+              "order_no": 2,
+              "question_text": "협업 과정에서 갈등이나 반복 문의를 해결한 경험을 작성해 주세요.",
+              "char_limit": 600,
+              "detected_type": "TYPE_C"
+            },
+            {
+              "id": "q3",
+              "order_no": 3,
+              "question_text": "실패 경험과 그 경험을 통해 배운 점을 작성해 주세요.",
+              "char_limit": 500,
+              "detected_type": "TYPE_G"
+            }
+          ]
+        },
+        "question_map_path": "analysis/question_map.json"
+      },
+      "output_path": "artifacts/writer.md",
+      "raw_output_path": "runs/20260309_064319/raw_writer.md",
+      "validation": {
+        "passed": true,
+        "missing": []
+      },
+      "created_at": "2026-03-09T06:44:13.371379+00:00"
+    },
+    {
+      "id": "interview-20260309_064215",
+      "artifact_type": "INTERVIEW",
+      "accepted": true,
+      "input_snapshot": {
+        "project": {
+          "company_name": "샘플 공공기관",
+          "job_title": "민원 응대 담당",
+          "career_stage": "ENTRY",
+          "company_type": "공공",
+          "research_notes": "정확한 응대, 기록 습관, 민원 상황에서의 침착함을 중요하게 본다는 공개 자료를 읽었습니다.",
+          "tone_style": "정확하고 차분한 톤",
+          "priority_experience_order": [
+            "응급실 접수 대기 흐름 정리",
+            "보호자 설명 실수 재발 방지"
+          ],
+          "questions": [
+            {
+              "id": "q1",
+              "order_no": 1,
+              "question_text": "지원 동기와 해당 직무에 적합한 이유를 작성해 주세요.",
+              "char_limit": 500,
+              "detected_type": "TYPE_A"
+            },
+            {
+              "id": "q2",
+              "order_no": 2,
+              "question_text": "협업 과정에서 갈등이나 반복 문의를 해결한 경험을 작성해 주세요.",
+              "char_limit": 600,
+              "detected_type": "TYPE_C"
+            },
+            {
+              "id": "q3",
+              "order_no": 3,
+              "question_text": "실패 경험과 그 경험을 통해 배운 점을 작성해 주세요.",
+              "char_limit": 500,
+              "detected_type": "TYPE_G"
+            }
+          ]
+        },
+        "writer_artifact_exists": false
+      },
+      "output_path": "artifacts/interview.md",
+      "raw_output_path": "runs/20260309_064038/raw_interview.md",
+      "validation": {
+        "passed": true,
+        "missing": []
+      },
+      "created_at": "2026-03-09T06:42:15.175902+00:00"
+    }
+  ],
+  "paths": {
+    "coach": "artifacts/coach.md",
+    "writer": "artifacts/writer.md",
+    "interview": "artifacts/interview.md",
+    "export": "artifacts/export.md"
+  }
+}

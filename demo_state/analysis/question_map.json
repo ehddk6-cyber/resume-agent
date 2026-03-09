@@ -1,0 +1,32 @@
+[
+  {
+    "question_id": "q1",
+    "order_no": 1,
+    "question_type": "TYPE_A",
+    "experience_id": "exp_er_flow",
+    "experience_title": "응급실 접수 대기 흐름 정리",
+    "score": 20,
+    "reason": "문항 유형은 지원동기와 직무 적합성으로 분류했고, 키워드(동기와, 해당, 직무에)와 증거 수준, 태그 적합도를 반영했습니다.",
+    "reuse_reason": null
+  },
+  {
+    "question_id": "q2",
+    "order_no": 2,
+    "question_type": "TYPE_C",
+    "experience_id": "exp_parent_retry",
+    "experience_title": "보호자 설명 실수 재발 방지",
+    "score": 16,
+    "reason": "문항 유형은 협업과 조정으로 분류했고, 키워드(협업, 과정에서, 갈등이나)와 증거 수준, 태그 적합도를 반영했습니다.",
+    "reuse_reason": null
+  },
+  {
+    "question_id": "q3",
+    "order_no": 3,
+    "question_type": "TYPE_D",
+    "experience_id": "exp_er_flow",
+    "experience_title": "응급실 접수 대기 흐름 정리",
+    "score": 13,
+    "reason": "문항 유형은 성장과 학습 루프으로 분류했고, 키워드(실패, 경험과, 경험을)와 증거 수준, 태그 적합도를 반영했습니다.",
+    "reuse_reason": "다른 경험보다 적합도가 높아 재사용되었으며 관점을 다르게 써야 합니다."
+  }
+]

@@ -1,0 +1,41 @@
+{
+  "summary": [
+    "질문 수: 3",
+    "경험 수: 4",
+    "L3 경험 수: 2",
+    "검증 필요 경험 수: 1"
+  ],
+  "missing_metrics": [
+    "교육 자료 체크리스트 개편"
+  ],
+  "missing_evidence": [],
+  "needs_verification": [
+    "학과 행사 안내 테이블 운영"
+  ],
+  "question_risks": [
+    {
+      "question_id": "q1",
+      "order_no": 1,
+      "question_type": "TYPE_A",
+      "best_score": 20,
+      "risk": "low"
+    },
+    {
+      "question_id": "q2",
+      "order_no": 2,
+      "question_type": "TYPE_C",
+      "best_score": 19,
+      "risk": "low"
+    },
+    {
+      "question_id": "q3",
+      "order_no": 3,
+      "question_type": "TYPE_D",
+      "best_score": 20,
+      "risk": "low"
+    }
+  ],
+  "recommendations": [
+    "정량 근거가 비어 있는 경험에 수치 또는 비교 근거를 보강하세요."
+  ]
+}

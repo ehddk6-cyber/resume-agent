@@ -1,0 +1,12 @@
+{
+  "validation": {
+    "passed": false,
+    "missing": [
+      "## ASSUMPTIONS & MISSING FACTS",
+      "## OUTLINE",
+      "## DRAFT ANSWERS",
+      "## SELF-CHECK"
+    ]
+  },
+  "exit_code": 1
+}
