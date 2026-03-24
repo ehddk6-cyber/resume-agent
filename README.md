@@ -22,23 +22,39 @@ It is:
 
 ## Design docs
 
-- [Enhanced Design](/home/da/resume-agent/CODEX_CLI_ENHANCED_DESIGN.md)
-- [Architecture](/home/da/resume-agent/ARCHITECTURE.md)
-- [Knowledge Base And State Spec](/home/da/resume-agent/KB_AND_STATE_SPEC.md)
-- [Codex Usage](/home/da/resume-agent/CODEX_USAGE.md)
+- [Enhanced Design](./CODEX_CLI_ENHANCED_DESIGN.md)
+- [Architecture](./ARCHITECTURE.md)
+- [Knowledge Base And State Spec](./KB_AND_STATE_SPEC.md)
+- [Codex Usage](./CODEX_USAGE.md)
+
+## Quick start
+
+If `python` or `pip` is not installed on your machine, use `uv`.
+It can provision Python automatically for this project.
+
+```bash
+uv run --python 3.11 python -m resume_agent --help
+uv run --python 3.11 python -m resume_agent setup my_run
+```
 
 ## Current scaffold commands
 
 These are implemented now:
 
 ```bash
-python3 -m pip install -e .
+uv run --python 3.11 python -m resume_agent init my_run
 
-resume-agent init my_run
-resume-agent ingest-examples my_run
-resume-agent analyze my_run
-resume-agent draft my_run --target profile/targets/example_target.md
-resume-agent review my_run --draft outputs/latest_draft.md
+uv run --python 3.11 python -m resume_agent ingest-examples my_run
+uv run --python 3.11 python -m resume_agent analyze my_run
+uv run --python 3.11 python -m resume_agent draft my_run --target profile/targets/example_target.md
+uv run --python 3.11 python -m resume_agent review my_run --draft outputs/latest_draft.md
+```
+
+If you already have Python available, the editable install flow still works:
+
+```bash
+python -m pip install -e .
+resume-agent --help
 ```
 
 The full target command model is documented as:

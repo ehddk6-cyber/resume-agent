@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+.venv_linux/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+render_crops/
+render_preview/
+render_preview_hd/
+render_preview_hd2/
+.tmp_*/
+.omx/
+demo_uv/
+my_dream_job/
+취업/
+
+# Data files
+*.csv
+*.Zone.Identifier
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Lock files (optional - uncomment if needed)
+# uv.lock

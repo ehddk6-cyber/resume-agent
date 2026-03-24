@@ -3,6 +3,14 @@ name = "resume-agent"
 version = "0.1.0"
 description = "Codex CLI-driven resume and application drafting pipeline"
 requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+    "rich",
+    "python-docx",
+    "pypdf",
+    "tiktoken",
+    "scikit-learn",
+]
 
 [project.scripts]
 resume-agent = "resume_agent.cli:main"
