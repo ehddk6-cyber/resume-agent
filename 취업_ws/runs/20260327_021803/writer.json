@@ -1,0 +1,13 @@
+{
+  "validation": {
+    "passed": false,
+    "missing": [
+      "## 블록 1: ASSUMPTIONS & MISSING FACTS",
+      "## 블록 2: OUTLINE",
+      "## 블록 3: DRAFT ANSWERS",
+      "## 블록 4: SELF-CHECK"
+    ],
+    "out_of_order": []
+  },
+  "exit_code": 1
+}

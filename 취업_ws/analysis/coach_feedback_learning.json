@@ -1,0 +1,36 @@
+{
+  "artifact": "coach",
+  "total_feedback": 1,
+  "recent_rejection_comments": [],
+  "top_patterns": [],
+  "recommended_pattern": "coach|공공기관|TYPE_B-TYPE_C-TYPE_F-TYPE_UNKNOWN",
+  "overall_success_rate": 0.0,
+  "similar_context": {
+    "artifact_type": "coach",
+    "artifact": "coach",
+    "stage": "coach",
+    "company_name": "국민연금공단",
+    "job_title": "6급 사무직",
+    "company_type": "공공기관",
+    "question_types": [
+      "TYPE_F",
+      "TYPE_UNKNOWN",
+      "TYPE_B",
+      "TYPE_C"
+    ]
+  },
+  "recent_rejection_reasons": [],
+  "insights": {
+    "total_feedback": 1,
+    "overall_success_rate": 0.0,
+    "average_rating": 0,
+    "top_patterns": [
+      {
+        "pattern_id": "writer_False",
+        "success_rate": 0.0,
+        "uses": 1
+      }
+    ],
+    "improvement_areas": []
+  }
+}

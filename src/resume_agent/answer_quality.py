@@ -33,6 +33,15 @@ CLICHE_PATTERNS = [
     "꿈꿔왔습니다",
 ]
 
+AI_STYLE_PATTERNS = [
+    "이를 바탕으로",
+    "이러한 경험을 통해",
+    "앞으로도",
+    "기여하겠습니다",
+    "역량을 발휘하겠습니다",
+    "성장할 수 있었습니다",
+]
+
 # 강력한 표현 패턴
 STRONG_EXPRESSIONS = [
     "주도적으로",
@@ -46,6 +55,63 @@ STRONG_EXPRESSIONS = [
     "감소시켰습니다",
     "증가시켰습니다",
 ]
+
+MECHANICAL_OPENERS = [
+    "안녕하세요",
+    "저는 ",
+    "저의 강점은",
+    "어릴 때부터",
+    "항상 ",
+    "귀사에 지원한 이유는",
+]
+
+FORMAL_FILLERS = [
+    "기여하고자 합니다",
+    "역량을 발휘하겠습니다",
+    "값진 경험이었습니다",
+    "성장할 수 있었습니다",
+    "좋은 결과를 만들 수 있었습니다",
+]
+
+
+def analyze_humanization(answer: str) -> Dict[str, Any]:
+    """기계적인 자기소개서 표현을 감지해 인간적인 문장 밀도를 평가합니다."""
+    score = 1.0
+    flags: List[str] = []
+    suggestions: List[str] = []
+
+    stripped = answer.strip()
+    first_line = stripped.splitlines()[0] if stripped else ""
+
+    for opener in MECHANICAL_OPENERS:
+        if first_line.startswith(opener):
+            flags.append(f"기계적 도입부: {opener}")
+            suggestions.append("도입부는 직무 접점이나 행동/문제 상황부터 시작하세요.")
+            score -= 0.2
+            break
+
+    found_cliches = [pattern for pattern in CLICHE_PATTERNS if pattern in answer]
+    if found_cliches:
+        flags.append("클리셰 표현: " + ", ".join(found_cliches[:3]))
+        suggestions.append("추상적 포부 대신 실제 행동, 판단, 결과 문장으로 바꾸세요.")
+        score -= min(0.4, len(found_cliches) * 0.12)
+
+    found_fillers = [pattern for pattern in FORMAL_FILLERS if pattern in answer]
+    if found_fillers:
+        flags.append("관성적 마무리: " + ", ".join(found_fillers[:2]))
+        suggestions.append("마무리는 '무엇을 하겠다'보다 '어떤 방식으로 기여할지'로 구체화하세요.")
+        score -= min(0.24, len(found_fillers) * 0.1)
+
+    if not re.search(r"\d", answer) and "결과" not in answer and "성과" not in answer:
+        flags.append("행동 대비 결과 근거가 약함")
+        suggestions.append("숫자가 없더라도 변화 전후나 관찰 가능한 결과를 한 문장 추가하세요.")
+        score -= 0.1
+
+    return {
+        "score": max(0.0, round(score, 2)),
+        "flags": flags,
+        "suggestions": list(dict.fromkeys(suggestions))[:3],
+    }
 
 
 class AnswerQualityEvaluator:
@@ -249,6 +315,20 @@ class AnswerQualityEvaluator:
         # 클리셰 발견 시 감점
         score -= min(0.5, cliche_count * 0.1)
 
+        ai_style_count = sum(1 for pattern in AI_STYLE_PATTERNS if pattern in answer)
+        score -= min(0.2, ai_style_count * 0.05)
+
+        sentence_starts = [
+            sentence.strip()[:8]
+            for sentence in re.split(r"[.!?]\s+|\n", answer)
+            if sentence.strip()
+        ]
+        repeated_starts = [
+            token for token, count in Counter(sentence_starts).items() if count >= 3
+        ]
+        if repeated_starts:
+            score -= min(0.15, len(repeated_starts) * 0.05)
+
         # 강력한 표현 사용 시 가점
         strong_count = sum(1 for expr in STRONG_EXPRESSIONS if expr in answer)
         score += min(0.2, strong_count * 0.04)
@@ -325,11 +405,25 @@ class AnswerQualityEvaluator:
         if found_cliches:
             weaknesses.append(f"클리셰 표현이 포함되어 있습니다: {found_cliches[0]}")
 
+        found_ai_style = [pattern for pattern in AI_STYLE_PATTERNS if pattern in answer]
+        if found_ai_style:
+            weaknesses.append(
+                f"AI스러운 연결 표현이 반복됩니다: {found_ai_style[0]}"
+            )
+
         # STAR 구조 부족
         star_keywords = ["상황", "과제", "행동", "결과"]
         star_count = sum(1 for kw in star_keywords if kw in answer)
         if star_count < 2:
             weaknesses.append("STAR 구조 요소가 부족합니다")
+
+        sentence_starts = [
+            sentence.strip()[:8]
+            for sentence in re.split(r"[.!?]\s+|\n", answer)
+            if sentence.strip()
+        ]
+        if any(count >= 3 for count in Counter(sentence_starts).values()):
+            weaknesses.append("문장 시작 패턴이 반복되어 사람다운 리듬이 약합니다")
 
         return strengths, weaknesses
 
@@ -360,6 +454,22 @@ class AnswerQualityEvaluator:
         if found_cliches:
             suggestions.append(
                 f"클리셰 표현('{found_cliches[0]}')을 구체적인 표현으로 대체하세요"
+            )
+
+        found_ai_style = [pattern for pattern in AI_STYLE_PATTERNS if pattern in answer]
+        if found_ai_style:
+            suggestions.append(
+                f"반복되는 연결 표현('{found_ai_style[0]}') 대신 사건·행동 중심 문장으로 바꾸세요"
+            )
+
+        sentence_starts = [
+            sentence.strip()[:8]
+            for sentence in re.split(r"[.!?]\s+|\n", answer)
+            if sentence.strip()
+        ]
+        if any(count >= 3 for count in Counter(sentence_starts).values()):
+            suggestions.append(
+                "문장 시작을 다양화하고, 결론-근거-행동 순서를 섞어 사람다운 리듬을 만드세요"
             )
 
         # 질문 유형별 맞춤 제안

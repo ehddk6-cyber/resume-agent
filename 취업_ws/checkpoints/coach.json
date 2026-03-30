@@ -1,0 +1,10 @@
+{
+  "step": "coach",
+  "timestamp": "2026-03-30T16:08:02.117062",
+  "state": {
+    "question_map_path": "analysis/question_map.json",
+    "gap_report_path": "analysis/gap_report.json",
+    "coach_path": "artifacts/coach.md",
+    "artifact_id": "coach-20260330_070802"
+  }
+}

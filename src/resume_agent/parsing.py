@@ -1,12 +1,17 @@
 import csv
 import hashlib
+import html
 import re
 from collections import Counter
 from pathlib import Path
 from typing import Any, List
+from urllib.parse import parse_qs, unquote, urlparse
+
+import requests
 
 from .models import KnowledgeSource, PatternKB, SourceType, StructureSignals, QuestionType
 from .classifier import classify_question, extract_question_keywords, QUESTION_TYPE_LABELS, MARKETING_PATTERNS
+from .pdf_utils import extract_text_from_pdf
 
 def stable_id(*parts: str) -> str:
     digest = hashlib.sha1("|".join(parts).encode("utf-8")).hexdigest()
@@ -24,6 +29,15 @@ def clean_source_text(text: str) -> str:
     cleaned = "\n".join(cleaned_lines)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     return cleaned.strip()
+
+
+def strip_html_text(text: str) -> str:
+    text = re.sub(r"(?is)<script.*?>.*?</script>", " ", text)
+    text = re.sub(r"(?is)<style.*?>.*?</style>", " ", text)
+    text = re.sub(r"(?s)<[^>]+>", " ", text)
+    text = html.unescape(text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
 
 def parse_title_meta(title: str) -> dict[str, str]:
     parts = [part.strip() for part in title.split("/")]
@@ -110,6 +124,44 @@ def build_generic_source(path: Path, text: str) -> KnowledgeSource:
         )
     )
 
+
+def build_url_source(url: str, text: str, title: str | None = None) -> KnowledgeSource:
+    cleaned_text = clean_source_text(strip_html_text(text))
+    question_lines = extract_question_lines(cleaned_text)
+    question_types = [classify_question(line) for line in question_lines[:6]]
+    source_title = title or url
+
+    return KnowledgeSource(
+        id=stable_id("url", source_title, url),
+        source_type=SourceType.USER_URL_PUBLIC,
+        title=source_title,
+        url=url,
+        raw_text=text,
+        cleaned_text=cleaned_text,
+        meta={
+            "company_name": "",
+            "job_title": "",
+            "season": "",
+            "question_count": len(question_lines),
+        },
+        pattern=PatternKB(
+            company_name="",
+            job_title="",
+            season="",
+            question_types=question_types,
+            structure_summary="공개 웹 조사 문서",
+            structure_signals=StructureSignals(
+                has_star=bool(re.search(r"상황|행동|결과", cleaned_text)),
+                has_metrics=bool(re.search(r"\d", cleaned_text)),
+                warns_against_copying=True,
+            ),
+            spec_keywords=[],
+            retrieval_terms=extract_spec_keywords(cleaned_text)[:10],
+            caution="외부 웹 문서. 사실 여부와 최신성은 별도 검증 필요.",
+            source_url=url,
+        ),
+    )
+
 def ingest_csv(path: Path) -> List[KnowledgeSource]:
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -163,8 +215,76 @@ def ingest_source_file(path: Path) -> List[KnowledgeSource]:
     suffix = path.suffix.lower()
     if suffix == ".csv":
         return ingest_csv(path)
+    if suffix == ".pdf":
+        text = extract_text_from_pdf(path)
+        if not text.strip():
+            return []
+        return [build_generic_source(path, text)]
+    if suffix == ".url":
+        urls = [
+            line.strip()
+            for line in path.read_text(encoding="utf-8-sig", errors="ignore").splitlines()
+            if line.strip()
+        ]
+        sources: List[KnowledgeSource] = []
+        for url in urls:
+            sources.extend(ingest_public_url(url))
+        return sources
     text = path.read_text(encoding="utf-8-sig", errors="ignore")
     return [build_generic_source(path, text)]
+
+
+def ingest_public_url(url: str, timeout: int = 15) -> List[KnowledgeSource]:
+    response = requests.get(
+        url,
+        timeout=timeout,
+        headers={
+            "User-Agent": "resume-agent/0.1 (+public knowledge ingestion)"
+        },
+    )
+    response.raise_for_status()
+    title_match = re.search(r"(?is)<title[^>]*>(.*?)</title>", response.text)
+    title = strip_html_text(title_match.group(1)) if title_match else url
+    return [build_url_source(url=url, text=response.text, title=title)]
+
+
+def discover_public_urls(
+    query: str,
+    limit: int = 5,
+    timeout: int = 15,
+) -> List[dict[str, str]]:
+    response = requests.get(
+        "https://html.duckduckgo.com/html/",
+        params={"q": query},
+        timeout=timeout,
+        headers={
+            "User-Agent": "resume-agent/0.1 (+public web discovery)"
+        },
+    )
+    response.raise_for_status()
+
+    results: List[dict[str, str]] = []
+    seen: set[str] = set()
+    pattern = re.compile(
+        r'<a[^>]+class="[^"]*result__a[^"]*"[^>]+href="([^"]+)"[^>]*>(.*?)</a>',
+        re.IGNORECASE | re.DOTALL,
+    )
+    for match in pattern.finditer(response.text):
+        href = html.unescape(match.group(1))
+        title = strip_html_text(match.group(2))
+        parsed = urlparse(href)
+        if "uddg" in parsed.query:
+            url = parse_qs(parsed.query).get("uddg", [href])[0]
+            url = unquote(url)
+        else:
+            url = href
+        if not url.startswith("http") or url in seen:
+            continue
+        seen.add(url)
+        results.append({"query": query, "url": url, "title": title or url})
+        if len(results) >= limit:
+            break
+    return results
 
 def calculate_sources_hash(sources: List[KnowledgeSource]) -> str:
     """모든 지식 소스의 ID와 내용을 기반으로 전체 해시를 생성합니다."""

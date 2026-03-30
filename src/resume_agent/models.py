@@ -35,6 +35,7 @@ class QuestionType(str, Enum):
     TYPE_G = "TYPE_G"  # failure and recovery
     TYPE_H = "TYPE_H"  # customer response
     TYPE_I = "TYPE_I"  # prioritization under pressure
+    TYPE_UNKNOWN = "TYPE_UNKNOWN"  # 분류 불가
 
 
 class SourceType(str, Enum):
@@ -47,6 +48,8 @@ class SourceType(str, Enum):
 
 class ArtifactType(str, Enum):
     COACH = "COACH"
+    RESEARCH = "RESEARCH"
+    SELF_INTRO = "SELF_INTRO"
     WRITER = "WRITER"
     INTERVIEW = "INTERVIEW"
     EXPORT = "EXPORT"
@@ -54,22 +57,24 @@ class ArtifactType(str, Enum):
 
 class InterviewStyle(str, Enum):
     """면접 스타일"""
-    FORMAL = "formal"           # 격식 있는 (대기업, 공공)
-    CASUAL = "casual"           # 편안한 (스타트업)
-    TECHNICAL = "technical"     # 기술 중심 (IT, 엔지니어링)
-    BEHAVIORAL = "behavioral"   # 행동 중심 (영업, 마케팅)
+
+    FORMAL = "formal"  # 격식 있는 (대기업, 공공)
+    CASUAL = "casual"  # 편안한 (스타트업)
+    TECHNICAL = "technical"  # 기술 중심 (IT, 엔지니어링)
+    BEHAVIORAL = "behavioral"  # 행동 중심 (영업, 마케팅)
 
 
 class SuccessPattern(str, Enum):
     """합격 자소서 패턴 유형 (linkareer 데이터 기반)"""
-    STAR_STRUCTURE = "star_structure"       # STAR 구조 활용
-    QUANTIFIED_RESULT = "quantified_result" # 정량적 성과 강조
-    PROBLEM_SOLVING = "problem_solving"     # 문제해결 서사
-    COLLABORATION = "collaboration"         # 협업 경험
-    GROWTH_STORY = "growth_story"           # 성장 스토리
-    CUSTOMER_FOCUS = "customer_focus"       # 고객 중심 사고
-    INNOVATION = "innovation"               # 혁신/개선 경험
-    ETHICS = "ethics"                       # 윤리/정직 강조
+
+    STAR_STRUCTURE = "star_structure"  # STAR 구조 활용
+    QUANTIFIED_RESULT = "quantified_result"  # 정량적 성과 강조
+    PROBLEM_SOLVING = "problem_solving"  # 문제해결 서사
+    COLLABORATION = "collaboration"  # 협업 경험
+    GROWTH_STORY = "growth_story"  # 성장 스토리
+    CUSTOMER_FOCUS = "customer_focus"  # 고객 중심 사고
+    INNOVATION = "innovation"  # 혁신/개선 경험
+    ETHICS = "ethics"  # 윤리/정직 강조
 
 
 class UserProfile(BaseModel):
@@ -166,6 +171,7 @@ class ValidationResult(BaseModel):
 
 class CompanyAnalysis(BaseModel):
     """회사 분석 결과 (linkareer 데이터 기반 패턴 포함)"""
+
     company_name: str
     company_type: str = "공공"  # 대기업, 중견, 스타트업, 공공, 공기업
     industry: str = ""
@@ -176,10 +182,12 @@ class CompanyAnalysis(BaseModel):
     success_patterns: List[SuccessPattern] = Field(default_factory=list)
     preferred_evidence_types: List[str] = Field(default_factory=list)
     tone_guide: str = ""
+    role_industry_strategy: dict[str, Any] = Field(default_factory=dict)
 
 
 class QuestionAnalysis(BaseModel):
     """질문 분석 결과"""
+
     question_id: str
     question_text: str
     question_type: QuestionType
@@ -192,6 +200,7 @@ class QuestionAnalysis(BaseModel):
 
 class AnswerQuality(BaseModel):
     """답변 품질 평가"""
+
     question_id: str
     answer_text: str
     relevance_score: float = 0.0  # 0.0 ~ 1.0
@@ -207,6 +216,7 @@ class AnswerQuality(BaseModel):
 
 class DefenseSimulation(BaseModel):
     """면접 방어 시뮬레이션 결과"""
+
     primary_question: str
     simulated_answer: str
     follow_up_questions: List[str] = Field(default_factory=list)
@@ -217,6 +227,7 @@ class DefenseSimulation(BaseModel):
 
 class SuccessCase(BaseModel):
     """합격 사례 (linkareer_results.csv 기반)"""
+
     title: str
     company_name: str = ""
     job_title: str = ""

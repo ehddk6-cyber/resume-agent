@@ -75,6 +75,13 @@ AGGRESSIVE_PATTERNS = {
     ],
 }
 
+PRESSURE_QUESTIONS = {
+    "metrics": "그 수치의 산출 기준과 비교 기준을 30초 안에 설명해보세요.",
+    "ownership": "그 성과에서 본인 지분만 떼어내면 정확히 무엇이 남나요?",
+    "tradeoff": "같은 상황에서 더 빠른 대안이 있었는데 왜 그 선택을 하지 않았나요?",
+    "failure_plan": "그 판단이 틀렸다고 드러났을 때 바로 수정할 백업 플랜은 무엇이었나요?",
+}
+
 
 class DefenseSimulator:
     """면접 방어 시뮬레이터"""
@@ -162,6 +169,12 @@ class DefenseSimulator:
         if not any(ind in answer for ind in defensive_indicators):
             risks.append("균형 잡힌 시각 표현 부족")
 
+        if not re.search(r"비교|기준|근거|측정", answer):
+            risks.append("수치/판단 기준 설명이 부족함")
+
+        if not re.search(r"대안|선택|이유|판단", answer):
+            risks.append("대안 비교와 선택 이유가 부족함")
+
         return risks
 
     def _generate_follow_up_questions(
@@ -171,21 +184,11 @@ class DefenseSimulator:
         risk_areas: List[str],
     ) -> List[str]:
         """꼬리질문 생성"""
-        questions = []
+        questions = self._build_three_step_follow_up_chain(
+            answer, question_type, risk_areas
+        )
 
-        # 1. 질문 유형별 기본 꼬리질문
-        type_questions = FOLLOW_UP_PATTERNS.get(question_type, [])
-        if type_questions:
-            questions.extend(type_questions[:2])
-
-        # 2. 면접 스타일별 공격적 질문
-        if self.company_analysis:
-            style = self.company_analysis.interview_style
-            aggressive_questions = AGGRESSIVE_PATTERNS.get(style, [])
-            if aggressive_questions:
-                questions.append(aggressive_questions[0])
-
-        # 3. 취약점 기반 꼬리질문
+        # 1. 취약점 기반 꼬리질문을 우선 배치
         if "구체적인 수치가 없어 증빙이 어려움" in risk_areas:
             questions.append("그 성과를 수치로 표현한다면 어떻게 설명하시겠어요?")
 
@@ -194,6 +197,28 @@ class DefenseSimulator:
 
         if "STAR 구조가 불완전하여 꼬리질문에 취약" in risk_areas:
             questions.append("그 상황에서 가장 먼저 한 행동은 무엇이었나요?")
+
+        if "수치/판단 기준 설명이 부족함" in risk_areas:
+            questions.append(PRESSURE_QUESTIONS["metrics"])
+
+        if "팀 성과와 개인 기여가 구분되지 않음" in risk_areas:
+            questions.append(PRESSURE_QUESTIONS["ownership"])
+
+        if "대안 비교와 선택 이유가 부족함" in risk_areas:
+            questions.append(PRESSURE_QUESTIONS["tradeoff"])
+            questions.append(PRESSURE_QUESTIONS["failure_plan"])
+
+        # 2. 질문 유형별 기본 꼬리질문
+        type_questions = FOLLOW_UP_PATTERNS.get(question_type, [])
+        if type_questions:
+            questions.extend(type_questions[:2])
+
+        # 3. 면접 스타일별 공격적 질문
+        if self.company_analysis:
+            style = self.company_analysis.interview_style
+            aggressive_questions = AGGRESSIVE_PATTERNS.get(style, [])
+            if aggressive_questions:
+                questions.append(aggressive_questions[0])
 
         # 4. 답변 내용 기반 꼬리질문
         # 수치가 있으면 근거 질문
@@ -209,7 +234,50 @@ class DefenseSimulator:
                 seen.add(q)
                 unique_questions.append(q)
 
-        return unique_questions[:5]
+        return unique_questions[:7]
+
+    def _build_three_step_follow_up_chain(
+        self,
+        answer: str,
+        question_type: QuestionType,
+        risk_areas: List[str],
+    ) -> List[str]:
+        fact_prompt = {
+            QuestionType.TYPE_A: "지원동기에서 말한 계기와 직무 연결을 사실 기준으로 다시 설명해보세요.",
+            QuestionType.TYPE_B: "그 역량을 보여주는 행동과 산출물을 사실 기준으로 다시 설명해보세요.",
+            QuestionType.TYPE_C: "협업 장면에서 실제로 누가 무엇을 했는지 사실 기준으로 다시 설명해보세요.",
+            QuestionType.TYPE_D: "무엇을 바꾸기 전과 후가 어떻게 달랐는지 사실 기준으로 다시 설명해보세요.",
+            QuestionType.TYPE_E: "입사 후 기여 방안을 지금까지의 경험 사실과 연결해 설명해보세요.",
+        }.get(question_type, "그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.")
+
+        judgment_prompt = {
+            QuestionType.TYPE_A: "왜 그 회사와 직무를 선택했는지 판단 기준을 설명해보세요.",
+            QuestionType.TYPE_B: "왜 그 방법이 최선이라고 판단했는지 기준을 설명해보세요.",
+            QuestionType.TYPE_C: "왜 그 협업 방식이 가장 효과적이라고 판단했는지 설명해보세요.",
+            QuestionType.TYPE_D: "왜 그 개선 방향을 선택했는지 판단 근거를 설명해보세요.",
+            QuestionType.TYPE_E: "왜 그 기여 방식이 가장 현실적이라고 판단했는지 설명해보세요.",
+        }.get(question_type, "당시 왜 그 선택을 했는지 판단 기준을 설명해보세요.")
+
+        value_prompt = {
+            QuestionType.TYPE_A: "그 선택이 본인의 일하는 기준이나 가치관을 어떻게 보여주나요?",
+            QuestionType.TYPE_B: "그 답변이 본인의 업무 원칙이나 강점과 어떻게 연결되나요?",
+            QuestionType.TYPE_C: "그 협업 경험이 본인의 대인관계 원칙을 어떻게 보여주나요?",
+            QuestionType.TYPE_D: "그 학습 경험이 본인의 성장 방식과 어떤 가치관을 보여주나요?",
+            QuestionType.TYPE_E: "그 포부가 본인의 직업관과 어떻게 연결되나요?",
+        }.get(question_type, "그 답변이 본인의 가치관이나 업무 원칙을 어떻게 보여주나요?")
+
+        if "구체적인 수치가 없어 증빙이 어려움" in risk_areas:
+            fact_prompt = "그 성과를 수치와 비교 기준까지 포함해 사실 기준으로 다시 설명해보세요."
+        if "대안 비교와 선택 이유가 부족함" in risk_areas:
+            judgment_prompt = "다른 선택지가 있었는데 왜 그 판단을 했는지 대안 비교 기준으로 설명해보세요."
+        if "균형 잡힌 시각 표현 부족" in risk_areas:
+            value_prompt = "그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+
+        return [
+            f"[사실] {fact_prompt}",
+            f"[판단] {judgment_prompt}",
+            f"[가치관] {value_prompt}",
+        ]
 
     def _suggest_defense_points(
         self, answer: str, risk_areas: List[str]
@@ -243,6 +311,11 @@ class DefenseSimulator:
         if "과도한 일반화 표현 사용" in risk_areas:
             defense_points.append(
                 "'항상', '모두' 대신 '대부분', '주로' 같은 조건부 표현을 사용하세요"
+            )
+
+        if "수치/판단 기준 설명이 부족함" in risk_areas:
+            defense_points.append(
+                "수치나 판단을 말할 때는 기준, 비교 대상, 측정 방식을 한 문장으로 붙여 설명하세요"
             )
 
         return defense_points

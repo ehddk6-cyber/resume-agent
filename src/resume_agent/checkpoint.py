@@ -18,13 +18,22 @@ class CheckpointManager:
         self.checkpoint_dir = workspace_root / "checkpoints"
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
     
-    def save_checkpoint(self, step: str, state: Dict[str, Any]) -> Path:
+    def save_checkpoint(
+        self,
+        step: str,
+        state: Dict[str, Any],
+        *,
+        status: str = "success",
+        error: Optional[str] = None,
+    ) -> Path:
         """
         각 단계 완료 시 체크포인트 저장
         
         Args:
             step: 단계 이름 (예: "coach", "writer", "interview")
             state: 저장할 상태 데이터
+            status: 체크포인트 상태 ("success" | "failed")
+            error: 실패 시 에러 요약
         
         Returns:
             저장된 체크포인트 파일 경로
@@ -34,7 +43,9 @@ class CheckpointManager:
         checkpoint_data = {
             "step": step,
             "timestamp": datetime.now().isoformat(),
-            "state": state
+            "status": status,
+            "error": error,
+            "state": state,
         }
         
         temp_path = checkpoint_path.with_suffix(".json.tmp")
@@ -91,7 +102,9 @@ class CheckpointManager:
         return {
             "step": checkpoint_data.get("step"),
             "timestamp": checkpoint_data.get("timestamp"),
-            "file_path": str(checkpoint_path)
+            "status": checkpoint_data.get("status", "success"),
+            "error": checkpoint_data.get("error"),
+            "file_path": str(checkpoint_path),
         }
     
     def delete_checkpoint(self, step: str) -> bool:

@@ -47,6 +47,10 @@ my_dream_job/
 *.csv
 *.Zone.Identifier
 
+# 민감 개인정보
+.secrets.json
+**/.secrets.json
+
 # OS
 .DS_Store
 Thumbs.db

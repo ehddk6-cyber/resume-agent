@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from collections import Counter
 
 from .models import (
+    ApplicationProject,
     CompanyAnalysis,
     InterviewStyle,
     SuccessPattern,
@@ -173,6 +174,19 @@ class CompanyAnalyzer:
             success_patterns=success_patterns,
             preferred_evidence_types=preferred_evidence,
             tone_guide=tone_guide,
+            role_industry_strategy=build_role_industry_strategy(
+                company_type=detected_type,
+                industry=self._detect_industry(all_text),
+                job_title=job_title,
+                question_types=[
+                    case.question_type.value
+                    for case in self.success_cases
+                    if case.company_name == company_name and case.question_type
+                ],
+                core_values=core_values,
+                preferred_evidence_types=preferred_evidence,
+                interview_style=interview_style.value,
+            ),
         )
 
     def extract_keywords(self, text: str) -> List[str]:
@@ -389,3 +403,264 @@ def extract_keywords(text: str) -> List[str]:
     """키워드 추출 편의 함수"""
     analyzer = CompanyAnalyzer()
     return analyzer.extract_keywords(text)
+
+
+def build_role_industry_strategy(
+    company_type: str,
+    industry: str,
+    job_title: str = "",
+    question_types: Optional[List[str]] = None,
+    core_values: Optional[List[str]] = None,
+    preferred_evidence_types: Optional[List[str]] = None,
+    interview_style: str = "",
+    source_grading: Optional[Dict[str, Any]] = None,
+    question_map: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """직무·업종 맥락을 writer/interview 프롬프트에서 재사용할 전략 팩 생성"""
+    question_types = question_types or []
+    core_values = core_values or []
+    preferred_evidence_types = preferred_evidence_types or []
+    source_grading = source_grading or {}
+    question_map = question_map or []
+
+    evidence_priority = _dedupe(
+        preferred_evidence_types
+        + _strategy_evidence_by_company_type(company_type)
+        + _strategy_evidence_by_job(job_title)
+    )
+    tone_rules = _dedupe(
+        [
+            COMPANY_TONE_GUIDES.get(company_type, "담백하고 근거 중심으로 답변합니다."),
+            f"{industry} 산업 맥락을 과장 없이 연결합니다." if industry else "",
+            f"{job_title} 직무에서 바로 쓰일 행동/성과 중심으로 정리합니다."
+            if job_title
+            else "",
+        ]
+    )
+    banned_patterns = _dedupe(
+        _strategy_banned_patterns(company_type, industry, question_types)
+    )
+    interview_pressure_themes = _dedupe(
+        _strategy_pressure_themes(
+            company_type=company_type,
+            industry=industry,
+            question_types=question_types,
+            interview_style=interview_style,
+            source_grading=source_grading,
+        )
+    )
+    writer_focus = _dedupe(
+        [
+            "지원동기와 직무 적합성을 사용자 경험으로 연결한다.",
+            "문항별로 한 경험의 역할·행동·성과를 분리해 제시한다.",
+            "입사 후 포부는 실행 가능한 첫 기여 단위까지 내려쓴다.",
+        ]
+        + [f"{value} 가치와 맞닿는 행동 근거를 포함한다." for value in core_values[:3]]
+    )
+    interview_focus = _dedupe(
+        [
+            "수치/기준/비교 근거를 30초 안에 다시 설명할 수 있게 준비한다.",
+            "팀 성과와 개인 기여를 구분해서 답한다.",
+            "단일 출처 정보는 확정 표현 대신 검증 예정 표현으로 낮춘다.",
+        ]
+        + [f"{theme} 관점의 압박 질문을 대비한다." for theme in interview_pressure_themes[:3]]
+    )
+    committee_personas = _build_committee_personas(
+        company_type=company_type,
+        industry=industry,
+        job_title=job_title,
+        interview_style=interview_style,
+        pressure_themes=interview_pressure_themes,
+    )
+
+    return {
+        "target_role": job_title or "일반 직무",
+        "target_industry": industry or "일반",
+        "company_type": company_type or "일반",
+        "question_types": question_types[:6],
+        "writer_focus": writer_focus[:6],
+        "interview_focus": interview_focus[:6],
+        "evidence_priority": evidence_priority[:6],
+        "tone_rules": tone_rules[:4],
+        "banned_patterns": banned_patterns[:6],
+        "interview_pressure_themes": interview_pressure_themes[:6],
+        "committee_personas": committee_personas,
+        "single_source_risks": [
+            item["area"]
+            for item in source_grading.get("cross_check", {}).get("key_areas", [])
+            if item.get("status") == "single_source"
+        ][:4],
+        "question_map_signals": [
+            item.get("recommended_focus")
+            for item in question_map
+            if item.get("recommended_focus")
+        ][:4],
+    }
+
+
+def build_role_industry_strategy_from_project(
+    project: ApplicationProject,
+    company_analysis: CompanyAnalysis,
+    question_map: Optional[List[Dict[str, Any]]] = None,
+    source_grading: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    question_types = [
+        question.detected_type.value
+        for question in project.questions
+        if getattr(question, "detected_type", None)
+    ]
+    return build_role_industry_strategy(
+        company_type=company_analysis.company_type,
+        industry=company_analysis.industry,
+        job_title=project.job_title,
+        question_types=question_types,
+        core_values=company_analysis.core_values,
+        preferred_evidence_types=company_analysis.preferred_evidence_types,
+        interview_style=company_analysis.interview_style.value,
+        source_grading=source_grading,
+        question_map=question_map,
+    )
+
+
+def _strategy_evidence_by_company_type(company_type: str) -> List[str]:
+    mapping = {
+        "공공": ["정확성", "규정 준수", "민원/서비스 품질"],
+        "공기업": ["공익성", "안정적 운영", "협업 정확성"],
+        "대기업": ["정량 성과", "프로세스 개선", "조직 적합성"],
+        "중견": ["실무 기여", "멀티태스킹", "빠른 적응"],
+        "스타트업": ["실행 속도", "문제해결", "자기주도성"],
+    }
+    return mapping.get(company_type, ["정량 성과", "직무 연관 행동"])
+
+
+def _strategy_evidence_by_job(job_title: str) -> List[str]:
+    title = job_title.lower()
+    if any(token in title for token in ["데이터", "분석", "analytics"]):
+        return ["지표 해석", "SQL/도구 활용", "의사결정 지원"]
+    if any(token in title for token in ["영업", "마케팅", "세일즈"]):
+        return ["고객 반응", "성과 전환", "관계 구축"]
+    if any(token in title for token in ["행정", "사무", "운영"]):
+        return ["정확한 처리", "문서/프로세스 관리", "민원 대응"]
+    return []
+
+
+def _strategy_banned_patterns(
+    company_type: str,
+    industry: str,
+    question_types: List[str],
+) -> List[str]:
+    banned = [
+        "검증 불가 수치 확대",
+        "회사 정보 복붙형 지원동기",
+        "팀 성과를 개인 성과처럼 포장",
+    ]
+    if company_type in {"공공", "공기업"}:
+        banned.append("사명감만 강조하고 실행 근거가 없는 표현")
+    if industry == "IT":
+        banned.append("기술 용어만 나열하고 실제 문제 해결 맥락이 없는 표현")
+    if "TYPE_E" in question_types:
+        banned.append("입사 후 포부를 추상적 성장 서사로만 마무리하는 표현")
+    return banned
+
+
+def _strategy_pressure_themes(
+    company_type: str,
+    industry: str,
+    question_types: List[str],
+    interview_style: str,
+    source_grading: Dict[str, Any],
+) -> List[str]:
+    themes = ["수치 검증", "개인 기여 검증", "대안 비교"]
+    if company_type in {"공공", "공기업"}:
+        themes.append("규정 준수와 공익성")
+    if industry:
+        themes.append(f"{industry} 도메인 이해도")
+    if interview_style == InterviewStyle.TECHNICAL.value:
+        themes.append("기술 선택 기준")
+    if "TYPE_A" in question_types:
+        themes.append("지원동기 진정성")
+    if "TYPE_E" in question_types:
+        themes.append("입사 후 90일 실행계획")
+    if source_grading.get("cross_check", {}).get("single_source_area_count", 0) > 0:
+        themes.append("단일 출처 주장 방어")
+    return themes
+
+
+def _dedupe(values: List[str]) -> List[str]:
+    seen = set()
+    deduped: List[str] = []
+    for value in values:
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
+
+
+def _build_committee_personas(
+    company_type: str,
+    industry: str,
+    job_title: str,
+    interview_style: str,
+    pressure_themes: List[str],
+) -> List[Dict[str, Any]]:
+    base_personas = [
+        {
+            "id": "chair",
+            "name": "위원장",
+            "role": "전체 논리와 답변 일관성 점검",
+            "focus": ["지원동기 진정성", "논리 일관성", "직무 적합성"],
+            "tone": "정중하지만 냉정함",
+        },
+        {
+            "id": "domain",
+            "name": "실무위원",
+            "role": f"{job_title or industry or '직무'} 실무 적합성 검증",
+            "focus": pressure_themes[:3] or ["직무 이해도", "실행 경험", "성과 근거"],
+            "tone": "구체 사례를 집요하게 확인함",
+        },
+        {
+            "id": "risk",
+            "name": "리스크위원",
+            "role": "과장, 단일 출처 주장, 실패 대응 검증",
+            "focus": ["개인 기여 검증", "대안 비교", "실패 복구"],
+            "tone": "반례와 허점을 먼저 찾음",
+        },
+    ]
+
+    if company_type in {"공공", "공기업"}:
+        base_personas.append(
+            {
+                "id": "public_value",
+                "name": "공공가치위원",
+                "role": "공익성, 규정 준수, 민원/서비스 품질 검증",
+                "focus": ["공익성", "규정 준수", "서비스 품질"],
+                "tone": "원칙과 책임을 강조함",
+            }
+        )
+    elif company_type == "스타트업":
+        base_personas.append(
+            {
+                "id": "execution",
+                "name": "실행위원",
+                "role": "짧은 시간 내 실행력과 우선순위 판단 검증",
+                "focus": ["실행 속도", "우선순위", "자기주도성"],
+                "tone": "직설적이고 빠른 판단을 요구함",
+            }
+        )
+    else:
+        base_personas.append(
+            {
+                "id": "culture",
+                "name": "조직적합성위원",
+                "role": "협업 방식과 조직 적합성 검증",
+                "focus": ["협업 방식", "조직 적응", "커뮤니케이션"],
+                "tone": "차분하지만 비교 질문이 많음",
+            }
+        )
+
+    if interview_style == InterviewStyle.TECHNICAL.value:
+        base_personas[1]["name"] = "기술위원"
+        base_personas[1]["focus"] = _dedupe(base_personas[1]["focus"] + ["기술 선택 기준"])
+
+    return base_personas

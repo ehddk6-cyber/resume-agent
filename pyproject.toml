@@ -10,6 +10,7 @@ dependencies = [
     "pypdf",
     "tiktoken",
     "scikit-learn",
+    "pyyaml>=6.0",
 ]
 
 [project.scripts]

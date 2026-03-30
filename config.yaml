@@ -1,0 +1,56 @@
+# Resume Agent 설정 파일
+# 이 파일의 값을 변경하면 파이프라인 동작이 변경됩니다.
+
+# 토큰 관련 설정
+token:
+  # 토큰 사용량 경고 임계값 (tokens)
+  warning_threshold: 8000
+  # 1k 토큰당 예상 비용 (USD)
+  cost_per_1k: 0.005
+  # 토큰 계수에 사용할 기본 모델
+  encoding_model: "gpt-4o"
+
+# 경험 점수 매기기 설정
+scoring:
+  # 증거 레벨별 보너스 점수
+  evidence_bonus:
+    L1: 1
+    L2: 4
+    L3: 8
+  # 경험 재사용 페널티
+  reuse_penalty: 7
+  # 같은 조직 반복 사용 페널티
+  same_org_penalty: 4
+  # 검증 완료 보너스
+  verified_bonus: 3
+  # 미검증 페널티
+  unverified_penalty: -2
+
+# 갭 분석 설정
+gap_analysis:
+  # 리스크 임계값 (최고점 기준)
+  risk_thresholds:
+    high: 5
+    medium: 10
+
+# Codex 실행 설정
+codex:
+  # 최대 재시도 횟수
+  max_retries: 3
+  # 재시도 간 대기 시간 (초, 지수 백오프)
+  retry_delay_base: 2
+
+# 검증 설정
+validation:
+  # 경험 STAR 구조 최소 길이
+  star_min_lengths:
+    situation: 50
+    task: 30
+    action: 100
+    result: 50
+
+# 내보내기 설정
+export:
+  # 자소서 목표 글자수 비율 (제한 대비)
+  char_limit_ratio_min: 0.90
+  char_limit_ratio_max: 0.97

@@ -1,0 +1,44 @@
+{
+  "summary": [
+    "질문 수: 4",
+    "경험 수: 8",
+    "L3 경험 수: 5",
+    "검증 필요 경험 수: 0"
+  ],
+  "missing_metrics": [],
+  "missing_evidence": [],
+  "needs_verification": [],
+  "question_risks": [
+    {
+      "question_id": "q1_responsibility",
+      "order_no": 1,
+      "question_type": "TYPE_F",
+      "best_score": 15,
+      "risk": "low"
+    },
+    {
+      "question_id": "q2_adaptation",
+      "order_no": 2,
+      "question_type": "TYPE_UNKNOWN",
+      "best_score": 13,
+      "risk": "low"
+    },
+    {
+      "question_id": "q3_competency",
+      "order_no": 3,
+      "question_type": "TYPE_B",
+      "best_score": 17,
+      "risk": "low"
+    },
+    {
+      "question_id": "q4_persuasion",
+      "order_no": 4,
+      "question_type": "TYPE_C",
+      "best_score": 16,
+      "risk": "low"
+    }
+  ],
+  "recommendations": [
+    "즉시 보강이 필요한 위험 신호가 크지 않습니다."
+  ]
+}

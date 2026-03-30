@@ -1,6 +1,22 @@
 import pytest
-from resume_agent.domain import classify_question, score_experience, extract_question_keywords
-from resume_agent.models import Question, QuestionType, Experience, EvidenceLevel, VerificationStatus
+from resume_agent.domain import (
+    build_coach_artifact,
+    classify_question,
+    extract_question_keywords,
+    score_experience,
+    allocate_experiences,
+    validate_company_research_contract,
+    validate_interview_contract,
+    validate_writer_contract,
+)
+from resume_agent.models import (
+    ApplicationProject,
+    EvidenceLevel,
+    Experience,
+    Question,
+    QuestionType,
+    VerificationStatus,
+)
 
 def test_classify_question():
     """질문 유형 분류가 정상적으로 작동하는지 확인합니다."""
@@ -59,3 +75,402 @@ def test_score_experience_penalty_for_reuse():
     
     assert score_first["score"] > score_reused["score"]
     assert score_first["score"] - score_reused["score"] == 7  # domain.py에 7점 페널티 적용됨
+
+
+def test_score_experience_adds_semantic_match_for_related_terms():
+    question = Question(
+        id="q1",
+        order_no=1,
+        question_text="민원 처리 경험을 설명해주세요.",
+        detected_type=QuestionType.TYPE_H,
+    )
+    semantic = Experience(
+        id="exp1",
+        title="고객 응대 기준 정비",
+        organization="기관",
+        period_start="2024-01-01",
+        situation="고객 질문이 반복되었습니다.",
+        task="응대 기준을 정리해야 했습니다.",
+        action="응대 문안과 안내 기준을 정비했습니다.",
+        result="안내 시간을 줄였습니다.",
+        evidence_level=EvidenceLevel.L2,
+        verification_status=VerificationStatus.VERIFIED,
+    )
+    unrelated = Experience(
+        id="exp2",
+        title="창고 정리",
+        organization="기관",
+        period_start="2024-01-01",
+        situation="물품이 흩어져 있었습니다.",
+        task="보관 위치를 정리했습니다.",
+        action="품목을 분류했습니다.",
+        result="정리 상태를 개선했습니다.",
+        evidence_level=EvidenceLevel.L2,
+        verification_status=VerificationStatus.VERIFIED,
+    )
+
+    score_semantic = score_experience(question, semantic, [], [], None)
+    score_unrelated = score_experience(question, unrelated, [], [], None)
+
+    assert score_semantic["score"] > score_unrelated["score"]
+    assert score_semantic["semantic_adjustment"] > 0
+
+
+def test_build_coach_artifact_includes_risks_and_recommendations():
+    project = ApplicationProject(
+        company_name="테스트기업",
+        job_title="백엔드",
+        questions=[
+            Question(
+                id="q1",
+                order_no=1,
+                question_text="협업 경험을 설명해 주세요.",
+                detected_type=QuestionType.TYPE_C,
+            )
+        ],
+    )
+    experiences = [
+        Experience(
+            id="exp1",
+            title="프로젝트 경험",
+            organization="팀",
+            period_start="2024-01-01",
+            evidence_level=EvidenceLevel.L2,
+            verification_status=VerificationStatus.NEEDS_VERIFICATION,
+            tags=["협업"],
+        )
+    ]
+    gap_report = {
+        "needs_verification": ["프로젝트 경험"],
+        "question_risks": [
+            {
+                "question_id": "q1",
+                "order_no": 1,
+                "question_type": QuestionType.TYPE_C,
+                "best_score": 4,
+                "risk": "high",
+            }
+        ],
+        "recommendations": ["정량 근거를 보강하세요."],
+    }
+
+    artifact = build_coach_artifact(project, experiences, gap_report)
+
+    assert "## QUESTION RISKS" in artifact["rendered"]
+    assert "## RECOMMENDATIONS" in artifact["rendered"]
+    assert "best_score=4" in artifact["rendered"]
+    assert "정량 근거를 보강하세요." in artifact["rendered"]
+
+
+def test_allocate_experiences_uses_outcome_summary_to_prefer_defensible_experience():
+    question = Question(
+        id="q1",
+        order_no=1,
+        question_text="지원 직무와 관련해 본인이 잘할 수 있는 이유를 설명하세요.",
+        detected_type=QuestionType.TYPE_A,
+    )
+    weak = Experience(
+        id="exp-weak",
+        title="일반 지원 경험",
+        organization="기관A",
+        period_start="2024-01-01",
+        situation="업무를 수행했습니다.",
+        task="지원 업무를 맡았습니다.",
+        action="열심히 했습니다.",
+        result="문제 없이 마쳤습니다.",
+        evidence_level=EvidenceLevel.L1,
+        verification_status=VerificationStatus.NEEDS_VERIFICATION,
+        tags=["지원"],
+    )
+    strong = Experience(
+        id="exp-strong",
+        title="민원 기준 정비",
+        organization="기관B",
+        period_start="2024-01-01",
+        situation="반복 민원이 많았습니다.",
+        task="안내 기준을 정리해야 했습니다.",
+        action="기준표와 응대 문안을 재작성했습니다.",
+        result="반복 문의 12건을 한 장으로 정리해 안내 시간을 줄였습니다.",
+        personal_contribution="기준표 초안을 직접 만들고 수정했습니다.",
+        metrics="반복 문의 12건 정리",
+        evidence_text="민원 응대 메모와 처리 기록",
+        evidence_level=EvidenceLevel.L2,
+        verification_status=VerificationStatus.VERIFIED,
+        tags=["고객응대", "의사소통", "직무역량"],
+    )
+
+    allocations = allocate_experiences(
+        [question],
+        [weak, strong],
+        [],
+        outcome_summary={
+            "matched_feedback_count": 3,
+            "outcome_breakdown": {"fail_interview": 2, "pass": 1},
+            "top_rejection_reasons": [{"reason": "근거 부족", "count": 2}],
+        },
+    )
+
+    assert allocations[0]["experience_id"] == "exp-strong"
+    assert "결과 학습 반영" in allocations[0]["reason"]
+
+
+def test_allocate_experiences_uses_strategy_outcome_summary_for_question_type():
+    question = Question(
+        id="q1",
+        order_no=1,
+        question_text="지원 직무와 관련해 본인이 잘할 수 있는 이유를 설명하세요.",
+        detected_type=QuestionType.TYPE_A,
+    )
+    stable = Experience(
+        id="exp-stable",
+        title="안내 기준 정비",
+        organization="기관A",
+        period_start="2024-01-01",
+        situation="반복 안내 문의가 많았습니다.",
+        task="응대 기준을 정리해야 했습니다.",
+        action="안내 기준표를 정리했습니다.",
+        result="응대 흐름을 표준화했습니다.",
+        personal_contribution="기준표 초안을 직접 작성했습니다.",
+        metrics="반복 문의 12건 정리",
+        evidence_text="안내 기준표 초안",
+        evidence_level=EvidenceLevel.L2,
+        verification_status=VerificationStatus.VERIFIED,
+        tags=["직무역량", "의사소통"],
+    )
+    risky = Experience(
+        id="exp-risky",
+        title="지원 업무 참여",
+        organization="기관B",
+        period_start="2024-01-01",
+        situation="지원 업무를 수행했습니다.",
+        task="요청 사항을 처리했습니다.",
+        action="안내를 도왔습니다.",
+        result="업무를 마쳤습니다.",
+        evidence_level=EvidenceLevel.L2,
+        verification_status=VerificationStatus.VERIFIED,
+        tags=["지원", "의사소통"],
+    )
+
+    allocations = allocate_experiences(
+        [question],
+        [stable, risky],
+        [],
+        strategy_outcome_summary={
+            "experience_stats_by_question_type": {
+                "TYPE_A": {
+                    "exp-stable": {
+                        "total_uses": 3,
+                        "pass_count": 3,
+                        "fail_count": 0,
+                        "pass_rate": 1.0,
+                        "pattern_breakdown": {
+                            "coach|공공|TYPE_A": {
+                                "total_uses": 2,
+                                "pass_count": 2,
+                                "fail_count": 0,
+                                "pass_rate": 1.0,
+                            }
+                        },
+                        "top_rejection_reasons": [],
+                    },
+                    "exp-risky": {
+                        "total_uses": 2,
+                        "pass_count": 0,
+                        "fail_count": 2,
+                        "pass_rate": 0.0,
+                        "pattern_breakdown": {
+                            "coach|공공|TYPE_A": {
+                                "total_uses": 2,
+                                "pass_count": 0,
+                                "fail_count": 2,
+                                "pass_rate": 0.0,
+                            }
+                        },
+                        "top_rejection_reasons": [{"reason": "개인 기여 불명확", "count": 2}],
+                    },
+                }
+            }
+        },
+        current_pattern="coach|공공|TYPE_A",
+    )
+
+    assert allocations[0]["experience_id"] == "exp-stable"
+    assert "실제 결과 통계" in allocations[0]["reason"]
+
+
+def test_allocate_experiences_limits_strategy_adjustment_when_samples_are_small():
+    question = Question(
+        id="q1",
+        order_no=1,
+        question_text="지원 직무와 관련해 본인이 잘할 수 있는 이유를 설명하세요.",
+        detected_type=QuestionType.TYPE_A,
+    )
+    experience = Experience(
+        id="exp-strong",
+        title="안내 기준 정비",
+        organization="기관A",
+        period_start="2024-01-01",
+        situation="반복 안내 문의가 많았습니다.",
+        task="응대 기준을 정리해야 했습니다.",
+        action="안내 기준표를 정리했습니다.",
+        result="응대 흐름을 표준화했습니다.",
+        personal_contribution="기준표 초안을 직접 작성했습니다.",
+        metrics="반복 문의 12건 정리",
+        evidence_text="안내 기준표 초안",
+        evidence_level=EvidenceLevel.L2,
+        verification_status=VerificationStatus.VERIFIED,
+        tags=["직무역량", "의사소통"],
+    )
+
+    low_sample = score_experience(
+        question,
+        experience,
+        [],
+        [],
+        None,
+        strategy_outcome_summary={
+            "experience_stats_by_question_type": {
+                "TYPE_A": {
+                    "exp-strong": {
+                        "total_uses": 1,
+                        "pass_count": 1,
+                        "fail_count": 0,
+                        "weighted_pass_score": 4,
+                        "weighted_fail_score": 0,
+                        "weighted_net_score": 4,
+                        "pattern_breakdown": {},
+                    }
+                }
+            }
+        },
+    )
+    enough_sample = score_experience(
+        question,
+        experience,
+        [],
+        [],
+        None,
+        strategy_outcome_summary={
+            "experience_stats_by_question_type": {
+                "TYPE_A": {
+                    "exp-strong": {
+                        "total_uses": 5,
+                        "pass_count": 4,
+                        "fail_count": 1,
+                        "weighted_pass_score": 12,
+                        "weighted_fail_score": 1,
+                        "weighted_net_score": 11,
+                        "pattern_breakdown": {},
+                    }
+                }
+            }
+        },
+    )
+
+    assert enough_sample["strategy_adjustment"] > low_sample["strategy_adjustment"]
+
+
+def test_validate_writer_contract_rejects_empty_block_body():
+    text = """## 블록 1: ASSUMPTIONS & MISSING FACTS
+
+## 블록 2: OUTLINE
+- 개요
+
+## 블록 3: DRAFT ANSWERS
+- 답변
+
+## 블록 4: SELF-CHECK
+- 점검
+"""
+    result = validate_writer_contract(text)
+
+    assert result["passed"] is False
+    assert "## 블록 1: ASSUMPTIONS & MISSING FACTS" in result["empty"]
+
+
+def test_validate_writer_contract_requires_char_count_and_self_check():
+    text = """## 블록 1: ASSUMPTIONS & MISSING FACTS
+- 가정
+
+## 블록 2: OUTLINE
+- 개요
+
+## 블록 3: DRAFT ANSWERS
+- 답변 본문
+
+## 블록 4: SELF-CHECK
+- 점검 항목
+"""
+    result = validate_writer_contract(text)
+
+    assert result["passed"] is False
+    assert "문항별 글자수 표기" in result["semantic_missing"]
+    assert "SELF-CHECK PASS/FAIL" in result["semantic_missing"]
+
+
+def test_validate_interview_contract_accepts_filled_sections():
+    text = """## 블록 1: INTERVIEW ASSUMPTIONS
+- 가정
+
+## 블록 2: INTERVIEW STRATEGY
+- 전략
+
+## 블록 3: EXPECTED QUESTIONS MAP
+- 2차 꼬리질문 맵
+
+## 블록 4: ANSWER FRAMES
+- 30초 답변 프레임
+"""
+    result = validate_interview_contract(text)
+
+    assert result["passed"] is True
+
+
+def test_validate_interview_contract_requires_followup_and_30sec_frame():
+    text = """## 블록 1: INTERVIEW ASSUMPTIONS
+- 가정
+
+## 블록 2: INTERVIEW STRATEGY
+- 전략
+
+## 블록 3: EXPECTED QUESTIONS MAP
+- 질문 맵
+
+## 블록 4: ANSWER FRAMES
+- 답변 프레임
+"""
+    result = validate_interview_contract(text)
+
+    assert result["passed"] is False
+    assert "연쇄 꼬리질문" in result["semantic_missing"]
+    assert "30초 답변 프레임" in result["semantic_missing"]
+
+
+def test_validate_company_research_contract_requires_type_links_and_self_check():
+    text = """## 블록 1: 확정 정보
+- 회사명
+- [NEEDS_VERIFICATION]
+
+## 블록 2: 입력 기반 핵심 신호
+- 신호
+
+## 블록 3: 직무 분석
+- 분석
+
+## 블록 4: 회사/조직 적합성 해석
+- 해석
+
+## 블록 5: 자소서 연결 전략
+- 지원동기 전략
+
+## 블록 6: 면접 대비 포인트
+- 면접 포인트
+
+## 블록 7: SELF-CHECK
+- 점검
+"""
+    result = validate_company_research_contract(text)
+
+    assert result["passed"] is False
+    assert "SELF-CHECK PASS/FAIL" in result["semantic_missing"]
+    assert "자소서 유형 연결" in result["semantic_missing"]

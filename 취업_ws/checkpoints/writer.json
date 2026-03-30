@@ -1,0 +1,25 @@
+{
+  "step": "writer",
+  "timestamp": "2026-03-27T11:18:10.398167",
+  "state": {
+    "artifact_path": "artifacts/writer.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## 블록 1: ASSUMPTIONS & MISSING FACTS",
+        "## 블록 2: OUTLINE",
+        "## 블록 3: DRAFT ANSWERS",
+        "## 블록 4: SELF-CHECK"
+      ],
+      "out_of_order": []
+    },
+    "fact_warnings": [],
+    "readability": {
+      "score": 80,
+      "feedback": [
+        "STAR(상황/행동/결과) 구조를 나타내는 명확한 표현이 부족합니다."
+      ]
+    },
+    "quality_evaluations": []
+  }
+}

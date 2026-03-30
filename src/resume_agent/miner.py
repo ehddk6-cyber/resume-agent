@@ -4,7 +4,7 @@ from typing import List, Any
 import subprocess
 
 from .models import Experience, EvidenceLevel, VerificationStatus
-from .pipeline import build_exec_prompt, extract_last_codex_message
+from .executor import build_exec_prompt, extract_last_codex_message
 from .pdf_utils import split_text
 
 MINE_PROMPT_TEMPLATE = """
@@ -41,20 +41,22 @@ Your job is to read the following segment of a past resume/essay and extract dis
 {document_text}
 """
 
+
 def mine_past_resume(file_path: Path, workspace_root: Path) -> List[Experience]:
     """과거 자소서 파일(txt, docx)을 읽어 Codex를 통해 경험 단위로 추출합니다 (청크 단위 분할 처리)."""
     # 문서 텍스트 읽기
     suffix = file_path.suffix.lower()
     full_text = ""
-    if suffix == '.docx':
+    if suffix == ".docx":
         try:
             from docx import Document
+
             doc = Document(file_path)
             full_text = "\n".join(para.text for para in doc.paragraphs)
         except ImportError:
             print("python-docx is required for docx files.")
             return []
-    elif suffix == '.txt':
+    elif suffix == ".txt":
         full_text = file_path.read_text(encoding="utf-8", errors="ignore")
     else:
         print(f"Unsupported file format for mining: {suffix}")
@@ -72,8 +74,8 @@ def mine_past_resume(file_path: Path, workspace_root: Path) -> List[Experience]:
 
     for i, chunk_text in enumerate(chunks):
         if len(chunks) > 1:
-            print(f"  - 세그먼트 {i+1}/{len(chunks)} 처리 중...")
-            
+            print(f"  - 세그먼트 {i + 1}/{len(chunks)} 처리 중...")
+
         # 프롬프트 생성
         prompt = MINE_PROMPT_TEMPLATE.format(document_text=chunk_text)
         exec_prompt = build_exec_prompt(prompt)
@@ -111,12 +113,12 @@ def mine_past_resume(file_path: Path, workspace_root: Path) -> List[Experience]:
             data = json.loads(extracted_text)
             if not isinstance(data, list):
                 continue
-                
+
             for j, item in enumerate(data):
                 title = item.get("title", "").strip()
                 if not title or title in seen_titles:
                     continue
-                
+
                 seen_titles.add(title)
                 exp = Experience(
                     id=f"mined_{file_path.stem}_{i}_{j}",
@@ -131,14 +133,16 @@ def mine_past_resume(file_path: Path, workspace_root: Path) -> List[Experience]:
                     metrics=item.get("metrics", ""),
                     evidence_text=item.get("evidence_text", ""),
                     tags=item.get("tags", []),
-                    evidence_level=EvidenceLevel.L2 if item.get("action") else EvidenceLevel.L1,
+                    evidence_level=EvidenceLevel.L2
+                    if item.get("action")
+                    else EvidenceLevel.L1,
                     verification_status=VerificationStatus.NEEDS_VERIFICATION,
                 )
                 if exp.metrics or any(c in exp.result for c in ["%", "건", "명", "배"]):
                     exp.evidence_level = EvidenceLevel.L3
                 all_extracted_experiences.append(exp)
         except json.JSONDecodeError:
-            print(f"⚠️ 세그먼트 {i+1} 파싱 실패 (응답 포맷 오류)")
+            print(f"⚠️ 세그먼트 {i + 1} 파싱 실패 (응답 포맷 오류)")
             continue
 
     return all_extracted_experiences

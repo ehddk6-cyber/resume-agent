@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
-import logging
+from datetime import date, datetime, time
+from enum import Enum
 from pathlib import Path
 from typing import Any, List, Type, TypeVar
 
 from pydantic import BaseModel
 
+from .logger import get_logger
 from .models import (
     ApplicationProject,
     EvidenceLevel,
@@ -18,7 +20,7 @@ from .models import (
 )
 from .workspace import Workspace
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -26,7 +28,7 @@ T = TypeVar("T", bound=BaseModel)
 def initialize_state(ws: Workspace) -> None:
     ws.ensure()
     write_if_missing(ws.state_dir / "profile.json", UserProfile().model_dump())
-    
+
     # Default experiences
     default_exps = [
         Experience(
@@ -83,7 +85,9 @@ def save_profile(ws: Workspace, profile: UserProfile) -> None:
 
 
 def save_experiences(ws: Workspace, experiences: List[Experience]) -> None:
-    write_json(ws.state_dir / "experiences.json", [item.model_dump() for item in experiences])
+    write_json(
+        ws.state_dir / "experiences.json", [item.model_dump() for item in experiences]
+    )
 
 
 def save_project(ws: Workspace, project: ApplicationProject) -> None:
@@ -91,11 +95,15 @@ def save_project(ws: Workspace, project: ApplicationProject) -> None:
 
 
 def save_knowledge_sources(ws: Workspace, sources: List[KnowledgeSource]) -> None:
-    write_json(ws.state_dir / "knowledge_sources.json", [item.model_dump() for item in sources])
+    write_json(
+        ws.state_dir / "knowledge_sources.json", [item.model_dump() for item in sources]
+    )
 
 
 def save_artifacts(ws: Workspace, artifacts: List[GeneratedArtifact]) -> None:
-    write_json(ws.state_dir / "artifacts.json", [item.model_dump() for item in artifacts])
+    write_json(
+        ws.state_dir / "artifacts.json", [item.model_dump() for item in artifacts]
+    )
 
 
 def upsert_artifact(ws: Workspace, artifact: GeneratedArtifact) -> None:
@@ -125,9 +133,37 @@ def read_json(path: Path, default: Any) -> Any:
 
 
 def write_json(path: Path, data: Any) -> None:
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+    def _json_default(value: Any) -> Any:
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        if isinstance(value, Path):
+            return str(value)
+        if isinstance(value, (datetime, date, time)):
+            return value.isoformat()
+        if isinstance(value, Enum):
+            return value.value
+        raise TypeError(
+            f"Object of type {type(value).__name__} is not JSON serializable"
+        )
+
+    path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False, default=_json_default),
+        encoding="utf-8",
+    )
 
 
 def write_if_missing(path: Path, data: Any) -> None:
     if not path.exists():
         write_json(path, data)
+
+
+def load_secrets(ws: Workspace) -> dict[str, Any]:
+    """민감 개인정보를 로드합니다 (.secrets.json). 파일이 없으면 빈 dict 반환."""
+    secrets_path = ws.root / ".secrets.json"
+    return read_json(secrets_path, {})
+
+
+def save_secrets(ws: Workspace, secrets: dict[str, Any]) -> None:
+    """민감 개인정보를 저장합니다 (.secrets.json)."""
+    secrets_path = ws.root / ".secrets.json"
+    write_json(secrets_path, secrets)
