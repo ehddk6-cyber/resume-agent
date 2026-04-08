@@ -1,0 +1,37 @@
+{
+  "company_name": "새마을금고",
+  "job_title": "신입직원",
+  "career_stage": "ENTRY",
+  "company_type": "상호금융",
+  "research_notes": "2026년 상반기 새마을금고 신입직원 공개채용 자기소개서 기준. 협동조합 원리, 지역사회 밀착형 금융, 고객 신뢰, 공동체정신(성실과 책임) 강조.",
+  "tone_style": "담백하고 근거 중심",
+  "priority_experience_order": [
+    "exp_mg_bank_parttime",
+    "exp_library",
+    "exp_seoul_covid_fraud",
+    "exp_seongbuk"
+  ],
+  "questions": [
+    {
+      "id": "q1_mg_motivation",
+      "order_no": 1,
+      "question_text": "새마을금고에 지원한 이유와 새마을금고가 지원자를 채용해야 하는 이유를 기술해 주십시오.",
+      "char_limit": 600,
+      "detected_type": "TYPE_A"
+    },
+    {
+      "id": "q2_mg_talent",
+      "order_no": 2,
+      "question_text": "새마을금고 인재상 중 본인이 가장 부합하는 요소를 고르고 그 이유를 구체적인 경험과 함께 기술해 주십시오.",
+      "char_limit": 600,
+      "detected_type": "TYPE_UNKNOWN"
+    },
+    {
+      "id": "q3_mg_goal",
+      "order_no": 3,
+      "question_text": "높은 목표를 설정하여 성공 또는 실패한 경험과 그 과정에서 얻은 교훈을 기술해 주십시오.",
+      "char_limit": 600,
+      "detected_type": "TYPE_G"
+    }
+  ]
+}

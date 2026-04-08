@@ -1,0 +1,80 @@
+{
+  "artifact": {
+    "current_stage": "HANDOFF_READY",
+    "purpose": "신한은행 / 일반직 신입행원 (개인/기업금융) 문항에 대한 경험 배분과 리스크를 정리합니다.",
+    "current_summary": [
+      "1번 문항은 핵심 역량으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감입니다.",
+      "2번 문항은 고객응대으로 분류했고, 주력 경험은 국민연금공단 기초연금 수급 대상자 발굴 자동화입니다.",
+      "3번 문항은 고객응대으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 부정수급 적발입니다.",
+      "4번 문항은 성장과 학습 루프으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습입니다."
+    ],
+    "required_inputs": [
+      "추가 입력 없음"
+    ],
+    "next_step": "WRITER_HANDOFF",
+    "assumptions": [
+      "[ASSUMPTION] 답변 톤은 '담백하고 근거 중심' 기준으로 유지합니다.",
+      "[ASSUMPTION] 우선순위가 비어 있어 현재 점수 기준으로 경험을 배분합니다."
+    ],
+    "needs_verification": [],
+    "question_risks": [
+      "1번 문항 / 핵심 역량 / best_score=16 / risk=low",
+      "2번 문항 / 고객응대 / best_score=15 / risk=low",
+      "3번 문항 / 고객응대 / best_score=15 / risk=low",
+      "4번 문항 / 성장과 학습 루프 / best_score=16 / risk=low"
+    ],
+    "recommendations": [
+      "즉시 보강이 필요한 위험 신호가 크지 않습니다."
+    ],
+    "allocations": [
+      {
+        "question_id": "q1_strength",
+        "order_no": 1,
+        "question_type": "TYPE_B",
+        "experience_id": "exp_seoul_covid_budget",
+        "experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+        "score": 16,
+        "reason": "질문 기대: 핵심 역량 문항이며, 질문 키워드(다른, 지원자와, 차별화되는)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      },
+      {
+        "question_id": "q2_value_conflict",
+        "order_no": 2,
+        "question_type": "TYPE_H",
+        "experience_id": "exp_nps_intern",
+        "experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+        "score": 13,
+        "reason": "질문 기대: 고객응대 문항이며, 질문 키워드(본인이, 중요하게, 생각하는)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      },
+      {
+        "question_id": "q3_social_issue",
+        "order_no": 3,
+        "question_type": "TYPE_H",
+        "experience_id": "exp_seoul_covid_fraud",
+        "experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+        "score": 15,
+        "reason": "질문 기대: 고객응대 문항이며, 질문 키워드(최근, 사회, 이슈)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      },
+      {
+        "question_id": "q4_future_vision",
+        "order_no": 4,
+        "question_type": "TYPE_D",
+        "experience_id": "exp_seoul_covid_crisis",
+        "experience_title": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습",
+        "score": 9,
+        "reason": "질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(은행, 입행, 혹은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(수백 통 민원 당일 수습) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      }
+    ],
+    "rendered": "## CURRENT STAGE\nHANDOFF_READY\n\n## PURPOSE\n신한은행 / 일반직 신입행원 (개인/기업금융) 문항에 대한 경험 배분과 리스크를 정리합니다.\n\n## CURRENT SUMMARY\n- 1번 문항은 핵심 역량으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감입니다.\n- 2번 문항은 고객응대으로 분류했고, 주력 경험은 국민연금공단 기초연금 수급 대상자 발굴 자동화입니다.\n- 3번 문항은 고객응대으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 부정수급 적발입니다.\n- 4번 문항은 성장과 학습 루프으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습입니다.\n\n## REQUIRED INPUTS\n- 추가 입력 없음\n\n## NEXT STEP\nWRITER_HANDOFF\n\n## ASSUMPTIONS\n- [ASSUMPTION] 답변 톤은 '담백하고 근거 중심' 기준으로 유지합니다.\n- [ASSUMPTION] 우선순위가 비어 있어 현재 점수 기준으로 경험을 배분합니다.\n\n## QUESTION RISKS\n- 1번 문항 / 핵심 역량 / best_score=16 / risk=low\n- 2번 문항 / 고객응대 / best_score=15 / risk=low\n- 3번 문항 / 고객응대 / best_score=15 / risk=low\n- 4번 문항 / 성장과 학습 루프 / best_score=16 / risk=low\n\n## RECOMMENDATIONS\n- 즉시 보강이 필요한 위험 신호가 크지 않습니다.\n\n## ALLOCATIONS\n### Q1\n- Experience: 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감\n- Type: QuestionType.TYPE_B\n- Score: 16\n- Reason: 질문 기대: 핵심 역량 문항이며, 질문 키워드(다른, 지원자와, 차별화되는)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n### Q2\n- Experience: 국민연금공단 기초연금 수급 대상자 발굴 자동화\n- Type: QuestionType.TYPE_H\n- Score: 13\n- Reason: 질문 기대: 고객응대 문항이며, 질문 키워드(본인이, 중요하게, 생각하는)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n### Q3\n- Experience: 서울시청 코로나19 지원팀 부정수급 적발\n- Type: QuestionType.TYPE_H\n- Score: 15\n- Reason: 질문 기대: 고객응대 문항이며, 질문 키워드(최근, 사회, 이슈)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n### Q4\n- Experience: 서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습\n- Type: QuestionType.TYPE_D\n- Score: 9\n- Reason: 질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(은행, 입행, 혹은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(수백 통 민원 당일 수습) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+  },
+  "validation": {
+    "passed": false,
+    "missing": [
+      "## NEEDS VERIFICATION"
+    ],
+    "out_of_order": []
+  }
+}

@@ -1,0 +1,447 @@
+{
+  "validation": {
+    "passed": false,
+    "missing": [
+      "Q1 분량 부족: 521자 / 제한 600자 / 목표 90% 이상",
+      "Q2 분량 부족: 467자 / 제한 600자 / 목표 90% 이상",
+      "Q3 분량 부족: 537자 / 제한 600자 / 목표 90% 이상"
+    ],
+    "out_of_order": []
+  },
+  "exit_code": 0,
+  "target_path": "profile/targets/example_target.md",
+  "tool": "codex",
+  "rewrite_count": 4,
+  "char_limit_adjusted": true,
+  "quality_evaluation_status": "ok",
+  "quality_evaluation_error": null,
+  "result_quality_evaluation_status": "ok",
+  "result_quality_evaluation_error": null,
+  "quality_evaluations": [
+    {
+      "question_id": "q_3798",
+      "answer_text": "- 문항 1  \n새마을금고에 지원한 이유는 협동조합 원리를 바탕으로 지역사회와 가장 가까운 금융 현장에서 고객 신뢰를 만들고 지키는 일이 결국 사람 사이의 차이를 조율하고 기준에 맞게 운영을 안정화하는 힘에서 나온다고 봤기 때문입니다. 신입직원도 단순 처리 인력이 아니라 고객과 내부 구성원의 의견 차이를 정리해 현장을 흔들리지 않게 만드는 역할을 해야 한다고 생각합니다. 저는 서울시청 코로나19지원팀에서 중수본 숙박비 지침 변경으로 급여 엑셀 수식을 다시 설정해야 했을 때, 자동화 수식을 쓰려는 젊은 직원과 수동 방식을 고수하던 선배 공무원 사이 갈등을 중재했습니다. 저는 기존 방식의 장점을 먼저 인정한 뒤 새 수식의 필요성과 사용법을 여러 차례 설명했고, 지침 준수와 현장 적응을 함께 고려해 두 방식을 병행하는 절충안을 제시했습니다. 그 결과 상호 사과와 함께 새 수식이 도입됐고 업무 효율은 30% 높아졌습니다. 저는 조직의 흐름과 기준을 함께 읽으며 변화를 정착시키는 방식으로 새마을금고의 운영 안정에 기여하겠습니다.",
+      "relevance_score": 0.6400000000000001,
+      "specificity_score": 0.63,
+      "defensibility_score": 0.7144186046511629,
+      "originality_score": 0.75,
+      "overall_score": 0.68,
+      "detected_patterns": [
+        "quantified_result",
+        "collaboration",
+        "innovation"
+      ],
+      "strengths": [
+        "정량적 성과가 구체적으로 표현되어 있습니다",
+        "구체적인 수치가 포함되어 있습니다"
+      ],
+      "weaknesses": [
+        "AI스러운 연결 표현이 반복됩니다: 기여하겠습니다",
+        "STAR 구조 요소가 부족합니다"
+      ],
+      "suggestions": [
+        "STAR 구조를 명확히 하세요: 상황 → 과제 → 행동 → 결과",
+        "반복되는 연결 표현('기여하겠습니다') 대신 사건·행동 중심 문장으로 바꾸세요",
+        "지원동기는 회사와 직무의 접점을 구체적으로 언급하세요"
+      ],
+      "resolved_question_type": "TYPE_A",
+      "question_order": 1,
+      "question_text": "새마을금고에 지원한 이유와 새마을금고가 지원자를 채용해야 하는 이유를 기술해 주십시오.",
+      "char_count": 521,
+      "char_limit": 600,
+      "char_ratio": 0.868,
+      "experience_title": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+      "humanization_score": 1.0,
+      "humanization_flags": [],
+      "humanization_suggestions": [],
+      "ncs_alignment_score": 1.0,
+      "ncs_expected_competencies": [
+        "의사소통능력",
+        "조직이해능력"
+      ],
+      "ncs_matched_competencies": [
+        "의사소통능력",
+        "조직이해능력"
+      ],
+      "ncs_missing_competencies": [],
+      "ncs_expected_ability_units": [],
+      "ncs_matched_ability_units": [],
+      "ncs_missing_ability_units": [],
+      "ncs_suggestions": [],
+      "ssot_alignment_score": 0.67,
+      "ssot_expected_claims": [
+        "신입직원에 바로 투입 가능한 검증형 실무자",
+        "새마을금고에 맞는 근거 중심 문제해결형 지원자",
+        "정량적 성과"
+      ],
+      "ssot_matched_claims": [
+        "새마을금고에 맞는 근거 중심 문제해결형 지원자"
+      ],
+      "ssot_missing_claims": [
+        "신입직원에 바로 투입 가능한 검증형 실무자",
+        "정량적 성과"
+      ],
+      "ssot_offtrack_signals": [],
+      "ssot_suggestions": [
+        "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요."
+      ],
+      "expected_followups": [
+        "[사실] 지원동기에서 말한 계기와 직무 연결을 사실 기준으로 다시 설명해보세요.",
+        "[판단] 왜 그 회사와 직무를 선택했는지 판단 기준을 설명해보세요.",
+        "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+      ],
+      "defense_gaps": [
+        "STAR 구조가 불완전하여 꼬리질문에 취약",
+        "균형 잡힌 시각 표현 부족"
+      ],
+      "message_discipline_score": 0.65,
+      "message_primary": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_A 문항에서 검증 가능한 기여를 입증한다.",
+      "message_competing_points": [
+        "신입직원도 단순 처리 인력이 아니라 고객과 내부 구성원의 의견 차이를 정리해 현장을 흔들리지 않게 만드는 역할을 해야 한다고 생각합니다",
+        "저는 서울시청 코로나19지원팀에서 중수본 숙박비 지침 변경으로 급여 엑셀 수식을 다시 설정해야 했을 때, 자동화 수식을 쓰려는 젊은 직원과 수동",
+        "저는 기존 방식의 장점을 먼저 인정한 뒤 새 수식의 필요성과 사용법을 여러 차례 설명했고, 지침 준수와 현장 적응을 함께 고려해 두 방식을 병행"
+      ],
+      "message_discipline_suggestions": [
+        "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+        "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요."
+      ],
+      "cliche_score": 1.0,
+      "cliche_flags": [],
+      "cliche_suggestions": [],
+      "differentiation_score": 0.75,
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+      "differentiation_gaps": [
+        "주력 경험명이 답변에 직접 드러나지 않습니다.",
+        "writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다."
+      ],
+      "differentiation_suggestions": [
+        "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+      ],
+      "committee_reaction_score": 0.6,
+      "committee_attack_points": [
+        "STAR 구조가 불완전하여 꼬리질문에 취약",
+        "균형 잡힌 시각 표현 부족",
+        "[사실] 지원동기에서 말한 계기와 직무 연결을 사실 기준으로 다시 설명해보세요.",
+        "[판단] 왜 그 회사와 직무를 선택했는지 판단 기준을 설명해보세요."
+      ],
+      "committee_reaction_summary": "면접관이 바로 파고들 만한 지점이 남아 있습니다.",
+      "committee_mitigation_priority": "STAR 구조가 불완전하여 꼬리질문에 취약",
+      "writer_checklist_status": {
+        "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_A 문항에서 검증 가능한 기여를 입증한다.",
+        "required_evidence": [
+          "업무 효율 30% 증가",
+          "서울시청 파견 근무 경험",
+          "질문 기대: 지원동기와 직무 적합성 문항이며, 질문 키워드(새마을금고에, 지원한, 이유와)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+        ],
+        "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+      },
+      "interviewer_checklist": [
+        "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
+        "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
+        "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가"
+      ],
+      "evaluation_rubric": {
+        "strong_points": [
+          "정량적 성과가 구체적으로 표현되어 있습니다",
+          "구체적인 수치가 포함되어 있습니다"
+        ],
+        "risk_points": [
+          "AI스러운 연결 표현이 반복됩니다: 기여하겠습니다",
+          "STAR 구조 요소가 부족합니다",
+          "STAR 구조가 불완전하여 꼬리질문에 취약",
+          "균형 잡힌 시각 표현 부족"
+        ],
+        "improvement_points": [
+          "STAR 구조를 명확히 하세요: 상황 → 과제 → 행동 → 결과",
+          "반복되는 연결 표현('기여하겠습니다') 대신 사건·행동 중심 문장으로 바꾸세요",
+          "지원동기는 회사와 직무의 접점을 구체적으로 언급하세요",
+          "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요."
+        ]
+      }
+    },
+    {
+      "question_id": "q_8960",
+      "answer_text": "- 문항 2  \n제가 새마을금고 인재상 중 가장 가깝다고 생각하는 요소는 고객이 이해할 수 있는 방식으로 끝까지 책임 있게 소통하는 태도입니다. 새마을금고 아르바이트 당시 90세의 시각·청각 장애 고객이 디지털 태블릿 서명 절차를 어려워하며 불안해한 적이 있었습니다. 당시 제 판단 기준은 절차를 빨리 끝내는 것이 아니라 고객이 중간에 포기하지 않고 직접 이해한 상태에서 서명을 마치도록 돕는 것이었습니다. 그래서 먼저 스몰토크로 긴장을 낮추고, 큰 목소리와 또박또박한 발음으로 한 단계씩 설명했습니다. 고객이 직접 따라 할 수 있도록 행동을 유도하면서 속도도 고객 기준에 맞췄고, 불필요하게 재촉하지 않으며 끝까지 같은 사람으로 응대를 이어갔습니다. 그 결과 고객은 절차를 중단하지 않고 서명을 마쳤고 불안도 낮아졌습니다. 저는 상황에 맞는 설명 방식과 관계를 끊지 않는 태도가 신뢰를 만든다는 점을 새마을금고 현장에서 확인했습니다.",
+      "relevance_score": 0.6492307692307693,
+      "specificity_score": 0.59,
+      "defensibility_score": 0.6864864864864866,
+      "originality_score": 0.8,
+      "overall_score": 0.67,
+      "detected_patterns": [
+        "star_structure",
+        "customer_focus"
+      ],
+      "strengths": [
+        "STAR 구조가 잘 드러나 있습니다",
+        "구체적인 수치가 포함되어 있습니다"
+      ],
+      "weaknesses": [
+        "정량적 성과 표현이 부족합니다"
+      ],
+      "suggestions": [
+        "상호금융 기업은 정량적 성과를 중시합니다"
+      ],
+      "resolved_question_type": "TYPE_H",
+      "question_order": 2,
+      "question_text": "새마을금고 인재상 중 본인이 가장 부합하는 요소를 고르고 그 이유를 구체적인 경험과 함께 기술해 주십시오.",
+      "char_count": 467,
+      "char_limit": 600,
+      "char_ratio": 0.778,
+      "experience_title": "새마을금고 아르바이트 - 디지털 취약 고객 응대",
+      "humanization_score": 1.0,
+      "humanization_flags": [],
+      "humanization_suggestions": [],
+      "ncs_alignment_score": 0.5,
+      "ncs_expected_competencies": [
+        "의사소통능력",
+        "대인관계능력"
+      ],
+      "ncs_matched_competencies": [
+        "의사소통능력"
+      ],
+      "ncs_missing_competencies": [
+        "대인관계능력"
+      ],
+      "ncs_expected_ability_units": [],
+      "ncs_matched_ability_units": [],
+      "ncs_missing_ability_units": [],
+      "ncs_suggestions": [
+        "대인관계능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+      ],
+      "ssot_alignment_score": 0.67,
+      "ssot_expected_claims": [
+        "신입직원에 바로 투입 가능한 검증형 실무자",
+        "새마을금고에 맞는 근거 중심 문제해결형 지원자",
+        "정량적 성과"
+      ],
+      "ssot_matched_claims": [
+        "새마을금고에 맞는 근거 중심 문제해결형 지원자"
+      ],
+      "ssot_missing_claims": [
+        "신입직원에 바로 투입 가능한 검증형 실무자",
+        "정량적 성과"
+      ],
+      "ssot_offtrack_signals": [],
+      "ssot_suggestions": [
+        "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요."
+      ],
+      "expected_followups": [
+        "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+        "[판단] 당시 왜 그 선택을 했는지 판단 기준을 설명해보세요.",
+        "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+      ],
+      "defense_gaps": [
+        "균형 잡힌 시각 표현 부족"
+      ],
+      "message_discipline_score": 0.65,
+      "message_primary": "새마을금고 아르바이트 - 디지털 취약 고객 응대 경험으로 QuestionType.TYPE_H 문항에서 검증 가능한 기여를 입증한다.",
+      "message_competing_points": [
+        "새마을금고 아르바이트 당시 90세의 시각·청각 장애 고객이 디지털 태블릿 서명 절차를 어려워하며 불안해한 적이 있었습니다",
+        "당시 제 판단 기준은 절차를 빨리 끝내는 것이 아니라 고객이 중간에 포기하지 않고 직접 이해한 상태에서 서명을 마치도록 돕는 것이었습니다",
+        "그래서 먼저 스몰토크로 긴장을 낮추고, 큰 목소리와 또박또박한 발음으로 한 단계씩 설명했습니다"
+      ],
+      "message_discipline_suggestions": [
+        "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+        "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요."
+      ],
+      "cliche_score": 1.0,
+      "cliche_flags": [],
+      "cliche_suggestions": [],
+      "differentiation_score": 0.75,
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 새마을금고 아르바이트 - 디지털 취약 고객 응대의 운영 기준·증빙·재현성을 제시한다.",
+      "differentiation_gaps": [
+        "주력 경험명이 답변에 직접 드러나지 않습니다.",
+        "writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다."
+      ],
+      "differentiation_suggestions": [
+        "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+      ],
+      "committee_reaction_score": 0.6,
+      "committee_attack_points": [
+        "균형 잡힌 시각 표현 부족",
+        "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+        "[판단] 당시 왜 그 선택을 했는지 판단 기준을 설명해보세요.",
+        "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+      ],
+      "committee_reaction_summary": "면접관이 바로 파고들 만한 지점이 남아 있습니다.",
+      "committee_mitigation_priority": "균형 잡힌 시각 표현 부족",
+      "writer_checklist_status": {
+        "core_message": "새마을금고 아르바이트 - 디지털 취약 고객 응대 경험으로 QuestionType.TYPE_H 문항에서 검증 가능한 기여를 입증한다.",
+        "required_evidence": [
+          "디지털 취약 계층 응대 성공",
+          "새마을금고 아르바이트 경험",
+          "질문 기대: 고객응대 문항이며, 질문 키워드(새마을금고, 인재상, 본인이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(디지털 취약 계층 응대 성공) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+        ],
+        "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+      },
+      "interviewer_checklist": [
+        "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
+        "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
+        "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가"
+      ],
+      "evaluation_rubric": {
+        "strong_points": [
+          "STAR 구조가 잘 드러나 있습니다",
+          "구체적인 수치가 포함되어 있습니다"
+        ],
+        "risk_points": [
+          "정량적 성과 표현이 부족합니다",
+          "균형 잡힌 시각 표현 부족"
+        ],
+        "improvement_points": [
+          "상호금융 기업은 정량적 성과를 중시합니다",
+          "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+          "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요.",
+          "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+        ]
+      }
+    },
+    {
+      "question_id": "q_1111",
+      "answer_text": "- 문항 3  \n제가 세운 높은 목표는 업무 지연을 이유로 추진되던 1억 원 규모의 외주 급여 시스템 도입을 막고, 더 나은 대안을 근거로 입증하는 것이었습니다. 당시 서울시청 코로나19지원팀에서는 누적된 의료 인력 데이터로 엑셀이 느려지자 외주 도입이 유력한 분위기였지만, 저는 속도 저하만 보고 계약을 결정하면 비용과 오류 위험을 함께 놓칠 수 있다고 판단했습니다. 초기에 저 역시 체감 불편만으로 반대하면 설득력이 없다고 봤기 때문에, 처리 속도·오류 여부·실제 업무 적용 가능성을 비교 기준으로 먼저 정리하고 그 기준에서만 판단하겠다고 스스로 통제했습니다. 이후 외주 시스템 시연 결과를 확인하고, 동일 데이터를 기존 엑셀 수식과 외주 프로그램에 각각 입력해 비교표를 직접 작성했습니다. 동시에 엑셀 데이터를 분리 저장하는 방식으로 속도 저하 문제도 해결했습니다. 그 결과 팀장을 설득해 외주 계약을 철회했고 1억 원의 예산 낭비를 막았습니다. 이 경험은 높은 목표일수록 판단 기준을 기록하고 끝까지 검증하는 습관이 필요하다는 점을 분명히 보여줬습니다.",
+      "relevance_score": 0.525,
+      "specificity_score": 0.69,
+      "defensibility_score": 0.7166666666666668,
+      "originality_score": 0.8400000000000001,
+      "overall_score": 0.68,
+      "detected_patterns": [
+        "star_structure",
+        "quantified_result",
+        "problem_solving",
+        "collaboration",
+        "innovation"
+      ],
+      "strengths": [
+        "정량적 성과가 구체적으로 표현되어 있습니다",
+        "STAR 구조가 잘 드러나 있습니다",
+        "문제 해결 과정이 명확하게 서술되어 있습니다",
+        "구체적인 수치가 포함되어 있습니다"
+      ],
+      "weaknesses": [
+        "STAR 구조 요소가 부족합니다"
+      ],
+      "suggestions": [
+        "실패 경험은 자기 책임, 개선 행동, 재발 방지 루틴을 포함하세요"
+      ],
+      "resolved_question_type": "TYPE_G",
+      "question_order": 3,
+      "question_text": "높은 목표를 설정하여 성공 또는 실패한 경험과 그 과정에서 얻은 교훈을 기술해 주십시오.",
+      "char_count": 537,
+      "char_limit": 600,
+      "char_ratio": 0.895,
+      "experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+      "humanization_score": 1.0,
+      "humanization_flags": [],
+      "humanization_suggestions": [],
+      "ncs_alignment_score": 1.0,
+      "ncs_expected_competencies": [
+        "정보능력",
+        "자기관리능력"
+      ],
+      "ncs_matched_competencies": [
+        "정보능력",
+        "자기관리능력"
+      ],
+      "ncs_missing_competencies": [],
+      "ncs_expected_ability_units": [],
+      "ncs_matched_ability_units": [],
+      "ncs_missing_ability_units": [],
+      "ncs_suggestions": [],
+      "ssot_alignment_score": 0.33,
+      "ssot_expected_claims": [
+        "신입직원에 바로 투입 가능한 검증형 실무자",
+        "새마을금고에 맞는 근거 중심 문제해결형 지원자",
+        "정량적 성과"
+      ],
+      "ssot_matched_claims": [],
+      "ssot_missing_claims": [
+        "신입직원에 바로 투입 가능한 검증형 실무자",
+        "새마을금고에 맞는 근거 중심 문제해결형 지원자",
+        "정량적 성과"
+      ],
+      "ssot_offtrack_signals": [],
+      "ssot_suggestions": [
+        "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요."
+      ],
+      "expected_followups": [
+        "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+        "[판단] 당시 왜 그 선택을 했는지 판단 기준을 설명해보세요.",
+        "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+      ],
+      "defense_gaps": [
+        "STAR 구조가 불완전하여 꼬리질문에 취약",
+        "균형 잡힌 시각 표현 부족"
+      ],
+      "message_discipline_score": 0.65,
+      "message_primary": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+      "message_competing_points": [
+        "당시 서울시청 코로나19지원팀에서는 누적된 의료 인력 데이터로 엑셀이 느려지자 외주 도입이 유력한 분위기였지만, 저는 속도 저하만 보고 계약을 ",
+        "초기에 저 역시 체감 불편만으로 반대하면 설득력이 없다고 봤기 때문에, 처리 속도·오류 여부·실제 업무 적용 가능성을 비교 기준으로 먼저 정리하",
+        "이후 외주 시스템 시연 결과를 확인하고, 동일 데이터를 기존 엑셀 수식과 외주 프로그램에 각각 입력해 비교표를 직접 작성했습니다"
+      ],
+      "message_discipline_suggestions": [
+        "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+        "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요."
+      ],
+      "cliche_score": 1.0,
+      "cliche_flags": [],
+      "cliche_suggestions": [],
+      "differentiation_score": 0.75,
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+      "differentiation_gaps": [
+        "주력 경험명이 답변에 직접 드러나지 않습니다.",
+        "writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다."
+      ],
+      "differentiation_suggestions": [
+        "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+      ],
+      "committee_reaction_score": 0.6,
+      "committee_attack_points": [
+        "STAR 구조가 불완전하여 꼬리질문에 취약",
+        "균형 잡힌 시각 표현 부족",
+        "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+        "[판단] 당시 왜 그 선택을 했는지 판단 기준을 설명해보세요."
+      ],
+      "committee_reaction_summary": "면접관이 바로 파고들 만한 지점이 남아 있습니다.",
+      "committee_mitigation_priority": "STAR 구조가 불완전하여 꼬리질문에 취약",
+      "writer_checklist_status": {
+        "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+        "required_evidence": [
+          "1억 원 예산 절감",
+          "서울시청 파견 근무 경험",
+          "질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(높은, 목표를, 설정하여)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+        ],
+        "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+      },
+      "interviewer_checklist": [
+        "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
+        "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
+        "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가"
+      ],
+      "evaluation_rubric": {
+        "strong_points": [
+          "정량적 성과가 구체적으로 표현되어 있습니다",
+          "STAR 구조가 잘 드러나 있습니다",
+          "문제 해결 과정이 명확하게 서술되어 있습니다"
+        ],
+        "risk_points": [
+          "STAR 구조 요소가 부족합니다",
+          "STAR 구조가 불완전하여 꼬리질문에 취약",
+          "균형 잡힌 시각 표현 부족"
+        ],
+        "improvement_points": [
+          "실패 경험은 자기 책임, 개선 행동, 재발 방지 루틴을 포함하세요",
+          "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+          "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요.",
+          "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+        ]
+      }
+    }
+  ],
+  "writer_brief_path": "analysis/writer_brief.json",
+  "rewrite_quality_report_path": "analysis/writer_rewrite_quality_report.json",
+  "writer_differentiation_path": "artifacts/writer_differentiation.json",
+  "writer_defensibility_path": "artifacts/writer_defensibility.json",
+  "writer_message_discipline_path": "artifacts/writer_message_discipline.json",
+  "writer_committee_reaction_path": "artifacts/writer_committee_reaction.json"
+}

@@ -2,7 +2,7 @@ from typing import List
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
-from .models import Experience
+from .models import Experience, EvidenceLevel
 from .workspace import Workspace
 from .state import load_experiences, save_experiences, initialize_state
 
@@ -65,7 +65,7 @@ def run_editor(ws: Workspace) -> None:
 
             # 수치가 추가되었다면 증거 수준 L3로 자동 상향
             if new_metrics and new_metrics != "정량 수치 없음":
-                exp.evidence_level = "L3"
+                exp.evidence_level = EvidenceLevel.L3
                 console.print(
                     "[yellow]수치 데이터가 감지되어 증거수준이 L3로 조정되었습니다.[/yellow]"
                 )

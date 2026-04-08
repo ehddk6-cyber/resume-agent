@@ -1,0 +1,31 @@
+{
+  "id": "f73598349377",
+  "source_type": "local_text",
+  "title": "실용글쓰기",
+  "url": null,
+  "raw_text": "종목 및 등급\n \n:\n \n준3급\n자  격  번  호\n \n:\n \n25GE04702\n취  득  점  수\n \n:\n \n553점\n성              명\n \n:\n \n원동아\n생  년  월  일\n \n:\n \n1992\n.\n06\n.\n01\n유  효  기  간\n \n:\n \n2025년 8월 19일 \n~\n \n2027년 8월 18일",
+  "cleaned_text": "종목 및 등급\n\n:\n\n준3급\n자  격  번  호\n\n:\n\n25GE04702\n취  득  점  수\n\n:\n\n553점\n성              명\n\n:\n\n원동아\n생  년  월  일\n\n:\n\n1992\n.\n06\n.\n01\n유  효  기  간\n\n:\n\n2025년 8월 19일\n~\n\n2027년 8월 18일",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

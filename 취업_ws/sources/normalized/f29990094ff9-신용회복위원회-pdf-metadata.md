@@ -1,0 +1,12 @@
+# 신용회복위원회.pdf metadata
+
+{
+  "title": "신용회복위원회.pdf",
+  "metadata": {
+    "sourceAddedTimestamp": "2024-11-18T02:17:49.398667Z",
+    "revisionData": {
+      "dateAdded": "2024-11-18T02:17:46.982593Z"
+    },
+    "originalSourceContentType": "SOURCE_CONTENT_TYPE_PDF"
+  }
+}

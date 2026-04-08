@@ -1,0 +1,31 @@
+{
+  "id": "d504142ea121",
+  "source_type": "local_text",
+  "title": "20251219222719553",
+  "url": null,
+  "raw_text": "서경대학교1 / 1USC_09001_P\n2015년도 2학기\n학과 : 공공인적자원학부 학년 : 2 학번 : 2012201049 성명 : 원동아\n \n구 분 학수번호 과목명 학점 등급 담당교수 비고\n균교 GE1117-01 유교와선비정신 3 C+ 최진홍 \n전공 PA1094-01 행정학특강2 3 B+ 하현길 \n전공 PA1096-01 사회복지정책론 3 C+ 노시평 \n전공 PR1012-01 고시국사 3 A+ 고병갑 \n전공 PR1014-01 경찰학개론 3 C+ 윤흥희 \n \n신청학점 : 15 취득학점 : 15 평점계 : 46.5 평점평균 : 3.10\n \n서 경 대 학 교   교 무 처 장\n2025년 12월 19일",
+  "cleaned_text": "서경대학교1 / 1USC_09001_P\n2015년도 2학기\n학과 : 공공인적자원학부 학년 : 2 학번 : 2012201049 성명 : 원동아\n\n구 분 학수번호 과목명 학점 등급 담당교수 비고\n균교 GE1117-01 유교와선비정신 3 C+ 최진홍\n전공 PA1094-01 행정학특강2 3 B+ 하현길\n전공 PA1096-01 사회복지정책론 3 C+ 노시평\n전공 PR1012-01 고시국사 3 A+ 고병갑\n전공 PR1014-01 경찰학개론 3 C+ 윤흥희\n\n신청학점 : 15 취득학점 : 15 평점계 : 46.5 평점평균 : 3.10\n\n서 경 대 학 교   교 무 처 장\n2025년 12월 19일",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

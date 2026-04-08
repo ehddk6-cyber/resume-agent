@@ -1,14 +1,4 @@
-"""
-의미적 검색 엔진 — 임베딩 기반 경험-질문 매칭
-
-Phase 1 개선 사항:
-1. SentenceTransformer 기반 의미적 유사도 계산
-2. TF-IDF 폴백 (sklearn 없을 때)
-3. 해시 기반 폴백 (그 외)
-4. 한국어 형태소 분석 통합 (Kiwi)
-5. 배치 처리 지원
-6. 캐싱 메커니즘
-"""
+"""의미적 검색 엔진 — 임베딩 기반 경험-질문 매칭"""
 
 from __future__ import annotations
 
@@ -23,8 +13,6 @@ from .logger import get_logger
 from .config import get_config_value
 
 logger = get_logger(__name__)
-
-# ─── 임베딩 모델 싱글톤 ─────────────────────────────────────────
 
 _ST_MODEL = None
 _ST_LOCK = threading.Lock()
@@ -56,23 +44,10 @@ def _get_embedding_model() -> Optional[Any]:
             try:
                 _ST_MODEL = _ST_CLASS(model_name)
                 logger.info(f"임베딩 모델 로드 완료: {model_name}")
-                
-                # 모델 차원 검증 로깅
-                expected_dim = get_config_value("embedding.dimension", 384)
-                actual_dim = _ST_MODEL.get_sentence_embedding_dimension()
-                logger.info(f"Expected embedding dimension: {expected_dim}")
-                logger.info(f"Actual embedding dimension: {actual_dim}")
-                if expected_dim != actual_dim:
-                    logger.warning(
-                        f"Dimension mismatch! Config: {expected_dim}, Model: {actual_dim}"
-                    )
             except Exception as e:
                 logger.warning(f"임베딩 모델 로드 실패: {e}")
                 return None
     return _ST_MODEL
-
-
-# ─── 데이터 구조 ─────────────────────────────────────────────────
 
 
 @dataclass
@@ -99,9 +74,6 @@ class SemanticSearchConfig:
     hash_weight: float = 0.1
 
 
-# ─── 한국어 형태소 분석 ──────────────────────────────────────────
-
-
 _KIWI = None
 _USE_KIWI = False
 
@@ -124,10 +96,6 @@ def _get_kiwi() -> Optional[Any]:
 
 
 def extract_korean_nouns(text: str) -> List[str]:
-    """
-    한국어 명사를 추출합니다.
-    Kiwi 사용 가능 시 형태소 분석, 아니면 정규식 폴백.
-    """
     if not text or not text.strip():
         return []
 
@@ -144,34 +112,17 @@ def extract_korean_nouns(text: str) -> List[str]:
         except Exception:
             pass
 
-    # 정규식 폴백
     return list(dict.fromkeys(re.findall(r"[가-힣]{2,}", text)))
 
 
 def extract_keywords_advanced(text: str) -> List[str]:
-    """
-    고급 키워드 추출 (명사 + 중요 영어 단어 + 숫자 포함 표현)
-    """
     if not text:
         return []
-
     keywords = []
-
-    # 한국어 명사 추출
     keywords.extend(extract_korean_nouns(text))
-
-    # 영어 단어 (2글자 이상)
-    english_words = re.findall(r"[A-Za-z]{2,}", text)
-    keywords.extend(english_words)
-
-    # 숫자 포함 표현 (예: 30%, 100건)
-    numeric_expr = re.findall(r"\d+[가-힣%]+|\d+[a-zA-Z%]+", text)
-    keywords.extend(numeric_expr)
-
+    keywords.extend(re.findall(r"[A-Za-z]{2,}", text))
+    keywords.extend(re.findall(r"\d+[가-힣%]+|\d+[a-zA-Z%]+", text))
     return list(dict.fromkeys(keywords))
-
-
-# ─── 코사인 유사도 계산 ──────────────────────────────────────────
 
 
 def _cosine_similarity(vec1: Dict[int, float], vec2: Dict[int, float]) -> float:
@@ -191,16 +142,7 @@ def _cosine_similarity(vec1: Dict[int, float], vec2: Dict[int, float]) -> float:
     return dot / (norm1 * norm2)
 
 
-# ─── 임베딩 기반 유사도 ──────────────────────────────────────────
-
-
 def compute_embedding_similarity(text1: str, text2: str) -> float:
-    """
-    SentenceTransformer 기반 의미적 유사도 계산
-
-    Returns:
-        0.0 ~ 1.0 유사도 점수
-    """
     if not text1.strip() or not text2.strip():
         return 0.0
 
@@ -228,12 +170,6 @@ def compute_embedding_similarity(text1: str, text2: str) -> float:
 
 
 def compute_batch_embedding_similarity(query: str, documents: List[str]) -> List[float]:
-    """
-    하나의 쿼리에 대해 여러 문서의 의미적 유사도를 배치 계산
-
-    Returns:
-        각 문서와의 유사도 리스트
-    """
     if not query.strip() or not documents:
         return [0.0] * len(documents)
 
@@ -266,16 +202,7 @@ def compute_batch_embedding_similarity(query: str, documents: List[str]) -> List
         return [-1.0] * len(documents)
 
 
-# ─── TF-IDF 기반 유사도 ──────────────────────────────────────────
-
-
 def compute_tfidf_similarity(text1: str, text2: str) -> float:
-    """
-    TF-IDF 기반 유사도 (sklearn 필요)
-
-    Returns:
-        0.0 ~ 1.0 유사도 점수
-    """
     try:
         from sklearn.feature_extraction.text import TfidfVectorizer
         from sklearn.metrics.pairwise import cosine_similarity
@@ -288,9 +215,6 @@ def compute_tfidf_similarity(text1: str, text2: str) -> float:
         return -1.0
     except Exception:
         return 0.0
-
-
-# ─── 해시 기반 유사도 (최후 폴백) ────────────────────────────────
 
 
 def _extract_features(text: str) -> List[str]:
@@ -306,7 +230,6 @@ def _extract_features(text: str) -> List[str]:
 
 
 def _text_to_sparse_vector(text: str, dim: int = 256) -> Dict[int, float]:
-    """텍스트를 희박 벡터로 변환 (해시 기반)"""
     vec: Dict[int, float] = {}
     for feature in _extract_features(text):
         idx = int(hashlib.md5(feature.encode("utf-8")).hexdigest(), 16) % dim
@@ -315,12 +238,6 @@ def _text_to_sparse_vector(text: str, dim: int = 256) -> Dict[int, float]:
 
 
 def compute_hash_similarity(text1: str, text2: str) -> float:
-    """
-    해시 기반 유사도 (외부 의존성 없음)
-
-    Returns:
-        0.0 ~ 1.0 유사도 점수
-    """
     if not text1.strip() or not text2.strip():
         return 0.0
 
@@ -329,20 +246,11 @@ def compute_hash_similarity(text1: str, text2: str) -> float:
     return _cosine_similarity(vec1, vec2)
 
 
-# ─── 통합 유사도 계산 ────────────────────────────────────────────
-
-
 def compute_similarity(
     text1: str,
     text2: str,
     config: Optional[SemanticSearchConfig] = None,
 ) -> Tuple[float, str]:
-    """
-    여러 방법을 조합한 통합 유사도 계산
-
-    Returns:
-        (유사도 점수, 사용된 방법)
-    """
     if config is None:
         config = SemanticSearchConfig()
 
@@ -363,16 +271,7 @@ def compute_similarity(
     return hash_sim, "hash"
 
 
-# ─── 의미적 검색 엔진 ───────────────────────────────────────────
-
-
 class SemanticSearchEngine:
-    """
-    의미적 검색 엔진
-
-    경험 카드와 질문 간의 의미적 유사도를 계산하여
-    최적의 경험-질문 매칭을 수행합니다.
-    """
 
     def __init__(self, config: Optional[SemanticSearchConfig] = None):
         self.config = config or SemanticSearchConfig()
@@ -380,12 +279,6 @@ class SemanticSearchEngine:
         self._embedding_cache: Dict[str, Any] = {}
 
     def index_documents(self, documents: Dict[str, str]) -> None:
-        """
-        문서를 인덱싱합니다.
-
-        Args:
-            documents: {doc_id: doc_text} 딕셔너리
-        """
         self._doc_cache.update(documents)
 
         # 임베딩 사전 계산 (배치)
@@ -410,17 +303,6 @@ class SemanticSearchEngine:
         top_k: Optional[int] = None,
         min_score: Optional[float] = None,
     ) -> List[SemanticMatch]:
-        """
-        쿼리와 가장 유사한 문서를 검색합니다.
-
-        Args:
-            query: 검색 쿼리
-            top_k: 반환할 최대 결과 수
-            min_score: 최소 유사도 점수
-
-        Returns:
-            유사도 높은 순서의 SemanticMatch 리스트
-        """
         if not query.strip() or not self._doc_cache:
             return []
 
@@ -497,16 +379,6 @@ class SemanticSearchEngine:
         query: str,
         candidates: Optional[List[str]] = None,
     ) -> Optional[SemanticMatch]:
-        """
-        쿼리와 가장 유사한 단일 문서를 반환합니다.
-
-        Args:
-            query: 검색 쿼리
-            candidates: 후보 doc_id 리스트 (None이면 전체 검색)
-
-        Returns:
-            가장 유사한 SemanticMatch 또는 None
-        """
         if candidates:
             docs = {
                 cid: self._doc_cache[cid]
@@ -532,25 +404,11 @@ class SemanticSearchEngine:
         }
 
 
-# ─── 경험-질문 의미적 매칭 ───────────────────────────────────────
-
-
 def match_experiences_to_questions(
     questions: List[str],
     experiences: Dict[str, str],
     config: Optional[SemanticSearchConfig] = None,
 ) -> Dict[str, List[SemanticMatch]]:
-    """
-    여러 질문에 대해 각각 최적의 경험을 매칭합니다.
-
-    Args:
-        questions: 질문 텍스트 리스트
-        experiences: {exp_id: exp_text} 경험 딕셔너리
-        config: 검색 설정
-
-    Returns:
-        {question: [SemanticMatch, ...]} 매핑
-    """
     engine = SemanticSearchEngine(config)
     engine.index_documents(experiences)
 
@@ -562,23 +420,9 @@ def match_experiences_to_questions(
     return results
 
 
-# ─── 의미적 키워드 추출 ──────────────────────────────────────────
-
-
 def extract_semantic_keywords(text: str) -> Dict[str, List[str]]:
-    """
-    텍스트에서 의미적 키워드를 추출합니다.
-
-    Returns:
-        {
-            "nouns": [명사 리스트],
-            "keywords": [전체 키워드 리스트],
-            "numeric": [숫자 표현 리스트],
-        }
-    """
-    result = {
+    return {
         "nouns": extract_korean_nouns(text),
         "keywords": extract_keywords_advanced(text),
         "numeric": re.findall(r"\d+[가-힣%]+|\d+[a-zA-Z%]+|\d{2,}", text),
     }
-    return result

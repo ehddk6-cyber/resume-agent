@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-04-06T06:40:22.709990+00:00",
+  "artifact_type": "company_research",
+  "current_pattern": "company_research|금융|TYPE_B-TYPE_D-TYPE_UNKNOWN",
+  "overall_success_rate": 0,
+  "outcome_summary": {
+    "matched_feedback_count": 0,
+    "outcome_breakdown": {},
+    "top_rejection_reasons": []
+  },
+  "recommended_pattern": "company_research|금융|TYPE_B-TYPE_D-TYPE_UNKNOWN",
+  "high_risk_hotspots": []
+}

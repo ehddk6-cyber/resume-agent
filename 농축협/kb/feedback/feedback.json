@@ -1,0 +1,240 @@
+{
+  "feedback": [
+    {
+      "draft_id": "writer-20260405_113751",
+      "pattern_used": "writer|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I",
+      "accepted": false,
+      "rating": null,
+      "comment": null,
+      "artifact_type": "writer",
+      "company_name": "농·축협",
+      "job_title": "신규직원",
+      "company_type": "협동조합",
+      "question_types": [
+        "TYPE_D",
+        "TYPE_I",
+        "TYPE_F",
+        "TYPE_F",
+        "TYPE_E"
+      ],
+      "stage": "writer",
+      "final_outcome": null,
+      "rejection_reason": null,
+      "selected_experience_ids": [
+        "exp_seoul_covid_budget",
+        "exp_nps_income_adjustment",
+        "exp_seoul_covid_conflict",
+        "exp_nps_intern",
+        "exp_seoul_covid_fraud"
+      ],
+      "question_experience_map": [
+        {
+          "question_id": "q1_nh_growth",
+          "question_type": "TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "question_order": 1
+        },
+        {
+          "question_id": "q2_nh_decision",
+          "question_type": "TYPE_I",
+          "experience_id": "exp_nps_income_adjustment",
+          "question_order": 2
+        },
+        {
+          "question_id": "q3_nh_trust",
+          "question_type": "TYPE_F",
+          "experience_id": "exp_seoul_covid_conflict",
+          "question_order": 3
+        },
+        {
+          "question_id": "q4_nh_value",
+          "question_type": "TYPE_F",
+          "experience_id": "exp_nps_intern",
+          "question_order": 4
+        },
+        {
+          "question_id": "q5_nh_structure",
+          "question_type": "TYPE_E",
+          "experience_id": "exp_seoul_covid_fraud",
+          "question_order": 5
+        }
+      ],
+      "question_strategy_map": [
+        {
+          "question_id": "q1_nh_growth",
+          "question_order": 1,
+          "question_type": "QuestionType.TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q2_nh_decision",
+          "question_order": 2,
+          "question_type": "QuestionType.TYPE_I",
+          "experience_id": "exp_nps_income_adjustment",
+          "core_message": "국민연금공단 기준소득월액 변경 특례 민원 응대 경험으로 QuestionType.TYPE_I 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_I 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기준소득월액 변경 특례 민원 응대의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q3_nh_trust",
+          "question_order": 3,
+          "question_type": "QuestionType.TYPE_F",
+          "experience_id": "exp_seoul_covid_conflict",
+          "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q4_nh_value",
+          "question_order": 4,
+          "question_type": "QuestionType.TYPE_F",
+          "experience_id": "exp_nps_intern",
+          "core_message": "국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q5_nh_structure",
+          "question_order": 5,
+          "question_type": "QuestionType.TYPE_E",
+          "experience_id": "exp_seoul_covid_fraud",
+          "core_message": "서울시청 코로나19 지원팀 부정수급 적발 경험으로 QuestionType.TYPE_E 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_E 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 부정수급 적발의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        }
+      ],
+      "timestamp": "2026-04-05T20:37:51.374480"
+    },
+    {
+      "draft_id": "writer-20260405_113858",
+      "pattern_used": "writer|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I",
+      "accepted": false,
+      "rating": null,
+      "comment": null,
+      "artifact_type": "writer",
+      "company_name": "농·축협",
+      "job_title": "신규직원",
+      "company_type": "협동조합",
+      "question_types": [
+        "TYPE_D",
+        "TYPE_I",
+        "TYPE_F",
+        "TYPE_F",
+        "TYPE_E"
+      ],
+      "stage": "writer",
+      "final_outcome": null,
+      "rejection_reason": null,
+      "selected_experience_ids": [
+        "exp_seoul_covid_budget",
+        "exp_nps_income_adjustment",
+        "exp_seoul_covid_conflict",
+        "exp_nps_intern",
+        "exp_seoul_covid_fraud"
+      ],
+      "question_experience_map": [
+        {
+          "question_id": "q1_nh_growth",
+          "question_type": "TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "question_order": 1
+        },
+        {
+          "question_id": "q2_nh_decision",
+          "question_type": "TYPE_I",
+          "experience_id": "exp_nps_income_adjustment",
+          "question_order": 2
+        },
+        {
+          "question_id": "q3_nh_trust",
+          "question_type": "TYPE_F",
+          "experience_id": "exp_seoul_covid_conflict",
+          "question_order": 3
+        },
+        {
+          "question_id": "q4_nh_value",
+          "question_type": "TYPE_F",
+          "experience_id": "exp_nps_intern",
+          "question_order": 4
+        },
+        {
+          "question_id": "q5_nh_structure",
+          "question_type": "TYPE_E",
+          "experience_id": "exp_seoul_covid_fraud",
+          "question_order": 5
+        }
+      ],
+      "question_strategy_map": [
+        {
+          "question_id": "q1_nh_growth",
+          "question_order": 1,
+          "question_type": "QuestionType.TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q2_nh_decision",
+          "question_order": 2,
+          "question_type": "QuestionType.TYPE_I",
+          "experience_id": "exp_nps_income_adjustment",
+          "core_message": "국민연금공단 기준소득월액 변경 특례 민원 응대 경험으로 QuestionType.TYPE_I 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_I 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기준소득월액 변경 특례 민원 응대의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q3_nh_trust",
+          "question_order": 3,
+          "question_type": "QuestionType.TYPE_F",
+          "experience_id": "exp_seoul_covid_conflict",
+          "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q4_nh_value",
+          "question_order": 4,
+          "question_type": "QuestionType.TYPE_F",
+          "experience_id": "exp_nps_intern",
+          "core_message": "국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q5_nh_structure",
+          "question_order": 5,
+          "question_type": "QuestionType.TYPE_E",
+          "experience_id": "exp_seoul_covid_fraud",
+          "core_message": "서울시청 코로나19 지원팀 부정수급 적발 경험으로 QuestionType.TYPE_E 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_E 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 부정수급 적발의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        }
+      ],
+      "timestamp": "2026-04-05T20:38:58.956642"
+    }
+  ]
+}

@@ -15,6 +15,7 @@ from .models import (
     Experience,
     GeneratedArtifact,
     KnowledgeSource,
+    SuccessCase,
     UserProfile,
     VerificationStatus,
 )
@@ -52,6 +53,7 @@ def initialize_state(ws: Workspace) -> None:
     write_if_missing(ws.state_dir / "experiences.json", default_exps)
     write_if_missing(ws.state_dir / "project.json", ApplicationProject().model_dump())
     write_if_missing(ws.state_dir / "knowledge_sources.json", [])
+    write_if_missing(ws.state_dir / "success_cases.json", [])
     write_if_missing(ws.state_dir / "artifacts.json", [])
 
 
@@ -97,6 +99,17 @@ def save_project(ws: Workspace, project: ApplicationProject) -> None:
 def save_knowledge_sources(ws: Workspace, sources: List[KnowledgeSource]) -> None:
     write_json(
         ws.state_dir / "knowledge_sources.json", [item.model_dump() for item in sources]
+    )
+
+
+def load_success_cases(ws: Workspace) -> List[SuccessCase]:
+    data = read_json(ws.state_dir / "success_cases.json", [])
+    return [SuccessCase.model_validate(item) for item in data]
+
+
+def save_success_cases(ws: Workspace, cases: List[SuccessCase]) -> None:
+    write_json(
+        ws.state_dir / "success_cases.json", [item.model_dump() for item in cases]
     )
 
 

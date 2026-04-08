@@ -1,0 +1,15 @@
+{
+  "status": "success",
+  "attempt_count": 1,
+  "timeout_seconds": 300,
+  "attempts": [
+    {
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "returncode": 0,
+      "duration_ms": 64915,
+      "failure_kind": null
+    }
+  ],
+  "output_path": "/home/ehddk/ai/ai/ai/resume-agent/새마을금고_ws/runs/length_fix_1_20260405_103338/rewritten_writer.md"
+}

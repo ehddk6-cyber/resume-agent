@@ -66,6 +66,9 @@ MODE ∈ {COACH, FAST_COACH, WRITER_HANDOFF_ONLY, INTERVIEW_HANDOFF_ONLY, DUAL_H
 - DATA.extra.self_intro_pack 이 있으면 30초 자기소개용 opening_hook, focus_keywords, banned_patterns 를 handoff 전략에 반영한다.
 - DATA.extra.ncs_profile 이 있으면 우선순위 직업공통능력과 질문별 추천 역량을 코칭 우선순위에 반영한다.
 - DATA.extra.ncs_profile.question_alignment[].recommended_ability_units 가 있으면 문항별 능력단위까지 handoff 에 반영한다.
+- DATA.extra.question_specific_hints 가 있으면 문항별로 유사 합격사례의 구조, 근거 유형, 매치 사유를 우선 참고한다.
+- DATA.extra.company_analysis.success_case_stats 가 있으면 정량성과 STAR 비율, 고객/협업 패턴 비율을 코칭 우선순위에 반영한다.
+- DATA.extra.company_analysis.discouraged_phrases 가 있으면 표현 복제가 의심되는 문구는 handoff 전략에서 금지 표현으로 분류한다.
 - 자기소개 코칭은 "회사/직무 접점 -> 대표 경험 -> 첫 기여 포인트" 순서를 기본 뼈대로 잡는다.
 
 # EVIDENCE LADDER
@@ -546,28 +549,28 @@ NO_INVENTION_GUARD:
           "question_id": "q1_responsibility",
           "order_no": 1,
           "question_type": "TYPE_F",
-          "best_score": 15,
+          "best_score": 17,
           "risk": "low"
         },
         {
           "question_id": "q2_adaptation",
           "order_no": 2,
-          "question_type": "TYPE_UNKNOWN",
-          "best_score": 13,
+          "question_type": "TYPE_C",
+          "best_score": 19,
           "risk": "low"
         },
         {
           "question_id": "q3_competency",
           "order_no": 3,
           "question_type": "TYPE_B",
-          "best_score": 17,
+          "best_score": 19,
           "risk": "low"
         },
         {
           "question_id": "q4_persuasion",
           "order_no": 4,
           "question_type": "TYPE_C",
-          "best_score": 16,
+          "best_score": 18,
           "risk": "low"
         }
       ],
@@ -580,20 +583,20 @@ NO_INVENTION_GUARD:
         "question_id": "q1_responsibility",
         "order_no": 1,
         "question_type": "TYPE_F",
-        "experience_id": "exp_seoul_covid_fraud",
-        "experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
-        "score": 15,
-        "reason": "문항 유형은 원칙과 신뢰으로 분류했고, 키워드(맡은, 업무, 역할)와 증거 수준, 태그 적합도를 반영했습니다.",
+        "experience_id": "exp_seoul_covid_conflict",
+        "experience_title": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+        "score": 18,
+        "reason": "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(맡은, 업무, 역할)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n결과 학습 반영: 실제 결과 통계에서 TYPE_F 문항에 이 경험의 통과 비중이 높아 가점 / 표본 수가 적어 결과 통계 가중치는 약하게 반영.",
         "reuse_reason": null
       },
       {
         "question_id": "q2_adaptation",
         "order_no": 2,
-        "question_type": "TYPE_UNKNOWN",
+        "question_type": "TYPE_C",
         "experience_id": "exp_nps_intern",
         "experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
-        "score": 13,
-        "reason": "문항 유형은 분류 불가 (확인 필요)으로 분류했고, 키워드(새로운, 조직이나, 팀에)와 증거 수준, 태그 적합도를 반영했습니다.",
+        "score": 14,
+        "reason": "질문 기대: 협업과 조정 문항이며, 질문 키워드(새로운, 조직이나, 팀에)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n결과 학습 반영: 실제 결과 통계에서 TYPE_C 문항에 이 경험의 통과 비중이 높아 가점 / 표본 수가 적어 결과 통계 가중치는 약하게 반영.",
         "reuse_reason": null
       },
       {
@@ -602,8 +605,8 @@ NO_INVENTION_GUARD:
         "question_type": "TYPE_B",
         "experience_id": "exp_seoul_covid_budget",
         "experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
-        "score": 16,
-        "reason": "문항 유형은 핵심 역량으로 분류했고, 키워드(본인이, 보유한, 직무역량이)와 증거 수준, 태그 적합도를 반영했습니다.",
+        "score": 19,
+        "reason": "질문 기대: 핵심 역량 문항이며, 질문 키워드(본인이, 보유한, 직무역량이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n결과 학습 반영: 실제 결과 통계에서 TYPE_B 문항에 이 경험의 통과 비중이 높아 가점 / 표본 수가 적어 결과 통계 가중치는 약하게 반영.",
         "reuse_reason": null
       },
       {
@@ -612,18 +615,106 @@ NO_INVENTION_GUARD:
         "question_type": "TYPE_C",
         "experience_id": "exp_nps_income_adjustment",
         "experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
-        "score": 13,
-        "reason": "문항 유형은 협업과 조정으로 분류했고, 키워드(이해관계가, 상충하거나, 규정에)와 증거 수준, 태그 적합도를 반영했습니다.",
+        "score": 17,
+        "reason": "질문 기대: 협업과 조정 문항이며, 질문 키워드(이해관계가, 상충하거나, 규정에)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(민원 응대 및 서류 검토 정확도 향상) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n결과 학습 반영: 실제 결과 통계에서 TYPE_C 문항에 이 경험의 통과 비중이 높아 가점 / 표본 수가 적어 결과 통계 가중치는 약하게 반영.",
         "reuse_reason": null
       }
     ],
     "feedback_learning": {
       "artifact": "coach",
-      "total_feedback": 1,
+      "total_feedback": 3,
       "recent_rejection_comments": [],
-      "top_patterns": [],
-      "recommended_pattern": "coach|공공기관|TYPE_B-TYPE_C-TYPE_F-TYPE_UNKNOWN",
-      "overall_success_rate": 0.0,
+      "top_patterns": [
+        {
+          "pattern_id": "writer|공공기관|TYPE_B-TYPE_C-TYPE_F",
+          "success_rate": 1.0,
+          "avg_rating": 0.0,
+          "total_uses": 1,
+          "confidence": 0.64
+        },
+        {
+          "pattern_id": "interview|공공기관|TYPE_B-TYPE_C-TYPE_F",
+          "success_rate": 1.0,
+          "avg_rating": 0.0,
+          "total_uses": 1,
+          "confidence": 0.64
+        }
+      ],
+      "recommended_pattern": "writer|공공기관|TYPE_B-TYPE_C-TYPE_F",
+      "current_pattern": "coach|공공기관|TYPE_B-TYPE_C-TYPE_F-TYPE_UNKNOWN",
+      "question_experience_map": [
+        {
+          "question_id": "q1_responsibility",
+          "question_type": "TYPE_B",
+          "experience_id": "exp_seoul_covid_budget",
+          "question_order": 1
+        },
+        {
+          "question_id": "q2_adaptation",
+          "question_type": "TYPE_C",
+          "experience_id": "exp_seoul_covid_conflict",
+          "question_order": 2
+        },
+        {
+          "question_id": "q3_competency",
+          "question_type": "TYPE_B",
+          "experience_id": "exp_nps_intern",
+          "question_order": 3
+        },
+        {
+          "question_id": "q4_persuasion",
+          "question_type": "TYPE_C",
+          "experience_id": "exp_seoul_covid_crisis",
+          "question_order": 4
+        }
+      ],
+      "question_strategy_map": [
+        {
+          "question_id": "q1_responsibility",
+          "question_order": 1,
+          "question_type": "QuestionType.TYPE_B",
+          "experience_id": "exp_seoul_covid_budget",
+          "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_B 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_B 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "의사소통능력, 기술능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q2_adaptation",
+          "question_order": 2,
+          "question_type": "QuestionType.TYPE_C",
+          "experience_id": "exp_seoul_covid_conflict",
+          "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_C 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_C 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "의사소통능력, 기술능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q3_competency",
+          "question_order": 3,
+          "question_type": "QuestionType.TYPE_B",
+          "experience_id": "exp_nps_intern",
+          "core_message": "국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_B 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_B 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "의사소통능력, 기술능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q4_persuasion",
+          "question_order": 4,
+          "question_type": "QuestionType.TYPE_C",
+          "experience_id": "exp_seoul_covid_crisis",
+          "core_message": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습 경험으로 QuestionType.TYPE_C 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_C 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "의사소통능력, 기술능력를 검증 가능하게 보여주는 사람"
+        }
+      ],
+      "overall_success_rate": 0.67,
       "similar_context": {
         "artifact_type": "coach",
         "artifact": "coach",
@@ -639,11 +730,175 @@ NO_INVENTION_GUARD:
         ]
       },
       "recent_rejection_reasons": [],
+      "outcome_summary": {
+        "matched_feedback_count": 2,
+        "outcome_breakdown": {
+          "unknown": 2
+        },
+        "top_rejection_reasons": []
+      },
+      "strategy_outcome_summary": {
+        "matched_feedback_count": 2,
+        "learned_outcome_weights": {
+          "offer": 4.0,
+          "final_pass": 3.0,
+          "pass": 3.0,
+          "interview_pass": 2.0,
+          "document_pass": 2.0,
+          "fail_interview": 3.0,
+          "interview_fail": 3.0,
+          "document_fail": 1.0,
+          "reject": 2.0,
+          "rejected": 2.0,
+          "accepted": 1.5
+        },
+        "experience_stats_by_question_type": {
+          "TYPE_F": {
+            "exp_seoul_covid_conflict": {
+              "total_uses": 2,
+              "pass_count": 2,
+              "fail_count": 0,
+              "weighted_pass_score": 3.0,
+              "weighted_fail_score": 0.0,
+              "weighted_net_score": 3,
+              "pass_rate": 1.0,
+              "pattern_breakdown": {
+                "writer|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+                  "total_uses": 1,
+                  "pass_count": 1,
+                  "fail_count": 0,
+                  "weighted_pass_score": 1.5,
+                  "weighted_fail_score": 0.0,
+                  "weighted_net_score": 1,
+                  "pass_rate": 1.0
+                },
+                "interview|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+                  "total_uses": 1,
+                  "pass_count": 1,
+                  "fail_count": 0,
+                  "weighted_pass_score": 1.5,
+                  "weighted_fail_score": 0.0,
+                  "weighted_net_score": 1,
+                  "pass_rate": 1.0
+                }
+              },
+              "top_rejection_reasons": []
+            }
+          },
+          "TYPE_C": {
+            "exp_nps_intern": {
+              "total_uses": 2,
+              "pass_count": 2,
+              "fail_count": 0,
+              "weighted_pass_score": 3.0,
+              "weighted_fail_score": 0.0,
+              "weighted_net_score": 3,
+              "pass_rate": 1.0,
+              "pattern_breakdown": {
+                "writer|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+                  "total_uses": 1,
+                  "pass_count": 1,
+                  "fail_count": 0,
+                  "weighted_pass_score": 1.5,
+                  "weighted_fail_score": 0.0,
+                  "weighted_net_score": 1,
+                  "pass_rate": 1.0
+                },
+                "interview|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+                  "total_uses": 1,
+                  "pass_count": 1,
+                  "fail_count": 0,
+                  "weighted_pass_score": 1.5,
+                  "weighted_fail_score": 0.0,
+                  "weighted_net_score": 1,
+                  "pass_rate": 1.0
+                }
+              },
+              "top_rejection_reasons": []
+            },
+            "exp_nps_income_adjustment": {
+              "total_uses": 2,
+              "pass_count": 2,
+              "fail_count": 0,
+              "weighted_pass_score": 3.0,
+              "weighted_fail_score": 0.0,
+              "weighted_net_score": 3,
+              "pass_rate": 1.0,
+              "pattern_breakdown": {
+                "writer|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+                  "total_uses": 1,
+                  "pass_count": 1,
+                  "fail_count": 0,
+                  "weighted_pass_score": 1.5,
+                  "weighted_fail_score": 0.0,
+                  "weighted_net_score": 1,
+                  "pass_rate": 1.0
+                },
+                "interview|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+                  "total_uses": 1,
+                  "pass_count": 1,
+                  "fail_count": 0,
+                  "weighted_pass_score": 1.5,
+                  "weighted_fail_score": 0.0,
+                  "weighted_net_score": 1,
+                  "pass_rate": 1.0
+                }
+              },
+              "top_rejection_reasons": []
+            }
+          },
+          "TYPE_B": {
+            "exp_seoul_covid_budget": {
+              "total_uses": 2,
+              "pass_count": 2,
+              "fail_count": 0,
+              "weighted_pass_score": 3.0,
+              "weighted_fail_score": 0.0,
+              "weighted_net_score": 3,
+              "pass_rate": 1.0,
+              "pattern_breakdown": {
+                "writer|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+                  "total_uses": 1,
+                  "pass_count": 1,
+                  "fail_count": 0,
+                  "weighted_pass_score": 1.5,
+                  "weighted_fail_score": 0.0,
+                  "weighted_net_score": 1,
+                  "pass_rate": 1.0
+                },
+                "interview|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+                  "total_uses": 1,
+                  "pass_count": 1,
+                  "fail_count": 0,
+                  "weighted_pass_score": 1.5,
+                  "weighted_fail_score": 0.0,
+                  "weighted_net_score": 1,
+                  "pass_rate": 1.0
+                }
+              },
+              "top_rejection_reasons": []
+            }
+          }
+        },
+        "strategy_stats_by_question_type": {},
+        "differentiation_stats_by_question_type": {},
+        "tone_stats_by_company_type": {}
+      },
       "insights": {
-        "total_feedback": 1,
-        "overall_success_rate": 0.0,
+        "total_feedback": 3,
+        "overall_success_rate": 0.67,
         "average_rating": 0,
         "top_patterns": [
+          {
+            "pattern_id": "writer|공공기관|TYPE_B-TYPE_C-TYPE_F",
+            "success_rate": 1.0,
+            "uses": 1
+          },
+          {
+            "pattern_id": "interview|공공기관|TYPE_B-TYPE_C-TYPE_F",
+            "success_rate": 1.0,
+            "uses": 1
+          },
           {
             "pattern_id": "writer_False",
             "success_rate": 0.0,
@@ -651,6 +906,12 @@ NO_INVENTION_GUARD:
           }
         ],
         "improvement_areas": []
+      },
+      "adaptation_plan": {
+        "recommended_pattern": "writer|공공기관|TYPE_B-TYPE_C-TYPE_F",
+        "focus_actions": [],
+        "risky_question_types": [],
+        "matched_feedback_count": 2
       }
     },
     "committee_feedback": {
@@ -662,10 +923,10 @@ NO_INVENTION_GUARD:
       "persona_panel": []
     },
     "self_intro_pack": {
-      "opening_hook": "국민연금공단의 6급 사무직에서 정량적 성과, 제도 개선, 고객 만족, 기술능력를 만드는 지원자입니다.",
+      "opening_hook": "국민연금공단의 6급 사무직에서 정량적 성과, 제도 개선, 고객 만족, 의사소통능력를 만드는 지원자입니다.",
       "thirty_second_frame": [
         "현재 지원 직무와 가장 직접 연결되는 경험 1개를 먼저 말한다.",
-        "핵심 경험: 서울시청 코로나19 지원팀 부정수급 적발, 국민연금공단 기초연금 수급 대상자 발굴 자동화",
+        "핵심 경험: 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감, 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
         "마무리는 국민연금공단에서의 첫 기여 포인트로 닫는다."
       ],
       "sixty_second_frame": [
@@ -678,7 +939,7 @@ NO_INVENTION_GUARD:
         "정량적 성과",
         "제도 개선",
         "고객 만족",
-        "기술능력"
+        "의사소통능력"
       ],
       "banned_patterns": [
         "검증 불가 수치 확대",
@@ -687,9 +948,41 @@ NO_INVENTION_GUARD:
       ],
       "committee_watchouts": [],
       "ncs_priority_competencies": [
-        "기술능력",
         "의사소통능력",
-        "문제해결능력"
+        "기술능력",
+        "대인관계능력"
+      ],
+      "top001_hooks": [
+        {
+          "type": "result_hook",
+          "content": "정량적 성과를 증명한 구체적 경험이 있습니다: 부정수급 20건 적발, 예산 40% 절감",
+          "score": 0.95
+        },
+        {
+          "type": "result_hook",
+          "content": "정량적 성과를 증명한 구체적 경험이 있습니다: 수백 통 민원 당일 수습",
+          "score": 0.95
+        },
+        {
+          "type": "result_hook",
+          "content": "정량적 성과를 증명한 구체적 경험이 있습니다: 1억 원 예산 절감",
+          "score": 0.95
+        },
+        {
+          "type": "connection_hook",
+          "content": "귀사의 국민연금공단 방향성과 직접 연결되는 경험입니다",
+          "score": 0.7
+        }
+      ],
+      "top001_versions": {
+        "elevator": "6급 사무직에서 중수본 공문 즉시 분석하여 군의관 배정 기준·절차 파악... 경험을 바탕으로 핵심 성과를 만들고자 합니다",
+        "30s": "저는 중수본 공문 즉시 분석하여 군의관 배정 기준·절차 파악. 병원 관계자용 배정 양식·지침과 군의관용 대응 매뉴얼(위치, 연락처, 업무 등) 자체 제작. 이메일로 신속 배포. 원론적 답변 필요한 문의는 직접 응대, 세부 사항은 담당 병원 연결. 그 결과 당일 발생한 대규모 혼란 성공적으로 통제, 불만 최소화 이를 6급 사무직에 기여할 수 있는 역량으로 발전시키고 싶습니다",
+        "60s": "저는 담당 사무관 휴가 중 중수본이 서울시청과 사전 협의 없이 군의관 수백 명을 병원에 일방 배정하는 공문 발송. 병원과 군의관으로부터 수백 통 민원 전화 폭주. 상황에서 실무 담당자가 부재한 위기 상황에서 혼란 수습 및 대응 매뉴얼 마련를 해결해야 했습니다 그때 중수본 공문 즉시 분석하여 군의관 배정 기준·절차 파악. 병원 관계자용 배정 양식·지침과 군의관용 대응 매뉴얼(위치, 연락처, 업무 등) 자체 제작. 이메일로 신속 배포. 원론적 답변 필요한 문의는 직접 응대, 세부 사항은 담당 병원 연결. 결과적으로 당일 발생한 대규모 혼란 성공적으로 통제, 불만 최소화 이러한 경험을 국민연금공단에서 발전시키고 싶습니다",
+        "90s": "저는 담당 사무관 휴가 중 중수본이 서울시청과 사전 협의 없이 군의관 수백 명을 병원에 일방 배정하는 공문 발송. 병원과 군의관으로부터 수백 통 민원 전화 폭주. 상황에서 실무 담당자가 부재한 위기 상황에서 혼란 수습 및 대응 매뉴얼 마련를 해결해야 했습니다 그때 중수본 공문 즉시 분석하여 군의관 배정 기준·절차 파악. 병원 관계자용 배정 양식·지침과 군의관용 대응 매뉴얼(위치, 연락처, 업무 등) 자체 제작. 이메일로 신속 배포. 원론적 답변 필요한 문의는 직접 응대, 세부 사항은 담당 병원 연결. 결과적으로 당일 발생한 대규모 혼란 성공적으로 통제, 불만 최소화 이러한 경험을 국민연금공단에서 발전시키고 싶습니다 그 과정에서 제가 중점적으로 맡은 부분은 공문 분석, 매뉴얼 자체 제작·배포, 민원 응대이었습니다 구체적으로 수백 통 민원 당일 수습의 성과를 냈습니다 이 경험을 국민연금공단의 6급 사무직에서 실질적 기여로 연결하고 싶습니다"
+      },
+      "top001_expected_follow_ups": [
+        "그 결과는 어떻게 측정하거나 확인하셨나요?",
+        "그 경험에서 가장 어려웠던 부분은 무엇이었나요?"
       ]
     },
     "ncs_profile": {
@@ -697,11 +990,11 @@ NO_INVENTION_GUARD:
       "reference_date": "2026-03-30",
       "reference_source": "https://www.ncs.go.kr/web/job/contents/1.%20%EC%A7%81%EC%97%85%EA%B3%B5%ED%86%B5%EB%8A%A5%EB%A0%A5_%EC%9D%98%EC%82%AC%EC%86%8C%ED%86%B5%EB%8A%A5%EB%A0%A5.pdf",
       "priority_competencies": [
-        "기술능력",
         "의사소통능력",
-        "문제해결능력",
+        "기술능력",
+        "대인관계능력",
         "수리능력",
-        "대인관계능력"
+        "문제해결능력"
       ],
       "job_spec_source_titles": [
         "부산교통공사 / 일반직9급_운영직(행정학)_장애인 / 2024 상반기",
@@ -710,33 +1003,92 @@ NO_INVENTION_GUARD:
         "한국토지주택공사 / 기술직 / 2023 상반기",
         "한국토지주택공사 / 인천권(사무)일반 / 2023 상반기"
       ],
-      "ability_units": [],
+      "ability_units": [
+        "기자 간담회",
+        "언론 브리핑 등 각종 행사 지원o 기자실",
+        "브리핑룸",
+        "휴게실 사무환경 정비 등 기자실 이용 지원o 노트북",
+        "복합기",
+        "마이크",
+        "빔 프로젝터",
+        "사무집기 등 자산 관리o 기타 홍보 업무 지원",
+        "환경미화직: 사옥 내",
+        "외부 환경정비",
+        "조경 관리",
+        "폐기물 처리 등o 보안지원직: 사옥 내"
+      ],
       "ability_unit_elements": [
         "조직이나 단체 생활 중 다른 구성원들과 원활한 정보 공유나 소통이 이루어지지 않아 어려움을 겪었던 경험을 소개해 주십시오. 당시 구성원과의 의사소통에 있어 보다 긍정적인 변화를 이끌기 위해 어떤 노력을 기울였는지",
         "그리고 그 결과는 어땠는지 기술해 주십시오.",
         "활동 혹은 업무 수행 중 예상치 못한 문제나 어려움에 직면하였으나",
         "이를 슬기롭게 극복했던 경험을 소개해 주십시오. 당시 상황은 어땠으며",
-        "문제 상황을 해결하기 위해 귀하가 취한 행동과 그렇게 행동한 이유"
+        "문제 상황을 해결하기 위해 귀하가 취한 행동과 그렇게 행동한 이유",
+        "경청 능력",
+        "문서이해 능력",
+        "문서작성 능력",
+        "의사표현 능력o",
+        "문서처리 능력",
+        "사고력o",
+        "정보처리 능력",
+        "컴퓨터활용 능력o",
+        "갈등관리 능력",
+        "고객서비스 능력",
+        "팀워크 능력o"
       ],
       "job_spec_competencies": [
         "중 자신있는 능력(영역)과 자신없는 능력(영역)을 선정하고 각 해당 능력에 대한 경험을 작성해주세요. (700자)",
         "저는 고객서비스능력에 가장 자신있습니다. 우체국 근로 당시 고객 대기시간을 20%단축한 경험이 있습니다. 설 연휴기간에 방문객이 급증했습니다. 방문객들의 많은 요구사항을 신속 정확하게 처리하기 위해 노력했습니다. 정중한 태도로 문제를 파악하기 위해 경청하였고 문제 해결을 위한 꼭 필요한 질문만 하여 빠르게 정보를 얻었습니다. 고객들의 요구사항에 최대한 경청하며 잘못된 문제점에 대한 빠른 인정과 신속한 시정을 하여 문제 해결을 진행했습니다. 또 도움이 필요해 보이는 상황에서 먼저 다가가 고객 서비스를 제공하며 대인관계능력을 향상시켰습니다. 빠른 일처리로 담당 업무를 끝내면 우편뿐만 아니라 다양한 업무에서 능동적인 업무 태도를 가지기 위해 노력하였고 익숙하지 않은 업무에 도전하면서 새로운 기술과 지식을 습득하였습니다. 그 결과 상황에 따라 유연하게 업무를 처리함으로써 더 유용한 구성원이 될 수 있었습니다. 적극적이고 신속한 서비스 대응에 저는 고객들로부터 좋은 평가를 받을 수 있었습니다.학창시절 영어공부에 흥미가 없었던 저는 지금도 꾸준히 공부하고 있지만 아직 만족스러운 점수를 얻지 못하고 있습니다. 그러나 기초외국어능력은 꼭 필요한 항목이고 추후 역량을 인정받기 위해서 매우 중요하기 때문에 더욱더 노력하고 있고 충분히 해결 가능한 영역이라고 생각합니다. 앞으로 언어능력을 향상시켜 국제적인 업무에 대비력을 갖춤으로써 다양한 역할을 수행할 수 있는 행정직으로서 성장하고자합니다.",
-        "🔥부산교통공사 청년인턴 자소서 함께 확인하세요!",
-        "https:",
-        "linkareer.com",
-        "cover-letter",
-        "30188",
         "의사소통) 과업 중 상대방의 의견과 다른 의견을 제시해야 했던 경험을 아래의 순서에 따라 기술해 주십시오.",
         "① 당시 상황 기술(과업 상황",
         "상대방의 의견",
         "본인의 의견)",
-        "② 본인의 의견을 전달하기 전에 확인하거나 준비한 부분 기술"
+        "② 본인의 의견을 전달하기 전에 확인하거나 준비한 부분 기술",
+        "③ 본인의 의견을 전달한 방법과 그 방법을 사용한 이유 기술",
+        "학과 동아리 조장 역할을 맡았을 당시",
+        "부조장과 계획 진행에 있어 추구하는 방향이 달라 갈등이 있었습니다. 이에 저는 감정적인 상황에서 벗어나",
+        "상황을 객관적으로 분석했습니다. 당시 저는 팀원 전체의 단체활동을 추구했고",
+        "부조장은 그러면 인원 통제가 힘들다는 의견을 가지고 있었습니다."
       ],
-      "ability_unit_map": [],
+      "ability_unit_map": [
+        {
+          "unit": "사무집기 등 자산 관리o 기타 홍보 업무 지원",
+          "matched_competencies": [
+            "자원관리능력"
+          ]
+        },
+        {
+          "unit": "조경 관리",
+          "matched_competencies": [
+            "자원관리능력"
+          ]
+        }
+      ],
       "competency_evidence_map": [
         {
+          "name": "의사소통능력",
+          "score": 28,
+          "matched_keywords": [
+            "저는 고객서비스능력에 가장 자신있습니다. 우체국 근로 당시 고객 대기시간을 20%단축한 경험이 있습니다. 설 연휴기간에 방문객이 급증했습니다. 방문객들의 많은 요구사항을 신속 정확하게 처리하기 위해 노력했습니다. 정중한 태도로 문제를 파악하기 위해 경청하였고 문제 해결을 위한 꼭 필요한 질문만 하여 빠르게 정보를 얻었습니다. 고객들의 요구사항에 최대한 경청하며 잘못된 문제점에 대한 빠른 인정과 신속한 시정을 하여 문제 해결을 진행했습니다. 또 도움이 필요해 보이는 상황에서 먼저 다가가 고객 서비스를 제공하며 대인관계능력을 향상시켰습니다. 빠른 일처리로 담당 업무를 끝내면 우편뿐만 아니라 다양한 업무에서 능동적인 업무 태도를 가지기 위해 노력하였고 익숙하지 않은 업무에 도전하면서 새로운 기술과 지식을 습득하였습니다. 그 결과 상황에 따라 유연하게 업무를 처리함으로써 더 유용한 구성원이 될 수 있었습니다. 적극적이고 신속한 서비스 대응에 저는 고객들로부터 좋은 평가를 받을 수 있었습니다.학창시절 영어공부에 흥미가 없었던 저는 지금도 꾸준히 공부하고 있지만 아직 만족스러운 점수를 얻지 못하고 있습니다. 그러나 기초외국어능력은 꼭 필요한 항목이고 추후 역량을 인정받기 위해서 매우 중요하기 때문에 더욱더 노력하고 있고 충분히 해결 가능한 영역이라고 생각합니다. 앞으로 언어능력을 향상시켜 국제적인 업무에 대비력을 갖춤으로써 다양한 역할을 수행할 수 있는 행정직으로서 성장하고자합니다.",
+            "의사소통) 과업 중 상대방의 의견과 다른 의견을 제시해야 했던 경험을 아래의 순서에 따라 기술해 주십시오.",
+            "조직이나 단체 생활 중 다른 구성원들과 원활한 정보 공유나 소통이 이루어지지 않아 어려움을 겪었던 경험을 소개해 주십시오. 당시 구성원과의 의사소통에 있어 보다 긍정적인 변화를 이끌기 위해 어떤 노력을 기울였는지",
+            "경청 능력",
+            "문서이해 능력"
+          ],
+          "matched_experience_ids": [
+            "exp_seoul_covid_fraud",
+            "exp_seoul_covid_crisis",
+            "exp_seoul_covid_budget",
+            "exp_seoul_covid_conflict"
+          ],
+          "reasons": [
+            "직무기술서/NCS 명시 역량과 직접 연결",
+            "직무기술서 능력단위/요소와 정합",
+            "TYPE_C 문항 의도와 직접 연결"
+          ]
+        },
+        {
           "name": "기술능력",
-          "score": 22,
+          "score": 27,
           "matched_keywords": [
             "기술",
             "저는 고객서비스능력에 가장 자신있습니다. 우체국 근로 당시 고객 대기시간을 20%단축한 경험이 있습니다. 설 연휴기간에 방문객이 급증했습니다. 방문객들의 많은 요구사항을 신속 정확하게 처리하기 위해 노력했습니다. 정중한 태도로 문제를 파악하기 위해 경청하였고 문제 해결을 위한 꼭 필요한 질문만 하여 빠르게 정보를 얻었습니다. 고객들의 요구사항에 최대한 경청하며 잘못된 문제점에 대한 빠른 인정과 신속한 시정을 하여 문제 해결을 진행했습니다. 또 도움이 필요해 보이는 상황에서 먼저 다가가 고객 서비스를 제공하며 대인관계능력을 향상시켰습니다. 빠른 일처리로 담당 업무를 끝내면 우편뿐만 아니라 다양한 업무에서 능동적인 업무 태도를 가지기 위해 노력하였고 익숙하지 않은 업무에 도전하면서 새로운 기술과 지식을 습득하였습니다. 그 결과 상황에 따라 유연하게 업무를 처리함으로써 더 유용한 구성원이 될 수 있었습니다. 적극적이고 신속한 서비스 대응에 저는 고객들로부터 좋은 평가를 받을 수 있었습니다.학창시절 영어공부에 흥미가 없었던 저는 지금도 꾸준히 공부하고 있지만 아직 만족스러운 점수를 얻지 못하고 있습니다. 그러나 기초외국어능력은 꼭 필요한 항목이고 추후 역량을 인정받기 위해서 매우 중요하기 때문에 더욱더 노력하고 있고 충분히 해결 가능한 영역이라고 생각합니다. 앞으로 언어능력을 향상시켜 국제적인 업무에 대비력을 갖춤으로써 다양한 역할을 수행할 수 있는 행정직으로서 성장하고자합니다.",
@@ -756,14 +1108,14 @@ NO_INVENTION_GUARD:
           ]
         },
         {
-          "name": "의사소통능력",
-          "score": 21,
+          "name": "대인관계능력",
+          "score": 26,
           "matched_keywords": [
             "저는 고객서비스능력에 가장 자신있습니다. 우체국 근로 당시 고객 대기시간을 20%단축한 경험이 있습니다. 설 연휴기간에 방문객이 급증했습니다. 방문객들의 많은 요구사항을 신속 정확하게 처리하기 위해 노력했습니다. 정중한 태도로 문제를 파악하기 위해 경청하였고 문제 해결을 위한 꼭 필요한 질문만 하여 빠르게 정보를 얻었습니다. 고객들의 요구사항에 최대한 경청하며 잘못된 문제점에 대한 빠른 인정과 신속한 시정을 하여 문제 해결을 진행했습니다. 또 도움이 필요해 보이는 상황에서 먼저 다가가 고객 서비스를 제공하며 대인관계능력을 향상시켰습니다. 빠른 일처리로 담당 업무를 끝내면 우편뿐만 아니라 다양한 업무에서 능동적인 업무 태도를 가지기 위해 노력하였고 익숙하지 않은 업무에 도전하면서 새로운 기술과 지식을 습득하였습니다. 그 결과 상황에 따라 유연하게 업무를 처리함으로써 더 유용한 구성원이 될 수 있었습니다. 적극적이고 신속한 서비스 대응에 저는 고객들로부터 좋은 평가를 받을 수 있었습니다.학창시절 영어공부에 흥미가 없었던 저는 지금도 꾸준히 공부하고 있지만 아직 만족스러운 점수를 얻지 못하고 있습니다. 그러나 기초외국어능력은 꼭 필요한 항목이고 추후 역량을 인정받기 위해서 매우 중요하기 때문에 더욱더 노력하고 있고 충분히 해결 가능한 영역이라고 생각합니다. 앞으로 언어능력을 향상시켜 국제적인 업무에 대비력을 갖춤으로써 다양한 역할을 수행할 수 있는 행정직으로서 성장하고자합니다.",
-            "의사소통) 과업 중 상대방의 의견과 다른 의견을 제시해야 했던 경험을 아래의 순서에 따라 기술해 주십시오.",
-            "조직이나 단체 생활 중 다른 구성원들과 원활한 정보 공유나 소통이 이루어지지 않아 어려움을 겪었던 경험을 소개해 주십시오. 당시 구성원과의 의사소통에 있어 보다 긍정적인 변화를 이끌기 위해 어떤 노력을 기울였는지",
-            "보고",
-            "민원"
+            "부조장과 계획 진행에 있어 추구하는 방향이 달라 갈등이 있었습니다. 이에 저는 감정적인 상황에서 벗어나",
+            "상황을 객관적으로 분석했습니다. 당시 저는 팀원 전체의 단체활동을 추구했고",
+            "갈등관리 능력",
+            "고객서비스 능력"
           ],
           "matched_experience_ids": [
             "exp_seoul_covid_fraud",
@@ -778,8 +1130,29 @@ NO_INVENTION_GUARD:
           ]
         },
         {
+          "name": "수리능력",
+          "score": 21,
+          "matched_keywords": [
+            "상황을 객관적으로 분석했습니다. 당시 저는 팀원 전체의 단체활동을 추구했고",
+            "검증",
+            "분석",
+            "엑셀",
+            "정산"
+          ],
+          "matched_experience_ids": [
+            "exp_seoul_covid_fraud",
+            "exp_seoul_covid_crisis",
+            "exp_seoul_covid_budget",
+            "exp_seoul_covid_conflict"
+          ],
+          "reasons": [
+            "직무기술서/NCS 명시 역량과 직접 연결",
+            "TYPE_B 문항 의도와 직접 연결"
+          ]
+        },
+        {
           "name": "문제해결능력",
-          "score": 17,
+          "score": 18,
           "matched_keywords": [
             "저는 고객서비스능력에 가장 자신있습니다. 우체국 근로 당시 고객 대기시간을 20%단축한 경험이 있습니다. 설 연휴기간에 방문객이 급증했습니다. 방문객들의 많은 요구사항을 신속 정확하게 처리하기 위해 노력했습니다. 정중한 태도로 문제를 파악하기 위해 경청하였고 문제 해결을 위한 꼭 필요한 질문만 하여 빠르게 정보를 얻었습니다. 고객들의 요구사항에 최대한 경청하며 잘못된 문제점에 대한 빠른 인정과 신속한 시정을 하여 문제 해결을 진행했습니다. 또 도움이 필요해 보이는 상황에서 먼저 다가가 고객 서비스를 제공하며 대인관계능력을 향상시켰습니다. 빠른 일처리로 담당 업무를 끝내면 우편뿐만 아니라 다양한 업무에서 능동적인 업무 태도를 가지기 위해 노력하였고 익숙하지 않은 업무에 도전하면서 새로운 기술과 지식을 습득하였습니다. 그 결과 상황에 따라 유연하게 업무를 처리함으로써 더 유용한 구성원이 될 수 있었습니다. 적극적이고 신속한 서비스 대응에 저는 고객들로부터 좋은 평가를 받을 수 있었습니다.학창시절 영어공부에 흥미가 없었던 저는 지금도 꾸준히 공부하고 있지만 아직 만족스러운 점수를 얻지 못하고 있습니다. 그러나 기초외국어능력은 꼭 필요한 항목이고 추후 역량을 인정받기 위해서 매우 중요하기 때문에 더욱더 노력하고 있고 충분히 해결 가능한 영역이라고 생각합니다. 앞으로 언어능력을 향상시켜 국제적인 업무에 대비력을 갖춤으로써 다양한 역할을 수행할 수 있는 행정직으로서 성장하고자합니다.",
             "활동 혹은 업무 수행 중 예상치 못한 문제나 어려움에 직면하였으나",
@@ -800,54 +1173,14 @@ NO_INVENTION_GUARD:
           ]
         },
         {
-          "name": "수리능력",
-          "score": 17,
-          "matched_keywords": [
-            "검증",
-            "분석",
-            "엑셀",
-            "정산"
-          ],
-          "matched_experience_ids": [
-            "exp_seoul_covid_fraud",
-            "exp_seoul_covid_crisis",
-            "exp_seoul_covid_budget",
-            "exp_seoul_covid_conflict"
-          ],
-          "reasons": [
-            "TYPE_B 문항 의도와 직접 연결"
-          ]
-        },
-        {
-          "name": "대인관계능력",
-          "score": 16,
-          "matched_keywords": [
-            "저는 고객서비스능력에 가장 자신있습니다. 우체국 근로 당시 고객 대기시간을 20%단축한 경험이 있습니다. 설 연휴기간에 방문객이 급증했습니다. 방문객들의 많은 요구사항을 신속 정확하게 처리하기 위해 노력했습니다. 정중한 태도로 문제를 파악하기 위해 경청하였고 문제 해결을 위한 꼭 필요한 질문만 하여 빠르게 정보를 얻었습니다. 고객들의 요구사항에 최대한 경청하며 잘못된 문제점에 대한 빠른 인정과 신속한 시정을 하여 문제 해결을 진행했습니다. 또 도움이 필요해 보이는 상황에서 먼저 다가가 고객 서비스를 제공하며 대인관계능력을 향상시켰습니다. 빠른 일처리로 담당 업무를 끝내면 우편뿐만 아니라 다양한 업무에서 능동적인 업무 태도를 가지기 위해 노력하였고 익숙하지 않은 업무에 도전하면서 새로운 기술과 지식을 습득하였습니다. 그 결과 상황에 따라 유연하게 업무를 처리함으로써 더 유용한 구성원이 될 수 있었습니다. 적극적이고 신속한 서비스 대응에 저는 고객들로부터 좋은 평가를 받을 수 있었습니다.학창시절 영어공부에 흥미가 없었던 저는 지금도 꾸준히 공부하고 있지만 아직 만족스러운 점수를 얻지 못하고 있습니다. 그러나 기초외국어능력은 꼭 필요한 항목이고 추후 역량을 인정받기 위해서 매우 중요하기 때문에 더욱더 노력하고 있고 충분히 해결 가능한 영역이라고 생각합니다. 앞으로 언어능력을 향상시켜 국제적인 업무에 대비력을 갖춤으로써 다양한 역할을 수행할 수 있는 행정직으로서 성장하고자합니다.",
-            "팀",
-            "설득",
-            "협업",
-            "갈등"
-          ],
-          "matched_experience_ids": [
-            "exp_seoul_covid_fraud",
-            "exp_seoul_covid_crisis",
-            "exp_seoul_covid_budget",
-            "exp_seoul_covid_conflict"
-          ],
-          "reasons": [
-            "직무기술서/NCS 명시 역량과 직접 연결",
-            "TYPE_C 문항 의도와 직접 연결"
-          ]
-        },
-        {
           "name": "정보능력",
-          "score": 15,
+          "score": 17,
           "matched_keywords": [
             "저는 고객서비스능력에 가장 자신있습니다. 우체국 근로 당시 고객 대기시간을 20%단축한 경험이 있습니다. 설 연휴기간에 방문객이 급증했습니다. 방문객들의 많은 요구사항을 신속 정확하게 처리하기 위해 노력했습니다. 정중한 태도로 문제를 파악하기 위해 경청하였고 문제 해결을 위한 꼭 필요한 질문만 하여 빠르게 정보를 얻었습니다. 고객들의 요구사항에 최대한 경청하며 잘못된 문제점에 대한 빠른 인정과 신속한 시정을 하여 문제 해결을 진행했습니다. 또 도움이 필요해 보이는 상황에서 먼저 다가가 고객 서비스를 제공하며 대인관계능력을 향상시켰습니다. 빠른 일처리로 담당 업무를 끝내면 우편뿐만 아니라 다양한 업무에서 능동적인 업무 태도를 가지기 위해 노력하였고 익숙하지 않은 업무에 도전하면서 새로운 기술과 지식을 습득하였습니다. 그 결과 상황에 따라 유연하게 업무를 처리함으로써 더 유용한 구성원이 될 수 있었습니다. 적극적이고 신속한 서비스 대응에 저는 고객들로부터 좋은 평가를 받을 수 있었습니다.학창시절 영어공부에 흥미가 없었던 저는 지금도 꾸준히 공부하고 있지만 아직 만족스러운 점수를 얻지 못하고 있습니다. 그러나 기초외국어능력은 꼭 필요한 항목이고 추후 역량을 인정받기 위해서 매우 중요하기 때문에 더욱더 노력하고 있고 충분히 해결 가능한 영역이라고 생각합니다. 앞으로 언어능력을 향상시켜 국제적인 업무에 대비력을 갖춤으로써 다양한 역할을 수행할 수 있는 행정직으로서 성장하고자합니다.",
             "조직이나 단체 생활 중 다른 구성원들과 원활한 정보 공유나 소통이 이루어지지 않아 어려움을 겪었던 경험을 소개해 주십시오. 당시 구성원과의 의사소통에 있어 보다 긍정적인 변화를 이끌기 위해 어떤 노력을 기울였는지",
+            "정보처리 능력",
             "검색",
-            "비교",
-            "정리"
+            "비교"
           ],
           "matched_experience_ids": [
             "exp_seoul_covid_fraud",
@@ -862,34 +1195,45 @@ NO_INVENTION_GUARD:
           ]
         },
         {
-          "name": "조직이해능력",
-          "score": 14,
+          "name": "자원관리능력",
+          "score": 16,
           "matched_keywords": [
-            "행정직",
-            "사무행정",
             "저는 고객서비스능력에 가장 자신있습니다. 우체국 근로 당시 고객 대기시간을 20%단축한 경험이 있습니다. 설 연휴기간에 방문객이 급증했습니다. 방문객들의 많은 요구사항을 신속 정확하게 처리하기 위해 노력했습니다. 정중한 태도로 문제를 파악하기 위해 경청하였고 문제 해결을 위한 꼭 필요한 질문만 하여 빠르게 정보를 얻었습니다. 고객들의 요구사항에 최대한 경청하며 잘못된 문제점에 대한 빠른 인정과 신속한 시정을 하여 문제 해결을 진행했습니다. 또 도움이 필요해 보이는 상황에서 먼저 다가가 고객 서비스를 제공하며 대인관계능력을 향상시켰습니다. 빠른 일처리로 담당 업무를 끝내면 우편뿐만 아니라 다양한 업무에서 능동적인 업무 태도를 가지기 위해 노력하였고 익숙하지 않은 업무에 도전하면서 새로운 기술과 지식을 습득하였습니다. 그 결과 상황에 따라 유연하게 업무를 처리함으로써 더 유용한 구성원이 될 수 있었습니다. 적극적이고 신속한 서비스 대응에 저는 고객들로부터 좋은 평가를 받을 수 있었습니다.학창시절 영어공부에 흥미가 없었던 저는 지금도 꾸준히 공부하고 있지만 아직 만족스러운 점수를 얻지 못하고 있습니다. 그러나 기초외국어능력은 꼭 필요한 항목이고 추후 역량을 인정받기 위해서 매우 중요하기 때문에 더욱더 노력하고 있고 충분히 해결 가능한 영역이라고 생각합니다. 앞으로 언어능력을 향상시켜 국제적인 업무에 대비력을 갖춤으로써 다양한 역할을 수행할 수 있는 행정직으로서 성장하고자합니다.",
-            "조직이나 단체 생활 중 다른 구성원들과 원활한 정보 공유나 소통이 이루어지지 않아 어려움을 겪었던 경험을 소개해 주십시오. 당시 구성원과의 의사소통에 있어 보다 긍정적인 변화를 이끌기 위해 어떤 노력을 기울였는지",
-            "절차"
+            "사무집기 등 자산 관리o 기타 홍보 업무 지원",
+            "조경 관리",
+            "갈등관리 능력",
+            "예산"
           ],
           "matched_experience_ids": [
-            "exp_seoul_covid_crisis",
-            "exp_nps_income_adjustment"
+            "exp_seoul_covid_fraud",
+            "exp_seoul_covid_budget",
+            "exp_nps_intern",
+            "exp_seongbuk"
           ],
           "reasons": [
             "직무기술서/NCS 명시 역량과 직접 연결",
             "직무기술서 능력단위/요소와 정합",
-            "TYPE_F 문항 의도와 직접 연결"
+            "TYPE_B 문항 의도와 직접 연결"
           ]
         }
       ],
       "question_alignment": [
         {
           "question_id": "q1_responsibility",
-          "question_type": "TYPE_F",
+          "question_type": "TYPE_B",
           "recommended_competencies": [
-            "조직이해능력",
-            "직업윤리",
-            "자기관리능력"
+            "기술능력",
+            "수리능력",
+            "문제해결능력"
+          ],
+          "recommended_ability_units": []
+        },
+        {
+          "question_id": "q2_adaptation",
+          "question_type": "TYPE_C",
+          "recommended_competencies": [
+            "의사소통능력",
+            "대인관계능력"
           ],
           "recommended_ability_units": []
         },
@@ -898,8 +1242,8 @@ NO_INVENTION_GUARD:
           "question_type": "TYPE_B",
           "recommended_competencies": [
             "기술능력",
-            "문제해결능력",
-            "수리능력"
+            "수리능력",
+            "문제해결능력"
           ],
           "recommended_ability_units": []
         },
@@ -914,16 +1258,776 @@ NO_INVENTION_GUARD:
         }
       ],
       "coaching_focus": [
-        "기술능력을(를) 증명할 수 있는 경험·행동·결과를 한 문항에 하나씩 고정",
         "의사소통능력을(를) 증명할 수 있는 경험·행동·결과를 한 문항에 하나씩 고정",
-        "문제해결능력을(를) 증명할 수 있는 경험·행동·결과를 한 문항에 하나씩 고정"
+        "기술능력을(를) 증명할 수 있는 경험·행동·결과를 한 문항에 하나씩 고정",
+        "대인관계능력을(를) 증명할 수 있는 경험·행동·결과를 한 문항에 하나씩 고정"
       ],
       "interview_watchouts": [
-        "기술능력 관련 답변은 수치·판단기준·개인기여를 30초 안에 다시 설명할 수 있어야 함",
         "의사소통능력 관련 답변은 수치·판단기준·개인기여를 30초 안에 다시 설명할 수 있어야 함",
-        "문제해결능력 관련 답변은 수치·판단기준·개인기여를 30초 안에 다시 설명할 수 있어야 함"
+        "기술능력 관련 답변은 수치·판단기준·개인기여를 30초 안에 다시 설명할 수 있어야 함",
+        "대인관계능력 관련 답변은 수치·판단기준·개인기여를 30초 안에 다시 설명할 수 있어야 함"
       ]
     },
+    "candidate_profile": {
+      "style_preference": "담백하고 근거 중심",
+      "communication_style": "logical",
+      "metric_coverage_ratio": 1.0,
+      "personal_contribution_ratio": 1.0,
+      "collaboration_ratio": 0.12,
+      "abstraction_ratio": 0.0,
+      "confidence_style": "assertive",
+      "signature_strengths": [
+        "설득",
+        "데이터분석",
+        "예산절감",
+        "프로세스개선"
+      ],
+      "blind_spots": [
+        "협업 맥락보다 개인 수행 중심으로 들릴 수 있습니다."
+      ],
+      "coaching_focus": [
+        "강한 분석형 톤은 유지하되 고객·협업 맥락을 더 드러내세요."
+      ],
+      "interview_strategy": {
+        "opening": "핵심 결론을 먼저 말하고, 곧바로 행동 근거와 결과를 붙입니다.",
+        "pressure_response": "즉답이 어려우면 기준→행동→결과 순서로 짧게 재정리합니다.",
+        "tone": "담백하고 근거 중심을 유지하되 질문 의도에 맞는 감정 온도를 한 문장 추가합니다."
+      },
+      "profile_summary": "담백하고 근거 중심 톤을 선호하는 logical형 지원자입니다. 주요 강점은 설득, 데이터분석, 예산절감입니다."
+    },
+    "narrative_ssot": {
+      "core_claims": [
+        "6급 사무직에 바로 투입 가능한 검증형 실무자",
+        "국민연금공단에 맞는 근거 중심 문제해결형 지원자",
+        "정량적 성과"
+      ],
+      "evidence_experience_ids": [
+        "exp_seoul_covid_budget",
+        "exp_seoul_covid_conflict",
+        "exp_nps_intern"
+      ],
+      "evidence_experience_titles": [
+        "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+        "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+        "국민연금공단 기초연금 수급 대상자 발굴 자동화"
+      ],
+      "opening_message": "국민연금공단의 6급 사무직에서 정량적 성과, 제도 개선, 고객 만족, 의사소통능력를 만드는 지원자입니다.",
+      "risk_watchouts": [],
+      "answer_anchor": "주장보다 근거를 먼저 제시하고, 마지막 문장을 입사 후 기여 방식으로 닫습니다."
+    },
+    "research_strategy_translation": {
+      "answer_tone": "",
+      "preferred_evidence_style": "행동 기준 + 수치/기록 + 개인 기여를 함께 제시",
+      "disliked_expressions": [
+        "항상",
+        "최선을 다했습니다",
+        "기여하고자 합니다"
+      ],
+      "essay_usefulness_score": 0.85,
+      "translation_notes": [
+        "핵심 회사 신호는 자소서 첫 문단과 면접 1분 답변에 공통으로 반영합니다.",
+        "교차검증된 신호를 지원동기와 직무적합성 문항에 우선 반영합니다."
+      ],
+      "top001": {
+        "strategic_signals": {
+          "core_values": [
+            "공익",
+            "책임"
+          ],
+          "competencies": [
+            "정량적 성과",
+            "제도 개선",
+            "고객 만족"
+          ],
+          "interview_predictions": [
+            "성장과정을 말씀해 주세요",
+            "지원동기를 구체적으로 말씀해 주세요"
+          ],
+          "differentiation": [
+            "귀사 국민연금공단에서 필요로 하는",
+            "일반 특화 역량"
+          ]
+        },
+        "question_hooks": {
+          "q1_responsibility": [
+            "구체적인 경험을 말씀드리겠습니다",
+            "핵심만 간략히 설명드리겠습니다"
+          ],
+          "q2_adaptation": [
+            "구체적인 경험을 말씀드리겠습니다",
+            "핵심만 간략히 설명드리겠습니다"
+          ],
+          "q3_competency": [
+            "'정량적 성과' 역량을 증명하는 경험은 다음과 같습니다",
+            "구체적 사례를 들어 '정량적 성과'를 설명드리겠습니다"
+          ],
+          "q4_persuasion": [
+            "구체적인 경험을 말씀드리겠습니다",
+            "핵심만 간략히 설명드리겠습니다"
+          ]
+        },
+        "evidence_maps": [
+          {
+            "experience_id": "exp_seoul_covid_fraud",
+            "signals": [
+              "귀사에서 중시하는정량적 성과 관련 경험",
+              "귀사에서 중시하는제도 개선 관련 경험"
+            ],
+            "proof_points": [
+              "정량적 근거: 부정수급 20건 적발, 예산 40% 절감",
+              "증빙: 서울시청 파견 근무 경험...",
+              "개인 기여: 데이터 검증 프로세스 설계, 부동산 시세 교차 조사, ..."
+            ]
+          },
+          {
+            "experience_id": "exp_seoul_covid_crisis",
+            "signals": [
+              "귀사에서 중시하는정량적 성과 관련 경험",
+              "귀사에서 중시하는제도 개선 관련 경험"
+            ],
+            "proof_points": [
+              "정량적 근거: 수백 통 민원 당일 수습",
+              "증빙: 서울시청 파견 근무 경험...",
+              "개인 기여: 공문 분석, 매뉴얼 자체 제작·배포, 민원 응대..."
+            ]
+          },
+          {
+            "experience_id": "exp_seoul_covid_budget",
+            "signals": [
+              "귀사에서 중시하는정량적 성과 관련 경험",
+              "귀사에서 중시하는제도 개선 관련 경험"
+            ],
+            "proof_points": [
+              "정량적 근거: 1억 원 예산 절감",
+              "증빙: 서울시청 파견 근무 경험...",
+              "개인 기여: 비교 분석 보고서 작성, 대체 방안 제안·구현..."
+            ]
+          },
+          {
+            "experience_id": "exp_seoul_covid_conflict",
+            "signals": [
+              "귀사에서 중시하는정량적 성과 관련 경험",
+              "귀사에서 중시하는제도 개선 관련 경험"
+            ],
+            "proof_points": [
+              "정량적 근거: 업무 효율 30% 증가",
+              "증빙: 서울시청 파견 근무 경험...",
+              "개인 기여: 갈등 중재, 절충안 제시, 매뉴얼 작성..."
+            ]
+          }
+        ],
+        "interview_predictions": [
+          {
+            "q": "공익과 관련하여 본인이 실천한 경험은?",
+            "intent": "공익성 검증",
+            "score_point": "시민 서비스 관점"
+          },
+          {
+            "q": "규정 준수와 관련된 어려움을 겪은 경험은?",
+            "intent": "규정 준수 태도",
+            "score_point": "원칙성 + 실용성"
+          }
+        ],
+        "defense_strategies": [
+          {
+            "vulnerable_point": "본인의 역할이 모호합니다",
+            "defense_script": "제가 직접 담당한 부분은 [구체적 행동]이었습니다",
+            "alternatives": [
+              "뿐만 아니라 다양한 요인이 복합적으로 작용했습니다",
+              "다만, 제가 기여한 핵심 부분은 명시적으로 있었습니다"
+            ]
+          },
+          {
+            "vulnerable_point": "수치의 근거가 불분명합니다",
+            "defense_script": "측정 기준은 [기준]이며 [비교 대상]과 비교했습니다",
+            "alternatives": [
+              "뿐만 아니라 다양한 요인이 복합적으로 작용했습니다",
+              "다만, 제가 기여한 핵심 부분은 명시적으로 있었습니다"
+            ]
+          },
+          {
+            "vulnerable_point": "인과관계가 약합니다",
+            "defense_script": "다른 요인도 있었지만, 핵심 원인은 [행동]이었다고 봅니다",
+            "alternatives": [
+              "뿐만 아니라 다양한 요인이 복합적으로 작용했습니다",
+              "다만, 제가 기여한 핵심 부분은 명시적으로 있었습니다"
+            ]
+          }
+        ]
+      }
+    },
+    "outcome_dashboard": {
+      "generated_at": "2026-04-06T06:36:58.122102+00:00",
+      "artifact_type": "coach",
+      "current_pattern": "coach|공공기관|TYPE_B-TYPE_C-TYPE_F-TYPE_UNKNOWN",
+      "overall_success_rate": 0.67,
+      "outcome_summary": {
+        "matched_feedback_count": 2,
+        "outcome_breakdown": {
+          "unknown": 2
+        },
+        "top_rejection_reasons": []
+      },
+      "recommended_pattern": "writer|공공기관|TYPE_B-TYPE_C-TYPE_F",
+      "high_risk_hotspots": [
+        {
+          "question_type": "TYPE_F",
+          "experience_id": "exp_seoul_covid_conflict",
+          "weighted_net_score": 3,
+          "total_uses": 2
+        },
+        {
+          "question_type": "TYPE_C",
+          "experience_id": "exp_nps_intern",
+          "weighted_net_score": 3,
+          "total_uses": 2
+        },
+        {
+          "question_type": "TYPE_C",
+          "experience_id": "exp_nps_income_adjustment",
+          "weighted_net_score": 3,
+          "total_uses": 2
+        },
+        {
+          "question_type": "TYPE_B",
+          "experience_id": "exp_seoul_covid_budget",
+          "weighted_net_score": 3,
+          "total_uses": 2
+        }
+      ]
+    },
+    "kpi_dashboard": {
+      "generated_at": "2026-04-06T06:36:58.123604+00:00",
+      "artifact_type": "coach",
+      "question_experience_match_accuracy": 1.0,
+      "self_intro_follow_up_hit_rate": 0.0,
+      "interview_defense_success_rate": 0.0,
+      "company_signal_reuse_rate": 1.0,
+      "document_pass_rate": 0.0,
+      "interview_pass_rate": 0.0,
+      "offer_rate": 0.0,
+      "company_signal_summary": {
+        "core_values": [
+          "공익",
+          "책임"
+        ],
+        "competencies": [
+          "정량적 성과",
+          "제도 개선",
+          "고객 만족"
+        ],
+        "differentiation": [
+          "귀사 국민연금공단에서 필요로 하는",
+          "일반 특화 역량"
+        ]
+      },
+      "writer_quality_metrics": {},
+      "result_quality_metrics": {},
+      "tracked_outcomes": {
+        "unknown": 2
+      }
+    },
+    "question_specific_hints": [
+      {
+        "question_id": "q1_responsibility",
+        "question_order": 1,
+        "question_text": "맡은 업무(역할)를 수행하면서 책임감을 발휘해 업무(역할)를 완수했던 경험에 대해 당시 상황, 본인의 행동, 그리고 결과를 중심으로 상세히 기술해 주십시오.",
+        "question_type": "TYPE_F",
+        "hints": [
+          {
+            "title": "국민연금공단 / 체험형 청년인턴 / 2024 하반기",
+            "company_name": "국민연금공단",
+            "job_title": "체험형 청년인턴",
+            "signal": "국민연금공단 / 체험형 청년인턴 / TF-IDF score 0.267",
+            "structure_summary": "국민연금공단 체험형 청년인턴 문항 2개 기준, 핵심 역량 / 분류 불가 (확인 필요) 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "applicable_question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": true,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "회사명 exact match",
+              "정량 결과 포함"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.717,
+            "question_id": "q1_responsibility",
+            "question_order": 1,
+            "question_text": "맡은 업무(역할)를 수행하면서 책임감을 발휘해 업무(역할)를 완수했던 경험에 대해 당시 상황, 본인의 행동, 그리고 결과를 중심으로 상세히 기술해 주십시오.",
+            "question_type": "TYPE_F"
+          },
+          {
+            "title": "국민연금공단 / 일반 / 2024 하반기",
+            "company_name": "국민연금공단",
+            "job_title": "일반",
+            "signal": "국민연금공단 / 일반 / TF-IDF score 0.229",
+            "structure_summary": "국민연금공단 일반 문항 2개 기준, 핵심 역량 / 분류 불가 (확인 필요) 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "applicable_question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": false,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "회사명 exact match"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.679,
+            "question_id": "q1_responsibility",
+            "question_order": 1,
+            "question_text": "맡은 업무(역할)를 수행하면서 책임감을 발휘해 업무(역할)를 완수했던 경험에 대해 당시 상황, 본인의 행동, 그리고 결과를 중심으로 상세히 기술해 주십시오.",
+            "question_type": "TYPE_F"
+          },
+          {
+            "title": "한국주택금융공사 / 사무직 / 2024 하반기",
+            "company_name": "한국주택금융공사",
+            "job_title": "사무직",
+            "signal": "한국주택금융공사 / 사무직 / TF-IDF score 0.283",
+            "structure_summary": "한국주택금융공사 사무직 문항 3개 기준, 지원동기와 직무 적합성 / 협업과 조정 / 지원동기와 직무 적합성 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_A",
+              "TYPE_C",
+              "TYPE_A"
+            ],
+            "applicable_question_types": [
+              "TYPE_A",
+              "TYPE_C",
+              "TYPE_A"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": true,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "직무명 overlap",
+              "정량 결과 포함"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.403,
+            "question_id": "q1_responsibility",
+            "question_order": 1,
+            "question_text": "맡은 업무(역할)를 수행하면서 책임감을 발휘해 업무(역할)를 완수했던 경험에 대해 당시 상황, 본인의 행동, 그리고 결과를 중심으로 상세히 기술해 주십시오.",
+            "question_type": "TYPE_F"
+          }
+        ]
+      },
+      {
+        "question_id": "q2_adaptation",
+        "question_order": 2,
+        "question_text": "새로운 조직이나 팀에 합류했을 당시 구성원들과 관계를 형성하고 조직에 적응하기 위해 노력했던 경험에 대해 구체적으로 기술해 주십시오.",
+        "question_type": "TYPE_UNKNOWN",
+        "hints": [
+          {
+            "title": "국민연금공단 / 체험형 청년인턴 / 2024 하반기",
+            "company_name": "국민연금공단",
+            "job_title": "체험형 청년인턴",
+            "signal": "국민연금공단 / 체험형 청년인턴 / TF-IDF score 0.317",
+            "structure_summary": "국민연금공단 체험형 청년인턴 문항 2개 기준, 핵심 역량 / 분류 불가 (확인 필요) 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "applicable_question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": true,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "회사명 exact match",
+              "문항유형 match (TYPE_UNKNOWN)",
+              "정량 결과 포함"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.887,
+            "question_id": "q2_adaptation",
+            "question_order": 2,
+            "question_text": "새로운 조직이나 팀에 합류했을 당시 구성원들과 관계를 형성하고 조직에 적응하기 위해 노력했던 경험에 대해 구체적으로 기술해 주십시오.",
+            "question_type": "TYPE_UNKNOWN"
+          },
+          {
+            "title": "국민연금공단 / 일반 / 2024 하반기",
+            "company_name": "국민연금공단",
+            "job_title": "일반",
+            "signal": "국민연금공단 / 일반 / TF-IDF score 0.283",
+            "structure_summary": "국민연금공단 일반 문항 2개 기준, 핵심 역량 / 분류 불가 (확인 필요) 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "applicable_question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": false,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "회사명 exact match",
+              "문항유형 match (TYPE_UNKNOWN)"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.853,
+            "question_id": "q2_adaptation",
+            "question_order": 2,
+            "question_text": "새로운 조직이나 팀에 합류했을 당시 구성원들과 관계를 형성하고 조직에 적응하기 위해 노력했던 경험에 대해 구체적으로 기술해 주십시오.",
+            "question_type": "TYPE_UNKNOWN"
+          },
+          {
+            "title": "한국주택금융공사 / 사무직 / 2024 하반기",
+            "company_name": "한국주택금융공사",
+            "job_title": "사무직",
+            "signal": "한국주택금융공사 / 사무직 / TF-IDF score 0.269",
+            "structure_summary": "한국주택금융공사 사무직 문항 3개 기준, 지원동기와 직무 적합성 / 협업과 조정 / 지원동기와 직무 적합성 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_A",
+              "TYPE_C",
+              "TYPE_A"
+            ],
+            "applicable_question_types": [
+              "TYPE_A",
+              "TYPE_C",
+              "TYPE_A"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": true,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "직무명 overlap",
+              "정량 결과 포함"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.389,
+            "question_id": "q2_adaptation",
+            "question_order": 2,
+            "question_text": "새로운 조직이나 팀에 합류했을 당시 구성원들과 관계를 형성하고 조직에 적응하기 위해 노력했던 경험에 대해 구체적으로 기술해 주십시오.",
+            "question_type": "TYPE_UNKNOWN"
+          }
+        ]
+      },
+      {
+        "question_id": "q3_competency",
+        "question_order": 3,
+        "question_text": "본인이 보유한 직무역량이 우리 조직의 목표 달성 또는 주요 현안 해결에 어떻게 기여할 수 있는지 설명하고 입사 후 실무 현장에서 실천할 수 있는 구체적인 행동 계획을 기술해 주십시오.",
+        "question_type": "TYPE_B",
+        "hints": [
+          {
+            "title": "국민연금공단 / 일반 / 2024 하반기",
+            "company_name": "국민연금공단",
+            "job_title": "일반",
+            "signal": "국민연금공단 / 일반 / TF-IDF score 0.204",
+            "structure_summary": "국민연금공단 일반 문항 2개 기준, 핵심 역량 / 분류 불가 (확인 필요) 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "applicable_question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": false,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "회사명 exact match",
+              "문항유형 match (TYPE_B)"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.774,
+            "question_id": "q3_competency",
+            "question_order": 3,
+            "question_text": "본인이 보유한 직무역량이 우리 조직의 목표 달성 또는 주요 현안 해결에 어떻게 기여할 수 있는지 설명하고 입사 후 실무 현장에서 실천할 수 있는 구체적인 행동 계획을 기술해 주십시오.",
+            "question_type": "TYPE_B"
+          },
+          {
+            "title": "한국주택금융공사 / 사무직 / 2024 하반기",
+            "company_name": "한국주택금융공사",
+            "job_title": "사무직",
+            "signal": "한국주택금융공사 / 사무직 / TF-IDF score 0.250",
+            "structure_summary": "한국주택금융공사 사무직 문항 3개 기준, 지원동기와 직무 적합성 / 협업과 조정 / 지원동기와 직무 적합성 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_A",
+              "TYPE_C",
+              "TYPE_A"
+            ],
+            "applicable_question_types": [
+              "TYPE_A",
+              "TYPE_C",
+              "TYPE_A"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": true,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "직무명 overlap",
+              "정량 결과 포함"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.37,
+            "question_id": "q3_competency",
+            "question_order": 3,
+            "question_text": "본인이 보유한 직무역량이 우리 조직의 목표 달성 또는 주요 현안 해결에 어떻게 기여할 수 있는지 설명하고 입사 후 실무 현장에서 실천할 수 있는 구체적인 행동 계획을 기술해 주십시오.",
+            "question_type": "TYPE_B"
+          },
+          {
+            "title": "한국산업인력공단 / 일반행정 6급 / 2024 하반기",
+            "company_name": "한국산업인력공단",
+            "job_title": "일반행정 6급",
+            "signal": "한국산업인력공단 / 일반행정 6급 / TF-IDF score 0.292",
+            "structure_summary": "한국산업인력공단 일반행정 6급 문항 4개 기준, 지원동기와 직무 적합성 / 상황판단과 우선순위 / 협업과 조정 / 협업과 조정 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_A",
+              "TYPE_I",
+              "TYPE_C",
+              "TYPE_C"
+            ],
+            "applicable_question_types": [
+              "TYPE_A",
+              "TYPE_I",
+              "TYPE_C",
+              "TYPE_C"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "협업",
+              "성장 서사"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": true,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "정량 결과 포함"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.292,
+            "question_id": "q3_competency",
+            "question_order": 3,
+            "question_text": "본인이 보유한 직무역량이 우리 조직의 목표 달성 또는 주요 현안 해결에 어떻게 기여할 수 있는지 설명하고 입사 후 실무 현장에서 실천할 수 있는 구체적인 행동 계획을 기술해 주십시오.",
+            "question_type": "TYPE_B"
+          }
+        ]
+      },
+      {
+        "question_id": "q4_persuasion",
+        "question_order": 4,
+        "question_text": "이해관계가 상충하거나 규정에 반하는 요구를 하는 고객 또는 상대방을 설득하여 원칙을 지키면서도 합의를 도출한 경험에 대해 기술해 주십시오. 특히 상대방을 설득하기 위해 활용한 본인만의 논리나 소통 전략은 무엇이었는지 구체적으로 기술해 주십시오.",
+        "question_type": "TYPE_C",
+        "hints": [
+          {
+            "title": "국민연금공단 / 체험형 청년인턴 / 2024 하반기",
+            "company_name": "국민연금공단",
+            "job_title": "체험형 청년인턴",
+            "signal": "국민연금공단 / 체험형 청년인턴 / TF-IDF score 0.275",
+            "structure_summary": "국민연금공단 체험형 청년인턴 문항 2개 기준, 핵심 역량 / 분류 불가 (확인 필요) 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "applicable_question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": true,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "회사명 exact match",
+              "정량 결과 포함"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.725,
+            "question_id": "q4_persuasion",
+            "question_order": 4,
+            "question_text": "이해관계가 상충하거나 규정에 반하는 요구를 하는 고객 또는 상대방을 설득하여 원칙을 지키면서도 합의를 도출한 경험에 대해 기술해 주십시오. 특히 상대방을 설득하기 위해 활용한 본인만의 논리나 소통 전략은 무엇이었는지 구체적으로 기술해 주십시오.",
+            "question_type": "TYPE_C"
+          },
+          {
+            "title": "국민연금공단 / 일반 / 2024 하반기",
+            "company_name": "국민연금공단",
+            "job_title": "일반",
+            "signal": "국민연금공단 / 일반 / TF-IDF score 0.238",
+            "structure_summary": "국민연금공단 일반 문항 2개 기준, 핵심 역량 / 분류 불가 (확인 필요) 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "applicable_question_types": [
+              "TYPE_B",
+              "TYPE_UNKNOWN"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": false,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "회사명 exact match"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.688,
+            "question_id": "q4_persuasion",
+            "question_order": 4,
+            "question_text": "이해관계가 상충하거나 규정에 반하는 요구를 하는 고객 또는 상대방을 설득하여 원칙을 지키면서도 합의를 도출한 경험에 대해 기술해 주십시오. 특히 상대방을 설득하기 위해 활용한 본인만의 논리나 소통 전략은 무엇이었는지 구체적으로 기술해 주십시오.",
+            "question_type": "TYPE_C"
+          },
+          {
+            "title": "한국주택금융공사 / 사무직 / 2024 하반기",
+            "company_name": "한국주택금융공사",
+            "job_title": "사무직",
+            "signal": "한국주택금융공사 / 사무직 / TF-IDF score 0.302",
+            "structure_summary": "한국주택금융공사 사무직 문항 3개 기준, 지원동기와 직무 적합성 / 협업과 조정 / 지원동기와 직무 적합성 중심 구조",
+            "caution": "표현 복제 금지. 구조만 참고.",
+            "question_types": [
+              "TYPE_A",
+              "TYPE_C",
+              "TYPE_A"
+            ],
+            "applicable_question_types": [
+              "TYPE_A",
+              "TYPE_C",
+              "TYPE_A"
+            ],
+            "evidence_focus": [
+              "STAR 구조",
+              "정량 결과",
+              "문제 해결",
+              "협업"
+            ],
+            "structure_signals": {
+              "has_star": true,
+              "has_metrics": true,
+              "warns_against_copying": true
+            },
+            "match_reasons": [
+              "직무명 overlap",
+              "문항유형 match (TYPE_C)",
+              "정량 결과 포함"
+            ],
+            "semantic_score": 0.0,
+            "vector_score": 0.0,
+            "combined_score": 0.542,
+            "question_id": "q4_persuasion",
+            "question_order": 4,
+            "question_text": "이해관계가 상충하거나 규정에 반하는 요구를 하는 고객 또는 상대방을 설득하여 원칙을 지키면서도 합의를 도출한 경험에 대해 기술해 주십시오. 특히 상대방을 설득하기 위해 활용한 본인만의 논리나 소통 전략은 무엇이었는지 구체적으로 기술해 주십시오.",
+            "question_type": "TYPE_C"
+          }
+        ]
+      }
+    ],
     "company_analysis": {
       "company_name": "국민연금공단",
       "company_type": "공공",
@@ -936,8 +2040,11 @@ NO_INVENTION_GUARD:
       "recent_news": [],
       "interview_style": "formal",
       "success_patterns": [
+        "quantified_result",
+        "problem_solving",
         "star_structure",
-        "quantified_result"
+        "innovation",
+        "collaboration"
       ],
       "preferred_evidence_types": [
         "정량적 성과",
@@ -1040,7 +2147,39 @@ NO_INVENTION_GUARD:
         ],
         "single_source_risks": [],
         "question_map_signals": []
-      }
+      },
+      "success_case_stats": {
+        "match_case_count": 17,
+        "exact_company_match_count": 16,
+        "job_match_count": 1,
+        "pattern_distribution": {
+          "quantified_result": 16,
+          "problem_solving": 16,
+          "star_structure": 15,
+          "innovation": 14,
+          "collaboration": 11,
+          "growth_story": 11
+        },
+        "quantified_result_rate": 0.941,
+        "star_structure_rate": 0.882,
+        "customer_focus_rate": 0.529,
+        "problem_solving_rate": 0.941,
+        "collaboration_rate": 0.647,
+        "recommended_writing_focus": [
+          "정량 결과를 포함한 문장을 우선 배치",
+          "상황-행동-결과가 분리된 STAR 구조 유지",
+          "고객/이용자 관점의 가치 연결 강조",
+          "문제 원인과 해결 판단 기준을 구체화"
+        ]
+      },
+      "similar_case_titles": [
+        "국민연금공단 / 체험형 청년인턴 / 2024 하반기",
+        "국민연금공단 / 일반 / 2024 하반기",
+        "국민연금공단 / 체험형 청년인턴 / 2024 상반기",
+        "국민연금공단 / 체험형 청년인턴(일반) / 2024 상반기",
+        "국민연금공단 / 체험현 청년인턴 (일반) / 2024 상반기"
+      ],
+      "discouraged_phrases": []
     }
   }
 }

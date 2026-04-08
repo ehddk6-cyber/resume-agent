@@ -1,0 +1,42 @@
+{
+  "company_name": "",
+  "job_title": "",
+  "candidate_count": 3,
+  "candidates": [
+    {
+      "id": "human_expert",
+      "label": "인간 전문가 버전",
+      "blind_code": "A"
+    },
+    {
+      "id": "resume_agent",
+      "label": "resume-agent 버전",
+      "blind_code": "B"
+    },
+    {
+      "id": "hybrid",
+      "label": "혼합 버전",
+      "blind_code": "C"
+    }
+  ],
+  "questions": [],
+  "rubric": [
+    "질문 적합성",
+    "구체성",
+    "개인 기여 명확성",
+    "면접 방어 가능성",
+    "조직 적합성",
+    "문장 자연스러움"
+  ],
+  "outcome_metrics": [
+    "document_pass_rate",
+    "interview_pass_rate",
+    "final_pass_rate",
+    "offer_rate"
+  ],
+  "instructions": [
+    "평가자는 작성 주체를 모르는 상태에서 각 버전을 비교합니다.",
+    "문항별 점수와 최종 선호 버전을 함께 기록합니다.",
+    "가능하면 실제 서류·면접 결과와 연결해 후속 분석합니다."
+  ]
+}

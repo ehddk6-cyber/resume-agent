@@ -9,13 +9,29 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 import requests
 
-from .models import KnowledgeSource, PatternKB, SourceType, StructureSignals, QuestionType
-from .classifier import classify_question, extract_question_keywords, QUESTION_TYPE_LABELS, MARKETING_PATTERNS
+from .models import (
+    KnowledgeSource,
+    PatternKB,
+    SourceType,
+    StructureSignals,
+    QuestionType,
+    SuccessCase,
+    SuccessPattern,
+)
+from .classifier import (
+    classify_question,
+    extract_question_keywords,
+    QUESTION_TYPE_LABELS,
+    MARKETING_PATTERNS,
+)
 from .pdf_utils import extract_text_from_pdf
+from .company_analyzer import SUCCESS_PATTERN_KEYWORDS
+
 
 def stable_id(*parts: str) -> str:
     digest = hashlib.sha1("|".join(parts).encode("utf-8")).hexdigest()
     return digest[:12]
+
 
 def clean_source_text(text: str) -> str:
     cleaned_lines: List[str] = []
@@ -24,6 +40,10 @@ def clean_source_text(text: str) -> str:
         if any(pattern in stripped for pattern in MARKETING_PATTERNS):
             continue
         if stripped.startswith("👉"):
+            continue
+        if stripped.startswith("🔥"):
+            continue
+        if re.fullmatch(r"https?://(?:www\.)?linkareer\.com/cover-letter/\S+", stripped):
             continue
         cleaned_lines.append(line.rstrip())
     cleaned = "\n".join(cleaned_lines)
@@ -39,6 +59,7 @@ def strip_html_text(text: str) -> str:
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
+
 def parse_title_meta(title: str) -> dict[str, str]:
     parts = [part.strip() for part in title.split("/")]
     return {
@@ -47,14 +68,24 @@ def parse_title_meta(title: str) -> dict[str, str]:
         "season": parts[2] if len(parts) > 2 else "",
     }
 
-def extract_question_lines(text: str) -> List[str]:
-    return [match.group(1).strip() for match in re.finditer(r"(?m)^\s*\d+\.\s*(.+)$", text)]
 
-def summarize_structure(company: str, job: str, question_types: List[str], question_count: int) -> str:
-    labels = [QUESTION_TYPE_LABELS.get(QuestionType(item), item) for item in question_types[:4]]
+def extract_question_lines(text: str) -> List[str]:
+    return [
+        match.group(1).strip() for match in re.finditer(r"(?m)^\s*\d+\.\s*(.+)$", text)
+    ]
+
+
+def summarize_structure(
+    company: str, job: str, question_types: List[str], question_count: int
+) -> str:
+    labels = [
+        QUESTION_TYPE_LABELS.get(QuestionType(item), item)
+        for item in question_types[:4]
+    ]
     if labels:
         return f"{company or '일반'} {job or '직무'} 문항 {question_count}개 기준, {' / '.join(labels)} 중심 구조"
     return f"{company or '일반'} {job or '직무'} 기준 구조 참고"
+
 
 def extract_spec_keywords(spec_text: str) -> List[str]:
     tokens = re.findall(r"[A-Za-z가-힣]{2,}", spec_text)
@@ -64,7 +95,20 @@ def extract_spec_keywords(spec_text: str) -> List[str]:
             seen.append(token)
     return seen[:10]
 
-def build_retrieval_terms(meta: dict[str, str], spec_text: str, question_lines: List[str]) -> List[str]:
+
+def detect_patterns(text: str) -> List[SuccessPattern]:
+    """텍스트에서 성공 패턴을 감지합니다. (키워드 매칭 기반, 2개 이상 매칭 시 해당 패턴)"""
+    detected: List[SuccessPattern] = []
+    for pattern, keywords in SUCCESS_PATTERN_KEYWORDS.items():
+        matches = sum(1 for kw in keywords if kw in text)
+        if matches >= 2:
+            detected.append(pattern)
+    return detected
+
+
+def build_retrieval_terms(
+    meta: dict[str, str], spec_text: str, question_lines: List[str]
+) -> List[str]:
     terms = [
         meta.get("company_name", ""),
         meta.get("job_title", ""),
@@ -79,23 +123,31 @@ def build_retrieval_terms(meta: dict[str, str], spec_text: str, question_lines: 
             deduped.append(term)
     return deduped[:15]
 
+
 def summarize_knowledge_sources(sources: List[KnowledgeSource]) -> dict[str, Any]:
     source_types = Counter(source.source_type.value for source in sources)
-    companies = Counter(source.pattern.company_name for source in sources if source.pattern and source.pattern.company_name)
+    companies = Counter(
+        source.pattern.company_name
+        for source in sources
+        if source.pattern and source.pattern.company_name
+    )
     return {
         "count": len(sources),
         "source_types": dict(source_types),
         "top_companies": companies.most_common(10),
     }
 
+
 def build_generic_source(path: Path, text: str) -> KnowledgeSource:
     cleaned_text = clean_source_text(text)
     question_lines = extract_question_lines(cleaned_text)
     question_types = [classify_question(line) for line in question_lines[:6]]
-    
+
     return KnowledgeSource(
         id=stable_id("file", path.name, cleaned_text[:80]),
-        source_type=SourceType.LOCAL_MARKDOWN if path.suffix.lower() == ".md" else SourceType.LOCAL_TEXT,
+        source_type=SourceType.LOCAL_MARKDOWN
+        if path.suffix.lower() == ".md"
+        else SourceType.LOCAL_TEXT,
         title=path.stem,
         url=None,
         raw_text=text,
@@ -121,7 +173,7 @@ def build_generic_source(path: Path, text: str) -> KnowledgeSource:
             retrieval_terms=[],
             caution="표현 복제 금지. 구조만 참고.",
             source_url=None,
-        )
+        ),
     )
 
 
@@ -162,12 +214,14 @@ def build_url_source(url: str, text: str, title: str | None = None) -> Knowledge
         ),
     )
 
-def ingest_csv(path: Path) -> List[KnowledgeSource]:
+
+def ingest_csv(path: Path) -> tuple[List[KnowledgeSource], List[SuccessCase]]:
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         rows = list(reader)
 
     sources: List[KnowledgeSource] = []
+    success_cases: List[SuccessCase] = []
     for index, row in enumerate(rows, start=1):
         title = str(row.get("제목", "")).strip() or f"{path.stem}-{index}"
         url = str(row.get("출처URL", "")).strip() or None
@@ -178,11 +232,15 @@ def ingest_csv(path: Path) -> List[KnowledgeSource]:
         question_lines = extract_question_lines(cleaned_text)
         question_types = [classify_question(line) for line in question_lines[:6]]
         structure_signals = StructureSignals(
-            has_star=bool(re.search(r"상황|과제|행동|결과|이를 위해|그 결과", cleaned_text)),
-            has_metrics=bool(re.search(r"\d+[%명건회배점]|[0-9]+\.[0-9]+", cleaned_text)),
+            has_star=bool(
+                re.search(r"상황|과제|행동|결과|이를 위해|그 결과", cleaned_text)
+            ),
+            has_metrics=bool(
+                re.search(r"\d+[%명건회배점]|[0-9]+\.[0-9]+", cleaned_text)
+            ),
             warns_against_copying=True,
         )
-        
+
         source = KnowledgeSource(
             id=stable_id("csv", title, url or "", str(index)),
             source_type=SourceType.LOCAL_CSV_ROW,
@@ -200,30 +258,75 @@ def ingest_csv(path: Path) -> List[KnowledgeSource]:
                 job_title=meta_dict["job_title"],
                 season=meta_dict["season"],
                 question_types=question_types,
-                structure_summary=summarize_structure(meta_dict["company_name"], meta_dict["job_title"], [qt.value for qt in question_types], len(question_lines)),
+                structure_summary=summarize_structure(
+                    meta_dict["company_name"],
+                    meta_dict["job_title"],
+                    [qt.value for qt in question_types],
+                    len(question_lines),
+                ),
                 structure_signals=structure_signals,
                 spec_keywords=extract_spec_keywords(spec_text),
-                retrieval_terms=build_retrieval_terms(meta_dict, spec_text, question_lines),
+                retrieval_terms=build_retrieval_terms(
+                    meta_dict, spec_text, question_lines
+                ),
                 caution="표현 복제 금지. 구조만 참고.",
                 source_url=url,
-            )
+            ),
         )
         sources.append(source)
-    return sources
 
-def ingest_source_file(path: Path) -> List[KnowledgeSource]:
+        # SuccessCase 생성 (패턴 감지 포함)
+        patterns = detect_patterns(cleaned_text)
+        case = SuccessCase.from_csv_row(
+            title=title,
+            company_name=meta_dict["company_name"],
+            job_title=meta_dict["job_title"],
+            spec_summary=spec_text,
+            answer_text=cleaned_text,
+            source_url=url,
+            detected_patterns=patterns,
+        )
+        success_cases.append(case)
+
+    return sources, success_cases
+
+
+def ingest_source_file(path: Path) -> tuple[List[KnowledgeSource], List[SuccessCase]]:
     suffix = path.suffix.lower()
     if suffix == ".csv":
         return ingest_csv(path)
     if suffix == ".pdf":
         text = extract_text_from_pdf(path)
         if not text.strip():
-            return []
-        return [build_generic_source(path, text)]
+            return [], []
+        return [build_generic_source(path, text)], []
+    if suffix == ".docx":
+        from .pdf_utils import extract_text_from_docx
+
+        text = extract_text_from_docx(path)
+        if not text.strip():
+            return [], []
+        return [build_generic_source(path, text)], []
     if suffix == ".url":
         urls = [
             line.strip()
-            for line in path.read_text(encoding="utf-8-sig", errors="ignore").splitlines()
+            for line in path.read_text(
+                encoding="utf-8-sig", errors="ignore"
+            ).splitlines()
+            if line.strip()
+        ]
+        sources: List[KnowledgeSource] = []
+        for url in urls:
+            sources.extend(ingest_public_url(url))
+        return sources, []
+    text = path.read_text(encoding="utf-8-sig", errors="ignore")
+    return [build_generic_source(path, text)], []
+    if suffix == ".url":
+        urls = [
+            line.strip()
+            for line in path.read_text(
+                encoding="utf-8-sig", errors="ignore"
+            ).splitlines()
             if line.strip()
         ]
         sources: List[KnowledgeSource] = []
@@ -238,9 +341,7 @@ def ingest_public_url(url: str, timeout: int = 15) -> List[KnowledgeSource]:
     response = requests.get(
         url,
         timeout=timeout,
-        headers={
-            "User-Agent": "resume-agent/0.1 (+public knowledge ingestion)"
-        },
+        headers={"User-Agent": "resume-agent/0.1 (+public knowledge ingestion)"},
     )
     response.raise_for_status()
     title_match = re.search(r"(?is)<title[^>]*>(.*?)</title>", response.text)
@@ -257,9 +358,7 @@ def discover_public_urls(
         "https://html.duckduckgo.com/html/",
         params={"q": query},
         timeout=timeout,
-        headers={
-            "User-Agent": "resume-agent/0.1 (+public web discovery)"
-        },
+        headers={"User-Agent": "resume-agent/0.1 (+public web discovery)"},
     )
     response.raise_for_status()
 
@@ -285,6 +384,7 @@ def discover_public_urls(
         if len(results) >= limit:
             break
     return results
+
 
 def calculate_sources_hash(sources: List[KnowledgeSource]) -> str:
     """모든 지식 소스의 ID와 내용을 기반으로 전체 해시를 생성합니다."""

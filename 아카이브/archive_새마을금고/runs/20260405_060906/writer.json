@@ -1,0 +1,18 @@
+{
+  "validation": {
+    "passed": false,
+    "missing": [
+      "## 블록 1: ASSUMPTIONS & MISSING FACTS",
+      "## 블록 2: OUTLINE",
+      "## 블록 3: DRAFT ANSWERS",
+      "## 블록 4: SELF-CHECK",
+      "문항별 글자수 표기",
+      "SELF-CHECK PASS/FAIL"
+    ],
+    "out_of_order": []
+  },
+  "exit_code": 1,
+  "quality_evaluations": [],
+  "rewrite_quality_report_path": null,
+  "writer_differentiation_path": "artifacts/writer_differentiation.json"
+}

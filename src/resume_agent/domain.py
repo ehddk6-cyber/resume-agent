@@ -1,16 +1,45 @@
 from __future__ import annotations
 
 import hashlib
+import importlib
 import re
 import threading
 import tempfile
+from collections import Counter
 from typing import Any, List
-from .models import ApplicationProject, Experience, KnowledgeSource, QuestionType, EvidenceLevel
+from .models import (
+    ApplicationProject,
+    Experience,
+    KnowledgeSource,
+    QuestionType,
+    EvidenceLevel,
+    SuccessPattern,
+    Question,
+)
+from .config import get_config_value
 
 # 파사드(Facade) 패턴: 분리된 모듈들을 기존처럼 도메인에서 가져다 쓸 수 있도록 함
-from .classifier import classify_question, extract_question_keywords, QUESTION_TYPE_LABELS
-from .scoring import score_experience, analyze_gaps, allocate_experiences, metric_present, find_experience, calculate_readability_score, audit_facts
-from .parsing import ingest_source_file, summarize_knowledge_sources, stable_id, calculate_sources_hash
+from .classifier import (
+    classify_question,
+    extract_question_keywords,
+    QUESTION_TYPE_LABELS,
+)
+from .scoring import (
+    score_experience,
+    analyze_gaps,
+    allocate_experiences,
+    metric_present,
+    find_experience,
+    calculate_readability_score,
+    audit_facts,
+)
+from .parsing import (
+    ingest_source_file,
+    summarize_knowledge_sources,
+    stable_id,
+    calculate_sources_hash,
+    detect_patterns,
+)
 from .vector_store import SimpleVectorStore
 
 # [전역 캐시 변수]
@@ -18,22 +47,59 @@ _KNOWLEDGE_CACHE = {
     "hash": "",
     "vectorizer": None,
     "tfidf_matrix": None,
-    "valid_sources": []
+    "valid_sources": [],
+    "doc_texts": [],
 }
 _KNOWLEDGE_CACHE_LOCK = threading.Lock()
+
+# SentenceTransformer 싱글톤 (domain 전용)
+_ST_MODEL_DOMAIN = None
+_ST_DOMAIN_CLASS = None
+
+
+def _get_st_model_domain():
+    global _ST_MODEL_DOMAIN, _ST_DOMAIN_CLASS
+    if _ST_DOMAIN_CLASS is None:
+        try:
+            module = importlib.import_module("sentence_transformers")
+            _ST_DOMAIN_CLASS = getattr(module, "SentenceTransformer", None)
+        except ImportError:
+            _ST_DOMAIN_CLASS = False
+    if _ST_DOMAIN_CLASS in (None, False):
+        return None
+    if _ST_MODEL_DOMAIN is None:
+        model_name = get_config_value(
+            "embedding.model_name", "paraphrase-multilingual-MiniLM-L12-v2"
+        )
+        _ST_MODEL_DOMAIN = _ST_DOMAIN_CLASS(model_name)
+    return _ST_MODEL_DOMAIN
 
 
 def _semantic_similarity(query_text: str, doc_text: str) -> float:
     if not query_text.strip() or not doc_text.strip():
         return 0.0
 
+    # SentenceTransformer 우선 시도
+    model = _get_st_model_domain()
+    if model is not None:
+        try:
+            q_vec = model.encode(query_text, normalize_embeddings=True)
+            d_vec = model.encode(doc_text, normalize_embeddings=True)
+            q_list = q_vec.tolist() if hasattr(q_vec, "tolist") else list(q_vec)
+            d_list = d_vec.tolist() if hasattr(d_vec, "tolist") else list(d_vec)
+            dot = sum(a * b for a, b in zip(q_list, d_list))
+            return max(0.0, min(1.0, dot))
+        except Exception:
+            pass
+
+    # 해시 기반 폴백 (기존 로직)
     def _features(text: str) -> List[str]:
         tokens = re.findall(r"[가-힣A-Za-z0-9]+", text.lower())
         compact_text = re.sub(r"\s+", "", text.lower())
         bigrams = [
-            compact_text[index:index + 2]
+            compact_text[index : index + 2]
             for index in range(len(compact_text) - 1)
-            if compact_text[index:index + 2].strip()
+            if compact_text[index : index + 2].strip()
         ]
         return tokens + bigrams
 
@@ -56,11 +122,366 @@ def _semantic_similarity(query_text: str, doc_text: str) -> float:
         return 0.0
     return dot / (query_norm * doc_norm)
 
+
 def auto_classify_project_questions(project: ApplicationProject) -> None:
     for question in project.questions:
         question.detected_type = classify_question(question.question_text)
 
-def build_knowledge_hints(sources: List[KnowledgeSource], project: ApplicationProject) -> List[dict[str, Any]]:
+
+def _compress_hint_sources(
+    sources: List[KnowledgeSource],
+    *,
+    max_sources: int,
+) -> List[KnowledgeSource]:
+    if len(sources) <= max_sources:
+        return sources
+
+    compressed: List[KnowledgeSource] = []
+    seen_keys: set[tuple[str, str]] = set()
+    for source in sources:
+        key = (
+            (source.title or "").strip(),
+            source.source_type.value,
+        )
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        compressed.append(source)
+        if len(compressed) >= max_sources:
+            break
+    return compressed
+
+
+def _normalize_match_text(text: str) -> str:
+    return re.sub(r"[\s\(\)\[\]·,./_-]+", "", (text or "").lower())
+
+
+def _company_aliases(company_name: str, company_type: str = "") -> set[str]:
+    normalized = _normalize_match_text(company_name)
+    aliases = {normalized} if normalized else set()
+    normalized_type = _normalize_match_text(company_type)
+
+    if any(token in normalized for token in ["새마을금고", "mg"]):
+        aliases.update({"새마을금고", "mg", "상호금융", "지역금융"})
+    if any(token in normalized for token in ["농축협", "농협", "축협"]):
+        aliases.update(
+            {"농축협", "농협", "축협", "협동조합", "상호금융", "지역금융"}
+        )
+    if "신협" in normalized:
+        aliases.update({"신협", "협동조합", "상호금융", "지역금융"})
+    if any(token in normalized_type for token in ["상호금융", "협동조합"]):
+        aliases.update({"상호금융", "협동조합", "지역금융"})
+    return {item for item in aliases if item}
+
+
+def _match_reason_summary(
+    *,
+    project: ApplicationProject,
+    pattern: Any,
+    question: Question | None = None,
+) -> tuple[float, list[str]]:
+    bonus = 0.0
+    reasons: list[str] = []
+    project_company_aliases = _company_aliases(
+        project.company_name, project.company_type
+    )
+    source_company = _normalize_match_text(getattr(pattern, "company_name", ""))
+    project_job = _normalize_match_text(project.job_title)
+    source_job = _normalize_match_text(getattr(pattern, "job_title", ""))
+
+    if (
+        project_company_aliases
+        and source_company
+        and any(alias == source_company for alias in project_company_aliases)
+    ):
+        bonus += 0.45
+        reasons.append("회사명 exact match")
+    elif (
+        project_company_aliases
+        and source_company
+        and any(alias in source_company or source_company in alias for alias in project_company_aliases)
+    ):
+        bonus += 0.25
+        reasons.append("회사군 partial match")
+
+    if project_job and source_job and project_job == source_job:
+        bonus += 0.2
+        reasons.append("직무명 exact match")
+    elif project_job and source_job and (project_job in source_job or source_job in project_job):
+        bonus += 0.12
+        reasons.append("직무명 overlap")
+
+    if question is not None:
+        qtype = getattr(question, "detected_type", None)
+        if qtype and qtype in getattr(pattern, "question_types", []):
+            bonus += 0.12
+            reasons.append(f"문항유형 match ({qtype.value})")
+
+    return bonus, reasons
+
+
+def _build_source_doc_text(source: KnowledgeSource) -> str:
+    pattern = source.pattern
+    return " ".join(
+        [
+            pattern.company_name,
+            pattern.job_title,
+            pattern.structure_summary,
+            " ".join(pattern.retrieval_terms),
+            source.cleaned_text[:500],
+        ]
+    ).strip()
+
+
+def _derive_evidence_focus(source: KnowledgeSource) -> list[str]:
+    patterns = detect_patterns(source.cleaned_text[:1600])
+    focus: list[str] = []
+    mapping = {
+        SuccessPattern.QUANTIFIED_RESULT: "정량 결과",
+        SuccessPattern.STAR_STRUCTURE: "STAR 구조",
+        SuccessPattern.PROBLEM_SOLVING: "문제 해결",
+        SuccessPattern.COLLABORATION: "협업",
+        SuccessPattern.CUSTOMER_FOCUS: "고객 관점",
+        SuccessPattern.ETHICS: "윤리/원칙",
+        SuccessPattern.GROWTH_STORY: "성장 서사",
+        SuccessPattern.INNOVATION: "개선/혁신",
+    }
+    for pattern in patterns:
+        label = mapping.get(pattern)
+        if label and label not in focus:
+            focus.append(label)
+    if source.pattern and source.pattern.structure_signals.has_metrics and "정량 결과" not in focus:
+        focus.append("정량 결과")
+    return focus[:4]
+
+
+def _build_hint_entry(
+    *,
+    source: KnowledgeSource,
+    tfidf_score: float,
+    semantic_score: float,
+    vector_score: float,
+    combined_score: float,
+    match_reasons: list[str],
+    question: Question | None = None,
+) -> dict[str, Any]:
+    pattern = source.pattern
+    applicable_question_types = [qt.value for qt in pattern.question_types]
+    entry = {
+        "title": source.title,
+        "company_name": pattern.company_name,
+        "job_title": pattern.job_title,
+        "signal": f"{pattern.company_name or '일반'} / {pattern.job_title or '직무 미상'} / TF-IDF score {tfidf_score:.3f}",
+        "structure_summary": pattern.structure_summary,
+        "caution": pattern.caution,
+        "question_types": applicable_question_types,
+        "applicable_question_types": applicable_question_types,
+        "evidence_focus": _derive_evidence_focus(source),
+        "structure_signals": pattern.structure_signals.model_dump(),
+        "match_reasons": match_reasons,
+        "semantic_score": round(semantic_score, 3),
+        "vector_score": round(vector_score, 3),
+        "combined_score": round(combined_score, 3),
+    }
+    if question is not None:
+        entry["question_id"] = question.id
+        entry["question_order"] = question.order_no
+        entry["question_text"] = question.question_text
+        entry["question_type"] = getattr(question.detected_type, "value", "")
+    return entry
+
+
+def _rank_knowledge_hints(
+    valid_sources: list[KnowledgeSource],
+    *,
+    vectorizer: Any,
+    tfidf_matrix: Any,
+    project: ApplicationProject,
+    doc_texts: list[str],
+    question: Question | None = None,
+    use_semantic_hinting: bool = True,
+    limit: int = 5,
+) -> list[dict[str, Any]]:
+    company = project.company_name.strip()
+    job = project.job_title.strip()
+    query_parts = [company, job]
+
+    if question is None:
+        for item in project.questions:
+            query_parts.extend(extract_question_keywords(item.question_text))
+            qtype = getattr(item.detected_type, "value", "")
+            if qtype:
+                query_parts.append(qtype)
+    else:
+        query_parts.extend(extract_question_keywords(question.question_text))
+        qtype = getattr(question.detected_type, "value", "")
+        if qtype:
+            query_parts.append(qtype)
+
+    query_text = " ".join(part for part in query_parts if part)
+    if not query_text.strip():
+        return []
+
+    query_vector = vectorizer.transform([query_text])
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    cosine_similarities = cosine_similarity(query_vector, tfidf_matrix).flatten()
+    vector_scores: dict[str, float] = {}
+    if use_semantic_hinting:
+        with tempfile.TemporaryDirectory(prefix="resume-agent-vector-") as vector_dir:
+            vector_store = SimpleVectorStore(vector_dir)
+            for source, doc_text in zip(valid_sources, doc_texts):
+                vector_store.add_document(
+                    doc_text,
+                    {"source_id": source.id},
+                    doc_id=source.id,
+                )
+            vector_scores = {
+                item["id"]: float(item.get("similarity", 0.0))
+                for item in vector_store.search(
+                    query_text,
+                    n_results=max(limit, len(valid_sources)),
+                    min_similarity=0.0,
+                )
+            }
+
+    ranked_indices = cosine_similarities.argsort()[::-1]
+    hints: list[dict[str, Any]] = []
+    for idx in ranked_indices:
+        tfidf_score = float(cosine_similarities[idx])
+        source = valid_sources[idx]
+        pattern = source.pattern
+        bonus, reasons = _match_reason_summary(
+            project=project,
+            pattern=pattern,
+            question=question,
+        )
+        semantic_score = (
+            _semantic_similarity(query_text, doc_texts[idx]) if use_semantic_hinting else 0.0
+        )
+        vector_score = vector_scores.get(source.id, 0.0) if use_semantic_hinting else 0.0
+
+        if pattern.structure_signals.has_metrics:
+            tfidf_score += 0.05
+            reasons = [*reasons, "정량 결과 포함"]
+
+        combined_score = tfidf_score + bonus + (semantic_score * 0.15) + (vector_score * 0.2)
+        if combined_score <= 0.05:
+            continue
+        hints.append(
+            _build_hint_entry(
+                source=source,
+                tfidf_score=tfidf_score,
+                semantic_score=semantic_score,
+                vector_score=vector_score,
+                combined_score=combined_score,
+                match_reasons=reasons,
+                question=question,
+            )
+        )
+        if len(hints) >= limit:
+            break
+
+    hints.sort(
+        key=lambda item: (
+            float(item.get("combined_score", 0.0)),
+            len(item.get("match_reasons", [])),
+            float(item.get("vector_score", 0.0)),
+            float(item.get("semantic_score", 0.0)),
+        ),
+        reverse=True,
+    )
+    return hints
+
+
+def build_question_specific_knowledge_hints(
+    sources: List[KnowledgeSource], project: ApplicationProject
+) -> List[dict[str, Any]]:
+    if not sources or not project.questions:
+        return []
+
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+    except ImportError:
+        return []
+
+    global _KNOWLEDGE_CACHE
+    current_hash = calculate_sources_hash(sources)
+    cache_hit = False
+    with _KNOWLEDGE_CACHE_LOCK:
+        cache_hit = (
+            _KNOWLEDGE_CACHE["hash"] == current_hash
+            and _KNOWLEDGE_CACHE["vectorizer"] is not None
+        )
+        if cache_hit:
+            vectorizer = _KNOWLEDGE_CACHE["vectorizer"]
+            tfidf_matrix = _KNOWLEDGE_CACHE["tfidf_matrix"]
+            valid_sources = list(_KNOWLEDGE_CACHE["valid_sources"])
+            doc_texts = list(_KNOWLEDGE_CACHE.get("doc_texts", []))
+
+    hint_source_cap = int(get_config_value("writer.hint_source_cap", 120))
+    if not cache_hit:
+        corpus = []
+        valid_sources = []
+        for source in sources:
+            if not source.pattern:
+                continue
+            valid_sources.append(source)
+        valid_sources = _compress_hint_sources(valid_sources, max_sources=hint_source_cap)
+        doc_texts = []
+        for source in valid_sources:
+            doc_text = _build_source_doc_text(source)
+            doc_texts.append(doc_text)
+            corpus.append(
+                " ".join(
+                    [
+                        source.pattern.company_name,
+                        source.pattern.job_title,
+                        " ".join(source.pattern.retrieval_terms),
+                        " ".join([qt.value for qt in source.pattern.question_types]),
+                    ]
+                )
+            )
+        if not corpus:
+            return []
+        vectorizer = TfidfVectorizer()
+        tfidf_matrix = vectorizer.fit_transform(corpus)
+        with _KNOWLEDGE_CACHE_LOCK:
+            _KNOWLEDGE_CACHE["hash"] = current_hash
+            _KNOWLEDGE_CACHE["vectorizer"] = vectorizer
+            _KNOWLEDGE_CACHE["tfidf_matrix"] = tfidf_matrix
+            _KNOWLEDGE_CACHE["valid_sources"] = list(valid_sources)
+            _KNOWLEDGE_CACHE["doc_texts"] = list(doc_texts)
+
+    semantic_hint_cap = int(get_config_value("writer.semantic_hint_cap", 32))
+    use_semantic_hinting = len(valid_sources) <= semantic_hint_cap
+    question_hints: list[dict[str, Any]] = []
+    for question in project.questions:
+        hints = _rank_knowledge_hints(
+            valid_sources,
+            vectorizer=vectorizer,
+            tfidf_matrix=tfidf_matrix,
+            project=project,
+            doc_texts=doc_texts,
+            question=question,
+            use_semantic_hinting=use_semantic_hinting,
+            limit=3,
+        )
+        question_hints.append(
+            {
+                "question_id": question.id,
+                "question_order": question.order_no,
+                "question_text": question.question_text,
+                "question_type": getattr(question.detected_type, "value", ""),
+                "hints": hints,
+            }
+        )
+    return question_hints
+
+
+def build_knowledge_hints(
+    sources: List[KnowledgeSource], project: ApplicationProject
+) -> List[dict[str, Any]]:
     if not sources:
         return []
 
@@ -72,7 +493,7 @@ def build_knowledge_hints(sources: List[KnowledgeSource], project: ApplicationPr
 
     global _KNOWLEDGE_CACHE
     current_hash = calculate_sources_hash(sources)
-    
+
     # 1. 캐시 히트 체크 (지식 베이스 데이터가 변경되지 않았다면 재사용)
     cache_hit = False
     with _KNOWLEDGE_CACHE_LOCK:
@@ -84,6 +505,8 @@ def build_knowledge_hints(sources: List[KnowledgeSource], project: ApplicationPr
             vectorizer = _KNOWLEDGE_CACHE["vectorizer"]
             tfidf_matrix = _KNOWLEDGE_CACHE["tfidf_matrix"]
             valid_sources = list(_KNOWLEDGE_CACHE["valid_sources"])
+            doc_texts = list(_KNOWLEDGE_CACHE.get("doc_texts", []))
+    hint_source_cap = int(get_config_value("writer.hint_source_cap", 120))
     if not cache_hit:
         # 2. 캐시 미스: 신규 백터화 수행
         corpus = []
@@ -92,117 +515,52 @@ def build_knowledge_hints(sources: List[KnowledgeSource], project: ApplicationPr
             if not source.pattern:
                 continue
             valid_sources.append(source)
+        valid_sources = _compress_hint_sources(
+            valid_sources,
+            max_sources=hint_source_cap,
+        )
+        for source in valid_sources:
             pattern = source.pattern
             doc_parts = [
-                pattern.company_name, 
+                pattern.company_name,
                 pattern.job_title,
                 " ".join(pattern.retrieval_terms),
-                " ".join([qt.value for qt in pattern.question_types])
+                " ".join([qt.value for qt in pattern.question_types]),
             ]
             corpus.append(" ".join(doc_parts))
-            
+        doc_texts = [_build_source_doc_text(source) for source in valid_sources]
+
         if not corpus:
             return []
 
         vectorizer = TfidfVectorizer()
         tfidf_matrix = vectorizer.fit_transform(corpus)
-        
+
         # 캐시 업데이트
         with _KNOWLEDGE_CACHE_LOCK:
             _KNOWLEDGE_CACHE["hash"] = current_hash
             _KNOWLEDGE_CACHE["vectorizer"] = vectorizer
             _KNOWLEDGE_CACHE["tfidf_matrix"] = tfidf_matrix
             _KNOWLEDGE_CACHE["valid_sources"] = list(valid_sources)
+            _KNOWLEDGE_CACHE["doc_texts"] = list(doc_texts)
 
-    company = project.company_name.strip()
-    job = project.job_title.strip()
-    
-    # 3. 쿼리 텍스트 구성 및 유사도 계산
-    query_parts = [company, job]
-    for question in project.questions:
-        query_parts.extend(extract_question_keywords(question.question_text))
-        query_parts.append(question.detected_type.value)
-        
-    query_text = " ".join(query_parts)
-    query_vector = vectorizer.transform([query_text])
-    cosine_similarities = cosine_similarity(query_vector, tfidf_matrix).flatten()
-    with tempfile.TemporaryDirectory(prefix="resume-agent-vector-") as vector_dir:
-        vector_store = SimpleVectorStore(vector_dir)
-        for source in valid_sources:
-            pattern = source.pattern
-            doc_text = " ".join(
-                [
-                    pattern.company_name,
-                    pattern.job_title,
-                    pattern.structure_summary,
-                    " ".join(pattern.retrieval_terms),
-                    source.cleaned_text[:500],
-                ]
-            ).strip()
-            vector_store.add_document(
-                doc_text,
-                {"source_id": source.id},
-                doc_id=source.id,
-            )
-        vector_scores = {
-            item["id"]: float(item.get("similarity", 0.0))
-            for item in vector_store.search(
-                query_text,
-                n_results=max(5, len(valid_sources)),
-                min_similarity=0.0,
-            )
-        }
-    
-    # 4. 점수 정렬 및 상위 5개 추출
-    ranked_indices = cosine_similarities.argsort()[::-1]
-    
-    hints: List[dict[str, Any]] = []
-    for idx in ranked_indices[:5]:
-        score = cosine_similarities[idx]
-        if score <= 0.01:
-            continue
-            
-        source = valid_sources[idx]
-        pattern = source.pattern
-        doc_text = " ".join(
-            [
-                pattern.company_name,
-                pattern.job_title,
-                pattern.structure_summary,
-                " ".join(pattern.retrieval_terms),
-                source.cleaned_text[:300],
-            ]
-        ).strip()
-        semantic_score = _semantic_similarity(query_text, doc_text)
-        vector_score = vector_scores.get(source.id, 0.0)
-
-        if pattern.structure_signals.has_metrics:
-            score += 0.05
-        combined_score = score + (semantic_score * 0.15) + (vector_score * 0.2)
-            
-        hints.append(
-            {
-                "title": source.title,
-                "signal": f"{pattern.company_name or '일반'} / {pattern.job_title or '직무 미상'} / TF-IDF score {score:.3f}",
-                "structure_summary": pattern.structure_summary,
-                "caution": pattern.caution,
-                "question_types": [qt.value for qt in pattern.question_types],
-                "semantic_score": round(semantic_score, 3),
-                "vector_score": round(vector_score, 3),
-                "combined_score": round(combined_score, 3),
-            }
-        )
-    hints.sort(
-        key=lambda item: (
-            float(item.get("combined_score", 0.0)),
-            float(item.get("vector_score", 0.0)),
-            float(item.get("semantic_score", 0.0)),
-        ),
-        reverse=True,
+    semantic_hint_cap = int(get_config_value("writer.semantic_hint_cap", 32))
+    use_semantic_hinting = len(valid_sources) <= semantic_hint_cap
+    return _rank_knowledge_hints(
+        valid_sources,
+        vectorizer=vectorizer,
+        tfidf_matrix=tfidf_matrix,
+        project=project,
+        doc_texts=doc_texts,
+        question=None,
+        use_semantic_hinting=use_semantic_hinting,
+        limit=5,
     )
-    return hints
 
-def _fallback_build_knowledge_hints(sources: List[KnowledgeSource], project: ApplicationProject) -> List[dict[str, Any]]:
+
+def _fallback_build_knowledge_hints(
+    sources: List[KnowledgeSource], project: ApplicationProject
+) -> List[dict[str, Any]]:
     # 이전 로직 그대로 유지
     company = project.company_name.strip()
     job = project.job_title.strip()
@@ -228,23 +586,32 @@ def _fallback_build_knowledge_hints(sources: List[KnowledgeSource], project: App
         score += sum(3 for qtype in question_types if qtype in pattern.question_types)
         if pattern.structure_signals.has_metrics:
             score += 1
+        bonus, reasons = _match_reason_summary(project=project, pattern=pattern)
+        score += int(round(bonus * 10))
         if score > 0:
-            ranked.append((score, source))
+            ranked.append((score, source, reasons))
 
     ranked.sort(key=lambda item: item[0], reverse=True)
     hints: List[dict[str, Any]] = []
-    for score, source in ranked[:5]:
+    for score, source, reasons in ranked[:5]:
         pattern = source.pattern
         hints.append(
             {
                 "title": source.title,
+                "company_name": pattern.company_name,
+                "job_title": pattern.job_title,
                 "signal": f"{pattern.company_name or '일반'} / {pattern.job_title or '직무 미상'} / score {score}",
                 "structure_summary": pattern.structure_summary,
                 "caution": pattern.caution,
                 "question_types": [qt.value for qt in pattern.question_types],
+                "applicable_question_types": [qt.value for qt in pattern.question_types],
+                "evidence_focus": _derive_evidence_focus(source),
+                "structure_signals": pattern.structure_signals.model_dump(),
+                "match_reasons": reasons,
             }
         )
     return hints
+
 
 def build_coach_artifact(
     project: ApplicationProject,
@@ -253,6 +620,9 @@ def build_coach_artifact(
     outcome_summary: dict[str, Any] | None = None,
     strategy_outcome_summary: dict[str, Any] | None = None,
     current_pattern: str | None = None,
+    feedback_adaptation_plan: dict[str, Any] | None = None,
+    question_strategies: List[dict[str, Any]] | None = None,
+    writer_contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     allocations = allocate_experiences(
         project.questions,
@@ -261,6 +631,7 @@ def build_coach_artifact(
         outcome_summary=outcome_summary,
         strategy_outcome_summary=strategy_outcome_summary,
         current_pattern=current_pattern,
+        feedback_adaptation_plan=feedback_adaptation_plan,
     )
     current_summary: List[str] = []
     required_inputs: List[str] = []
@@ -268,24 +639,32 @@ def build_coach_artifact(
     for allocation in allocations:
         experience = find_experience(experiences, allocation["experience_id"])
         if not experience:
-             continue
+            continue
         current_summary.append(
             f"{allocation['order_no']}번 문항은 {QUESTION_TYPE_LABELS.get(allocation['question_type'], allocation['question_type'])}으로 분류했고, "
             f"주력 경험은 {experience.title}입니다."
         )
         if not metric_present(experience):
-            required_inputs.append(f"{experience.title}: 정량 또는 비교 근거를 보강하세요.")
+            required_inputs.append(
+                f"{experience.title}: 정량 또는 비교 근거를 보강하세요."
+            )
         if not experience.evidence_text.strip():
-            required_inputs.append(f"{experience.title}: 면접 방어용 증빙 텍스트를 추가하세요.")
+            required_inputs.append(
+                f"{experience.title}: 면접 방어용 증빙 텍스트를 추가하세요."
+            )
 
     needs_verification = [
         f"[NEEDS_VERIFICATION] {title}"
         for title in gap_report.get("needs_verification", [])
     ]
     if not any(exp.evidence_level == EvidenceLevel.L3 for exp in experiences):
-        needs_verification.append("[NEEDS_VERIFICATION] L3 수준의 증거 경험이 없습니다.")
+        needs_verification.append(
+            "[NEEDS_VERIFICATION] L3 수준의 증거 경험이 없습니다."
+        )
 
-    assumptions = [f"[ASSUMPTION] 답변 톤은 '{project.tone_style}' 기준으로 유지합니다."]
+    assumptions = [
+        f"[ASSUMPTION] 답변 톤은 '{project.tone_style}' 기준으로 유지합니다."
+    ]
     if not project.priority_experience_order:
         assumptions.append(
             "[ASSUMPTION] 우선순위가 비어 있어 현재 점수 기준으로 경험을 배분합니다."
@@ -310,9 +689,12 @@ def build_coach_artifact(
         "recommendations": gap_report.get("recommendations", [])
         or ["즉시 보강이 필요한 추천 사항이 없습니다."],
         "allocations": allocations,
+        "question_strategies": question_strategies or [],
+        "writer_contract": writer_contract or {},
     }
     artifact["rendered"] = render_coach_artifact(artifact)
     return artifact
+
 
 def render_coach_artifact(artifact: dict[str, Any]) -> str:
     lines = [
@@ -332,13 +714,33 @@ def render_coach_artifact(artifact: dict[str, Any]) -> str:
         artifact["next_step"],
     ]
     if artifact.get("assumptions"):
-        lines.extend(["", "## ASSUMPTIONS", *[f"- {item}" for item in artifact["assumptions"]]])
+        lines.extend(
+            ["", "## ASSUMPTIONS", *[f"- {item}" for item in artifact["assumptions"]]]
+        )
     if artifact.get("needs_verification"):
-        lines.extend(["", "## NEEDS VERIFICATION", *[f"- {item}" for item in artifact["needs_verification"]]])
+        lines.extend(
+            [
+                "",
+                "## NEEDS VERIFICATION",
+                *[f"- {item}" for item in artifact["needs_verification"]],
+            ]
+        )
     if artifact.get("question_risks"):
-        lines.extend(["", "## QUESTION RISKS", *[f"- {item}" for item in artifact["question_risks"]]])
+        lines.extend(
+            [
+                "",
+                "## QUESTION RISKS",
+                *[f"- {item}" for item in artifact["question_risks"]],
+            ]
+        )
     if artifact.get("recommendations"):
-        lines.extend(["", "## RECOMMENDATIONS", *[f"- {item}" for item in artifact["recommendations"]]])
+        lines.extend(
+            [
+                "",
+                "## RECOMMENDATIONS",
+                *[f"- {item}" for item in artifact["recommendations"]],
+            ]
+        )
     if artifact.get("allocations"):
         lines.extend(["", "## ALLOCATIONS"])
         for item in artifact["allocations"]:
@@ -353,7 +755,51 @@ def render_coach_artifact(artifact: dict[str, Any]) -> str:
             )
             if item.get("reuse_reason"):
                 lines.append(f"- Reuse: {item['reuse_reason']}")
+    if artifact.get("question_strategies"):
+        lines.extend(["", "## QUESTION STRATEGIES"])
+        for item in artifact["question_strategies"]:
+            lines.extend(
+                [
+                    f"### Q{item.get('question_order', '?')}",
+                    f"- Core message: {item.get('core_message', '미정')}",
+                    f"- Winning angle: {item.get('winning_angle', '미정')}",
+                    f"- Losing angle: {item.get('losing_angle', '미정')}",
+                    f"- Primary experience: {item.get('primary_experience_title', '미정')}",
+                ]
+            )
+            supporting = item.get("supporting_experience_titles", [])
+            if supporting:
+                lines.append(f"- Supporting experiences: {', '.join(supporting)}")
+            forbidden = item.get("forbidden_points", [])
+            if forbidden:
+                lines.append(f"- Forbidden points: {', '.join(forbidden)}")
+            attack_points = item.get("expected_attack_points", [])
+            if attack_points:
+                lines.append(f"- Expected attacks: {', '.join(attack_points)}")
+            required_evidence = item.get("required_evidence", [])
+            if required_evidence:
+                lines.append(f"- Required evidence: {', '.join(required_evidence)}")
+            differentiation = item.get("differentiation_line")
+            if differentiation:
+                lines.append(f"- Differentiation line: {differentiation}")
+    if artifact.get("writer_contract"):
+        contract = artifact["writer_contract"]
+        lines.extend(
+            [
+                "",
+                "## WRITER CONTRACT",
+                f"- Mode: {contract.get('mode_label', 'heuristic mode')}",
+                f"- Headline: {contract.get('headline', '문항별 단일 전략을 고정합니다.')}",
+            ]
+        )
+        checklist = contract.get("answer_checklist", [])
+        if checklist:
+            lines.extend([f"- Checklist: {item}" for item in checklist])
+        principles = contract.get("decision_principles", [])
+        if principles:
+            lines.extend([f"- Principle: {item}" for item in principles])
     return "\n".join(lines)
+
 
 def _extract_section_body(text: str, heading: str, headings: List[str]) -> str:
     start = text.find(heading)
@@ -369,11 +815,13 @@ def _extract_section_body(text: str, heading: str, headings: List[str]) -> str:
             end = idx
     return text[start:end].strip()
 
+
 def _section_has_content(text: str, heading: str, headings: List[str]) -> bool:
     body = _extract_section_body(text, heading, headings)
     if not body:
         return False
     return any(line.strip("- ").strip() for line in body.splitlines())
+
 
 def validate_coach_contract(text: str) -> dict[str, Any]:
     headings = [
@@ -388,13 +836,23 @@ def validate_coach_contract(text: str) -> dict[str, Any]:
         "## RECOMMENDATIONS",
     ]
     missing = [heading for heading in headings if heading not in text]
-    empty = [heading for heading in headings if heading in text and not _section_has_content(text, heading, headings)]
+    empty = [
+        heading
+        for heading in headings
+        if heading in text and not _section_has_content(text, heading, headings)
+    ]
     return {"passed": not missing and not empty, "missing": missing, "empty": empty}
+
 
 def validate_block_contract(text: str, headings: List[str]) -> dict[str, Any]:
     missing = [heading for heading in headings if heading not in text]
-    empty = [heading for heading in headings if heading in text and not _section_has_content(text, heading, headings)]
+    empty = [
+        heading
+        for heading in headings
+        if heading in text and not _section_has_content(text, heading, headings)
+    ]
     return {"passed": not missing and not empty, "missing": missing, "empty": empty}
+
 
 def validate_writer_contract(text: str) -> dict[str, Any]:
     headings = [
@@ -412,6 +870,7 @@ def validate_writer_contract(text: str) -> dict[str, Any]:
     result["passed"] = result["passed"] and not semantic_missing
     result["semantic_missing"] = semantic_missing
     return result
+
 
 def validate_interview_contract(text: str) -> dict[str, Any]:
     headings = [

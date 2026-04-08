@@ -1,0 +1,424 @@
+{
+  "artifact": "interview",
+  "total_feedback": 2,
+  "recent_rejection_comments": [],
+  "top_patterns": [],
+  "recommended_pattern": "interview|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I",
+  "current_pattern": "interview|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I",
+  "question_experience_map": [
+    {
+      "question_id": "q1_nh_growth",
+      "question_type": "TYPE_D",
+      "experience_id": "exp_seoul_covid_conflict",
+      "question_order": 1
+    },
+    {
+      "question_id": "q2_nh_decision",
+      "question_type": "TYPE_I",
+      "experience_id": "exp_nps_intern",
+      "question_order": 2
+    },
+    {
+      "question_id": "q3_nh_trust",
+      "question_type": "TYPE_F",
+      "experience_id": "exp_seoul_covid_fraud",
+      "question_order": 3
+    },
+    {
+      "question_id": "q4_nh_value",
+      "question_type": "TYPE_F",
+      "experience_id": "exp_seoul_covid_crisis",
+      "question_order": 4
+    },
+    {
+      "question_id": "q5_nh_structure",
+      "question_type": "TYPE_E",
+      "experience_id": "exp_mg_bank_parttime",
+      "question_order": 5
+    }
+  ],
+  "question_strategy_map": [
+    {
+      "question_id": "q1_nh_growth",
+      "question_order": 1,
+      "question_type": "QuestionType.TYPE_D",
+      "experience_id": "exp_seoul_covid_conflict",
+      "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    },
+    {
+      "question_id": "q2_nh_decision",
+      "question_order": 2,
+      "question_type": "QuestionType.TYPE_I",
+      "experience_id": "exp_nps_intern",
+      "core_message": "국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_I 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_I 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    },
+    {
+      "question_id": "q3_nh_trust",
+      "question_order": 3,
+      "question_type": "QuestionType.TYPE_F",
+      "experience_id": "exp_seoul_covid_fraud",
+      "core_message": "서울시청 코로나19 지원팀 부정수급 적발 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 부정수급 적발의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    },
+    {
+      "question_id": "q4_nh_value",
+      "question_order": 4,
+      "question_type": "QuestionType.TYPE_F",
+      "experience_id": "exp_seoul_covid_crisis",
+      "core_message": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    },
+    {
+      "question_id": "q5_nh_structure",
+      "question_order": 5,
+      "question_type": "QuestionType.TYPE_E",
+      "experience_id": "exp_mg_bank_parttime",
+      "core_message": "새마을금고 아르바이트 - 디지털 취약 고객 응대 경험으로 QuestionType.TYPE_E 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_E 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 새마을금고 아르바이트 - 디지털 취약 고객 응대의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    }
+  ],
+  "overall_success_rate": 0.0,
+  "similar_context": {
+    "artifact_type": "interview",
+    "artifact": "interview",
+    "stage": "interview",
+    "company_name": "농·축협",
+    "job_title": "신규직원",
+    "company_type": "협동조합",
+    "question_types": [
+      "TYPE_D",
+      "TYPE_I",
+      "TYPE_F",
+      "TYPE_F",
+      "TYPE_E"
+    ]
+  },
+  "recent_rejection_reasons": [],
+  "outcome_summary": {
+    "matched_feedback_count": 2,
+    "outcome_breakdown": {
+      "unknown": 2
+    },
+    "top_rejection_reasons": []
+  },
+  "strategy_outcome_summary": {
+    "matched_feedback_count": 2,
+    "learned_outcome_weights": {
+      "offer": 4.0,
+      "final_pass": 3.0,
+      "pass": 3.0,
+      "interview_pass": 2.0,
+      "document_pass": 2.0,
+      "fail_interview": 3.0,
+      "interview_fail": 3.0,
+      "document_fail": 1.0,
+      "reject": 2.0,
+      "rejected": 3.0
+    },
+    "experience_stats_by_question_type": {
+      "TYPE_D": {
+        "exp_seoul_covid_budget": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 6.0,
+          "weighted_net_score": -6,
+          "pass_rate": 0.0,
+          "pattern_breakdown": {
+            "writer|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I": {
+              "total_uses": 2,
+              "pass_count": 0,
+              "fail_count": 2,
+              "weighted_pass_score": 0.0,
+              "weighted_fail_score": 6.0,
+              "weighted_net_score": -6,
+              "pass_rate": 0.0
+            }
+          },
+          "top_rejection_reasons": []
+        }
+      },
+      "TYPE_I": {
+        "exp_nps_income_adjustment": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 6.0,
+          "weighted_net_score": -6,
+          "pass_rate": 0.0,
+          "pattern_breakdown": {
+            "writer|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I": {
+              "total_uses": 2,
+              "pass_count": 0,
+              "fail_count": 2,
+              "weighted_pass_score": 0.0,
+              "weighted_fail_score": 6.0,
+              "weighted_net_score": -6,
+              "pass_rate": 0.0
+            }
+          },
+          "top_rejection_reasons": []
+        }
+      },
+      "TYPE_F": {
+        "exp_seoul_covid_conflict": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 6.0,
+          "weighted_net_score": -6,
+          "pass_rate": 0.0,
+          "pattern_breakdown": {
+            "writer|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I": {
+              "total_uses": 2,
+              "pass_count": 0,
+              "fail_count": 2,
+              "weighted_pass_score": 0.0,
+              "weighted_fail_score": 6.0,
+              "weighted_net_score": -6,
+              "pass_rate": 0.0
+            }
+          },
+          "top_rejection_reasons": []
+        },
+        "exp_nps_intern": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 6.0,
+          "weighted_net_score": -6,
+          "pass_rate": 0.0,
+          "pattern_breakdown": {
+            "writer|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I": {
+              "total_uses": 2,
+              "pass_count": 0,
+              "fail_count": 2,
+              "weighted_pass_score": 0.0,
+              "weighted_fail_score": 6.0,
+              "weighted_net_score": -6,
+              "pass_rate": 0.0
+            }
+          },
+          "top_rejection_reasons": []
+        }
+      },
+      "TYPE_E": {
+        "exp_seoul_covid_fraud": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 6.0,
+          "weighted_net_score": -6,
+          "pass_rate": 0.0,
+          "pattern_breakdown": {
+            "writer|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I": {
+              "total_uses": 2,
+              "pass_count": 0,
+              "fail_count": 2,
+              "weighted_pass_score": 0.0,
+              "weighted_fail_score": 6.0,
+              "weighted_net_score": -6,
+              "pass_rate": 0.0
+            }
+          },
+          "top_rejection_reasons": []
+        }
+      }
+    },
+    "strategy_stats_by_question_type": {
+      "QuestionType.TYPE_D": {
+        "QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 6.0,
+          "weighted_net_score": -6,
+          "pass_rate": 0.0
+        }
+      },
+      "QuestionType.TYPE_I": {
+        "QuestionType.TYPE_I 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 6.0,
+          "weighted_net_score": -6,
+          "pass_rate": 0.0
+        }
+      },
+      "QuestionType.TYPE_F": {
+        "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.": {
+          "total_uses": 4,
+          "pass_count": 0,
+          "fail_count": 4,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 12.0,
+          "weighted_net_score": -12,
+          "pass_rate": 0.0
+        }
+      },
+      "QuestionType.TYPE_E": {
+        "QuestionType.TYPE_E 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "weighted_pass_score": 0.0,
+          "weighted_fail_score": 6.0,
+          "weighted_net_score": -6,
+          "pass_rate": 0.0
+        }
+      }
+    },
+    "differentiation_stats_by_question_type": {
+      "QuestionType.TYPE_D": {
+        "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "pass_rate": 0.0
+        }
+      },
+      "QuestionType.TYPE_I": {
+        "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기준소득월액 변경 특례 민원 응대의 운영 기준·증빙·재현성을 제시한다.": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "pass_rate": 0.0
+        }
+      },
+      "QuestionType.TYPE_F": {
+        "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "pass_rate": 0.0
+        },
+        "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "pass_rate": 0.0
+        }
+      },
+      "QuestionType.TYPE_E": {
+        "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 부정수급 적발의 운영 기준·증빙·재현성을 제시한다.": {
+          "total_uses": 2,
+          "pass_count": 0,
+          "fail_count": 2,
+          "pass_rate": 0.0
+        }
+      }
+    },
+    "tone_stats_by_company_type": {
+      "협동조합": {
+        "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람": {
+          "total_uses": 10,
+          "pass_count": 0,
+          "fail_count": 10,
+          "pass_rate": 0.0
+        }
+      }
+    }
+  },
+  "insights": {
+    "total_feedback": 2,
+    "overall_success_rate": 0.0,
+    "average_rating": 0,
+    "top_patterns": [
+      {
+        "pattern_id": "writer|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I",
+        "success_rate": 0.0,
+        "uses": 2
+      }
+    ],
+    "improvement_areas": []
+  },
+  "adaptation_plan": {
+    "recommended_pattern": "interview|협동조합|TYPE_D-TYPE_E-TYPE_F-TYPE_I",
+    "focus_actions": [
+      "TYPE_D 문항은 경험 선택 재검토",
+      "TYPE_I 문항은 경험 선택 재검토"
+    ],
+    "risky_question_types": [
+      {
+        "question_type": "TYPE_D",
+        "weak_experiences": [
+          {
+            "experience_id": "exp_seoul_covid_budget",
+            "pass_rate": 0.0,
+            "weighted_net_score": -6,
+            "top_rejection_reasons": []
+          }
+        ],
+        "recommended_action": "해당 문항 유형은 경험 교체 또는 근거 보강을 우선 검토하세요."
+      },
+      {
+        "question_type": "TYPE_I",
+        "weak_experiences": [
+          {
+            "experience_id": "exp_nps_income_adjustment",
+            "pass_rate": 0.0,
+            "weighted_net_score": -6,
+            "top_rejection_reasons": []
+          }
+        ],
+        "recommended_action": "해당 문항 유형은 경험 교체 또는 근거 보강을 우선 검토하세요."
+      },
+      {
+        "question_type": "TYPE_F",
+        "weak_experiences": [
+          {
+            "experience_id": "exp_seoul_covid_conflict",
+            "pass_rate": 0.0,
+            "weighted_net_score": -6,
+            "top_rejection_reasons": []
+          },
+          {
+            "experience_id": "exp_nps_intern",
+            "pass_rate": 0.0,
+            "weighted_net_score": -6,
+            "top_rejection_reasons": []
+          }
+        ],
+        "recommended_action": "해당 문항 유형은 경험 교체 또는 근거 보강을 우선 검토하세요."
+      },
+      {
+        "question_type": "TYPE_E",
+        "weak_experiences": [
+          {
+            "experience_id": "exp_seoul_covid_fraud",
+            "pass_rate": 0.0,
+            "weighted_net_score": -6,
+            "top_rejection_reasons": []
+          }
+        ],
+        "recommended_action": "해당 문항 유형은 경험 교체 또는 근거 보강을 우선 검토하세요."
+      }
+    ],
+    "matched_feedback_count": 2
+  }
+}

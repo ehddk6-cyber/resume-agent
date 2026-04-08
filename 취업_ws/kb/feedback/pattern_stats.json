@@ -8,6 +8,24 @@
       "avg_rating": 0.0,
       "success_rate": 0.0,
       "last_used": "2026-03-27T11:18:10.405459"
+    },
+    "writer|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+      "pattern_id": "writer|공공기관|TYPE_B-TYPE_C-TYPE_F",
+      "total_uses": 1,
+      "accepted_count": 1,
+      "rejected_count": 0,
+      "avg_rating": 0.0,
+      "success_rate": 1.0,
+      "last_used": "2026-04-01T00:04:17.019978"
+    },
+    "interview|공공기관|TYPE_B-TYPE_C-TYPE_F": {
+      "pattern_id": "interview|공공기관|TYPE_B-TYPE_C-TYPE_F",
+      "total_uses": 1,
+      "accepted_count": 1,
+      "rejected_count": 0,
+      "avg_rating": 0.0,
+      "success_rate": 1.0,
+      "last_used": "2026-04-01T00:08:39.522725"
     }
   }
 }

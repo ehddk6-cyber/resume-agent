@@ -376,6 +376,9 @@ MODE ∈ {{COACH, FAST_COACH, WRITER_HANDOFF_ONLY, INTERVIEW_HANDOFF_ONLY, DUAL_
 - DATA.extra.self_intro_pack 이 있으면 30초 자기소개용 opening_hook, focus_keywords, banned_patterns 를 handoff 전략에 반영한다.
 - DATA.extra.ncs_profile 이 있으면 우선순위 직업공통능력과 질문별 추천 역량을 코칭 우선순위에 반영한다.
 - DATA.extra.ncs_profile.question_alignment[].recommended_ability_units 가 있으면 문항별 능력단위까지 handoff 에 반영한다.
+- DATA.extra.question_specific_hints 가 있으면 문항별로 유사 합격사례의 구조, 근거 유형, 매치 사유를 우선 참고한다.
+- DATA.extra.company_analysis.success_case_stats 가 있으면 정량성과 STAR 비율, 고객/협업 패턴 비율을 코칭 우선순위에 반영한다.
+- DATA.extra.company_analysis.discouraged_phrases 가 있으면 표현 복제가 의심되는 문구는 handoff 전략에서 금지 표현으로 분류한다.
 - 자기소개 코칭은 "회사/직무 접점 -> 대표 경험 -> 첫 기여 포인트" 순서를 기본 뼈대로 잡는다.
 
 # EVIDENCE LADDER
@@ -676,11 +679,14 @@ _PROMPT_WRITER_LEGACY = """# ROLE
 ## R7 COMPANY_CONTEXT_INTEGRATION
 - DATA 에 company_analysis 가 있으면 반드시 활용한다.
 - company_analysis.role_industry_strategy 가 있으면 evidence_priority, tone_rules, banned_patterns 를 우선 적용한다.
+- company_analysis.success_case_stats 가 있으면 정량 결과 비율, STAR 비율, 고객/협업 패턴 비율을 답변 구조 결정에 반영한다.
+- company_analysis.discouraged_phrases 가 있으면 해당 문구를 그대로 반복하지 않는다.
 - DATA.extra.committee_feedback 가 있으면 반복 리스크(recurring_risks)를 먼저 줄이는 방향으로 문장을 재구성한다.
 - DATA.extra.self_intro_pack 이 있으면 opening_hook 과 focus_keywords 를 참고해 지원동기 첫 문장과 자기소개 톤을 맞춘다.
 - DATA.extra.ncs_profile 이 있으면 priority_competencies 와 question_alignment 를 보고 문항별 증명 역량을 더 선명하게 맞춘다.
 - DATA.extra.ncs_profile.question_alignment[].recommended_ability_units 가 있으면 문항이 어떤 능력단위를 증명하는지 문장 안에서 드러나게 한다.
 - DATA.extra.narrative_ssot 가 있으면 core_claims, evidence_experience_ids, answer_anchor 를 writer 답변의 공통 기준으로 사용한다.
+- DATA.extra.question_specific_hints 가 있으면 문항별 top 힌트의 evidence_focus, match_reasons, applicable_question_types 를 먼저 참고해 구조를 잡는다.
 - 자소서 문항이 달라도 핵심 주장과 근거 경험 축은 narrative_ssot 와 충돌하지 않게 유지한다.
 - TYPE_A(지원동기): company_analysis.core_values 또는 culture_keywords 를 지원동기에 반영한다.
   예: "귀사의 [핵심가치]에 공감하며, 제 [경험]으로 [직무]에 기여할 수 있습니다"

@@ -1,3 +1,4 @@
+import importlib
 import re
 from typing import Any, List, Optional
 from .models import (
@@ -47,8 +48,72 @@ _SEMANTIC_EQUIVALENTS = {
     "직무": {"업무", "실무", "역할"},
 }
 
+# 임베딩 모듈 지연 로딩 (순환 import 방지)
+_ST_MODEL_SCORING = None
+_ST_CLASS_SCORING = None
 
-def _semantic_adjustment(question_text: str, haystack: str) -> tuple[int, list[str]]:
+
+def _get_st_model_scoring():
+    global _ST_MODEL_SCORING, _ST_CLASS_SCORING
+    if _ST_CLASS_SCORING is None:
+        try:
+            module = importlib.import_module("sentence_transformers")
+            _ST_CLASS_SCORING = getattr(module, "SentenceTransformer", None)
+        except ImportError:
+            _ST_CLASS_SCORING = False
+    if _ST_CLASS_SCORING in (None, False):
+        return None
+    if _ST_MODEL_SCORING is None:
+        model_name = get_config_value(
+            "embedding.model_name", "paraphrase-multilingual-MiniLM-L12-v2"
+        )
+        _ST_MODEL_SCORING = _ST_CLASS_SCORING(model_name)
+    return _ST_MODEL_SCORING
+
+
+def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
+    if len(vec1) != len(vec2):
+        return 0.0
+    dot = sum(a * b for a, b in zip(vec1, vec2))
+    n1 = sum(a * a for a in vec1) ** 0.5
+    n2 = sum(b * b for b in vec2) ** 0.5
+    if n1 == 0 or n2 == 0:
+        return 0.0
+    return dot / (n1 * n2)
+
+
+def _semantic_adjustment_embedding(
+    question_text: str, haystack: str
+) -> tuple[int, list[str]]:
+    """SentenceTransformer 기반 의미적 유사도 가점 (최대 +3)"""
+    model = _get_st_model_scoring()
+    if model is None:
+        return _semantic_adjustment_fallback(question_text, haystack)
+
+    try:
+        threshold = float(get_config_value("embedding.similarity_threshold", 0.35))
+        max_bonus = int(get_config_value("embedding.max_semantic_bonus", 3))
+
+        q_vec = model.encode(question_text, normalize_embeddings=True)
+        h_vec = model.encode(haystack, normalize_embeddings=True)
+
+        q_list = q_vec.tolist() if hasattr(q_vec, "tolist") else list(q_vec)
+        h_list = h_vec.tolist() if hasattr(h_vec, "tolist") else list(h_vec)
+
+        sim = _cosine_similarity(q_list, h_list)
+        if sim < threshold:
+            return 0, []
+
+        adjustment = min(max_bonus, max(1, int(sim * max_bonus / 0.5)))
+        return adjustment, ["질문과 경험의 의미 축이 임베딩 유사도로 연결되어 가점"]
+    except Exception:
+        return _semantic_adjustment_fallback(question_text, haystack)
+
+
+def _semantic_adjustment_fallback(
+    question_text: str, haystack: str
+) -> tuple[int, list[str]]:
+    """동의어 사전 기반 폴백"""
     question_tokens = {
         token for token in re.findall(r"[A-Za-z0-9가-힣]{2,}", question_text.lower())
     }
@@ -69,18 +134,28 @@ def _semantic_adjustment(question_text: str, haystack: str) -> tuple[int, list[s
     return adjustment, ["질문과 경험의 의미 축이 직접 연결되어 가점"]
 
 
+def _semantic_adjustment(question_text: str, haystack: str) -> tuple[int, list[str]]:
+    """의미적 유사도 가점 — 임베딩 우선, 폴백"""
+    return _semantic_adjustment_embedding(question_text, haystack)
+
+
 def _outcome_alignment_adjustment(
     experience: Experience,
     outcome_summary: dict[str, Any] | None,
 ) -> tuple[int, list[str]]:
-    if not outcome_summary or int(outcome_summary.get("matched_feedback_count", 0)) <= 0:
+    if (
+        not outcome_summary
+        or int(outcome_summary.get("matched_feedback_count", 0)) <= 0
+    ):
         return 0, []
 
     adjustment = 0
     notes: list[str] = []
     outcomes = outcome_summary.get("outcome_breakdown", {}) or {}
     pass_count = int(outcomes.get("pass", 0)) + int(outcomes.get("document_pass", 0))
-    fail_count = int(outcomes.get("fail_interview", 0)) + int(outcomes.get("document_fail", 0))
+    fail_count = int(outcomes.get("fail_interview", 0)) + int(
+        outcomes.get("document_fail", 0)
+    )
 
     rejection_text = " ".join(
         item.get("reason", "")
@@ -100,13 +175,21 @@ def _outcome_alignment_adjustment(
             notes.append("통과 사례 기준으로 개인 기여가 분명한 경험을 우대")
 
     if fail_count and rejection_text:
-        if ("근거" in rejection_text or "수치" in rejection_text) and not metric_present(experience):
+        if (
+            "근거" in rejection_text or "수치" in rejection_text
+        ) and not metric_present(experience):
             adjustment -= 3
             notes.append("과거 실패 이유가 근거 부족이라 수치 없는 경험을 감점")
-        if ("개인" in rejection_text or "기여" in rejection_text) and not experience.personal_contribution.strip():
+        if (
+            "개인" in rejection_text or "기여" in rejection_text
+        ) and not experience.personal_contribution.strip():
             adjustment -= 2
-            notes.append("과거 실패 이유가 개인 기여 불명확이라 개인 역할이 약한 경험을 감점")
-        if ("증빙" in rejection_text or "검증" in rejection_text) and not experience.evidence_text.strip():
+            notes.append(
+                "과거 실패 이유가 개인 기여 불명확이라 개인 역할이 약한 경험을 감점"
+            )
+        if (
+            "증빙" in rejection_text or "검증" in rejection_text
+        ) and not experience.evidence_text.strip():
             adjustment -= 2
             notes.append("과거 실패 이유가 검증 취약이라 증빙 없는 경험을 감점")
 
@@ -132,8 +215,13 @@ def _strategy_outcome_adjustment(
     bucket = exp_stats
     note_prefix = "실제 결과 통계"
     if current_pattern:
-        pattern_bucket = (exp_stats.get("pattern_breakdown", {}) or {}).get(current_pattern)
-        if isinstance(pattern_bucket, dict) and int(pattern_bucket.get("total_uses", 0)) > 0:
+        pattern_bucket = (exp_stats.get("pattern_breakdown", {}) or {}).get(
+            current_pattern
+        )
+        if (
+            isinstance(pattern_bucket, dict)
+            and int(pattern_bucket.get("total_uses", 0)) > 0
+        ):
             bucket = pattern_bucket
             note_prefix = "실제 결과 통계(동일 패턴)"
 
@@ -168,7 +256,11 @@ def _strategy_outcome_adjustment(
         return adjustment, notes
     if margin < 0:
         adjustment = -min(cap, max(1, abs(margin)))
-        reasons = bucket.get("top_rejection_reasons") or exp_stats.get("top_rejection_reasons") or []
+        reasons = (
+            bucket.get("top_rejection_reasons")
+            or exp_stats.get("top_rejection_reasons")
+            or []
+        )
         reason_hint = ""
         if reasons and isinstance(reasons[0], dict):
             reason_hint = reasons[0].get("reason", "")
@@ -180,6 +272,34 @@ def _strategy_outcome_adjustment(
         if reason_hint:
             notes.append(f"주요 실패 사유: {reason_hint}")
         return adjustment, notes
+    return 0, []
+
+
+def _feedback_adaptation_adjustment(
+    question_type: QuestionType,
+    experience: Experience,
+    feedback_adaptation_plan: dict[str, Any] | None,
+) -> tuple[int, list[str]]:
+    if not feedback_adaptation_plan:
+        return 0, []
+
+    risky_question_types = feedback_adaptation_plan.get("risky_question_types", []) or []
+    for item in risky_question_types:
+        if str(item.get("question_type", "")).strip() != question_type.value:
+            continue
+        for weak in item.get("weak_experiences", []) or []:
+            if str(weak.get("experience_id", "")).strip() != experience.id:
+                continue
+            reasons = weak.get("top_rejection_reasons", []) or []
+            reason_hint = ""
+            if reasons and isinstance(reasons[0], dict):
+                reason_hint = str(reasons[0].get("reason", "")).strip()
+            notes = [
+                f"학습 적응 계획에서 {question_type.value} 문항에 이 경험이 반복 취약 경험으로 식별되어 감점"
+            ]
+            if reason_hint:
+                notes.append(f"반복 탈락 사유: {reason_hint}")
+            return -12, notes
     return 0, []
 
 
@@ -237,9 +357,12 @@ def score_experience(
     outcome_summary: dict[str, Any] | None = None,
     strategy_outcome_summary: dict[str, Any] | None = None,
     current_pattern: str | None = None,
+    feedback_adaptation_plan: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     question_text = question.question_text
-    question_type = classify_question(question_text)
+    question_type = getattr(question, "detected_type", None)
+    if not isinstance(question_type, QuestionType) or question_type == QuestionType.TYPE_UNKNOWN:
+        question_type = classify_question(question_text)
     keywords = extract_question_keywords(question_text)
 
     haystack = " ".join(
@@ -290,6 +413,12 @@ def score_experience(
         current_pattern,
     )
     score += strategy_adjustment
+    adaptation_adjustment, adaptation_notes = _feedback_adaptation_adjustment(
+        question_type,
+        experience,
+        feedback_adaptation_plan,
+    )
+    score += adaptation_adjustment
 
     return {
         "score": score,
@@ -297,8 +426,9 @@ def score_experience(
         "keywords": keywords,
         "outcome_adjustment": outcome_adjustment,
         "strategy_adjustment": strategy_adjustment,
+        "adaptation_adjustment": adaptation_adjustment,
         "semantic_adjustment": semantic_adjustment,
-        "outcome_notes": [*outcome_notes, *strategy_notes],
+        "outcome_notes": [*outcome_notes, *strategy_notes, *adaptation_notes],
         "semantic_notes": semantic_notes,
     }
 
@@ -319,6 +449,7 @@ def allocate_experiences(
     outcome_summary: dict[str, Any] | None = None,
     strategy_outcome_summary: dict[str, Any] | None = None,
     current_pattern: str | None = None,
+    feedback_adaptation_plan: dict[str, Any] | None = None,
 ) -> List[dict[str, Any]]:
     allocations: List[dict[str, Any]] = []
     used_experience_ids: List[str] = []
@@ -337,6 +468,7 @@ def allocate_experiences(
                     outcome_summary,
                     strategy_outcome_summary,
                     current_pattern,
+                    feedback_adaptation_plan,
                 ),
             }
             for exp in experiences

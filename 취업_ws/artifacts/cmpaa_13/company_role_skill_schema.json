@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resume-agent.local/schemas/company-role-skill-record.json",
+  "title": "CompanyRoleSkillRecord",
+  "description": "Company/role-level skill evidence record extracted from hiring materials.",
+  "type": "object",
+  "required": [
+    "record_id",
+    "company_name",
+    "company_type",
+    "role_name",
+    "role_family",
+    "employment_type",
+    "job_stage",
+    "source",
+    "skill_tags",
+    "evidence_excerpt",
+    "evidence_type",
+    "confidence"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]{8,64}$",
+      "description": "Stable identifier for one skill-evidence row."
+    },
+    "company_name": {
+      "type": "string",
+      "minLength": 2
+    },
+    "company_type": {
+      "type": "string",
+      "enum": [
+        "public_corporation",
+        "quasi_government",
+        "public_agency",
+        "state_owned_bank",
+        "public_foundation",
+        "other"
+      ]
+    },
+    "role_name": {
+      "type": "string",
+      "minLength": 2
+    },
+    "role_family": {
+      "type": "string",
+      "enum": [
+        "general_admin",
+        "business_support",
+        "finance_accounting",
+        "customer_service",
+        "it_data",
+        "policy_research",
+        "operations",
+        "other"
+      ]
+    },
+    "employment_type": {
+      "type": "string",
+      "enum": [
+        "full_time",
+        "intern",
+        "contract",
+        "other"
+      ]
+    },
+    "job_stage": {
+      "type": "string",
+      "enum": [
+        "entry",
+        "junior",
+        "mid",
+        "senior",
+        "intern"
+      ]
+    },
+    "location_scope": {
+      "type": "string",
+      "description": "Region or branch scope, when available."
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "file_path",
+        "source_kind"
+      ],
+      "properties": {
+        "file_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_kind": {
+          "type": "string",
+          "enum": [
+            "normalized_jd",
+            "normalized_essay_prompt",
+            "manually_curated"
+          ]
+        },
+        "source_line_hint": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "skill_tags": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9_.-]{2,64}$"
+      },
+      "description": "Standardized tags from the CMPAA-13 taxonomy."
+    },
+    "skill_weights": {
+      "type": "object",
+      "description": "Optional relative weights by tag (0~1).",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "evidence_excerpt": {
+      "type": "string",
+      "minLength": 8,
+      "description": "Short excerpt or paraphrase that justifies assigned skills."
+    },
+    "evidence_type": {
+      "type": "string",
+      "enum": [
+        "explicit_requirement",
+        "implicit_requirement",
+        "success_profile"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Analyst assumptions used for normalization."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

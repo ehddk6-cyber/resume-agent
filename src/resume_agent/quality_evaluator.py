@@ -17,6 +17,9 @@ class QualityDimension(Enum):
     LOGIC = "logic"                # 논리성
     ORIGINALITY = "originality"    # 독창성
     READABILITY = "readability"    # 가독성
+    PERSUASIVENESS = "persuasiveness"  # 설득력
+    DEFENSIBILITY = "defensibility"    # 면접 방어 가능성
+    COMPANY_FIT = "company_fit"        # 회사 적합성
 
 
 @dataclass
@@ -108,14 +111,32 @@ class QualityEvaluator:
         readability_score, readability_feedback = self._evaluate_readability(draft)
         scores["readability"] = readability_score
         feedback.extend(readability_feedback)
+
+        # 6. 설득력 평가
+        persuasiveness_score, persuasiveness_feedback = self._evaluate_persuasiveness(draft)
+        scores["persuasiveness"] = persuasiveness_score
+        feedback.extend(persuasiveness_feedback)
+
+        # 7. 면접 방어 가능성 평가
+        defensibility_score, defensibility_feedback = self._evaluate_defensibility(draft)
+        scores["defensibility"] = defensibility_score
+        feedback.extend(defensibility_feedback)
+
+        # 8. 회사 적합성 평가
+        company_fit_score, company_fit_feedback = self._evaluate_company_fit(draft, question)
+        scores["company_fit"] = company_fit_score
+        feedback.extend(company_fit_feedback)
         
         # 종합 점수 계산 (가중 평균)
         weights = {
             "relevance": 0.30,
-            "specificity": 0.25,
-            "logic": 0.20,
-            "originality": 0.15,
-            "readability": 0.10
+            "specificity": 0.18,
+            "logic": 0.14,
+            "originality": 0.10,
+            "readability": 0.08,
+            "persuasiveness": 0.08,
+            "defensibility": 0.07,
+            "company_fit": 0.05,
         }
         
         overall = sum(scores[dim] * weights[dim] for dim in scores)
@@ -314,8 +335,57 @@ class QualityEvaluator:
         
         if scores.get("readability", 0) < 70:
             suggestions.append("문단을 나누고 적절한 길이의 문장을 사용하세요")
+
+        if scores.get("persuasiveness", 0) < 70:
+            suggestions.append("주장 뒤에 바로 근거와 결과를 붙여 설득 구조를 강화하세요")
+
+        if scores.get("defensibility", 0) < 70:
+            suggestions.append("면접에서 재질문받을 수 있는 수치·비교 기준·개인 기여를 미리 넣어두세요")
+
+        if scores.get("company_fit", 0) < 70:
+            suggestions.append("회사·직무 신호와 본인 경험의 연결고리를 더 앞부분에서 드러내세요")
         
         return suggestions
+
+    def _evaluate_persuasiveness(self, draft: str) -> tuple[float, List[str]]:
+        feedback = []
+        score = 60.0
+
+        if any(connector in draft for connector in ["결과적으로", "이를 통해", "따라서", "그래서"]):
+            score += 15
+        if any(char.isdigit() for char in draft):
+            score += 15
+        if any(keyword in draft for keyword in ["기여", "개선", "성과", "효과"]):
+            score += 10
+        if score < 75:
+            feedback.append("주장과 성과 사이의 연결이 약해 설득력이 떨어질 수 있습니다")
+        return min(100, score), feedback
+
+    def _evaluate_defensibility(self, draft: str) -> tuple[float, List[str]]:
+        feedback = []
+        score = 55.0
+
+        if any(keyword in draft for keyword in ["제가", "직접", "담당", "판단"]):
+            score += 20
+        if any(char.isdigit() for char in draft):
+            score += 15
+        if any(keyword in draft for keyword in ["기준", "비교", "근거", "측정"]):
+            score += 10
+        if score < 70:
+            feedback.append("면접에서 근거·비교 기준·개인 기여를 다시 물으면 방어가 약할 수 있습니다")
+        return min(100, score), feedback
+
+    def _evaluate_company_fit(self, draft: str, question: str) -> tuple[float, List[str]]:
+        feedback = []
+        score = 55.0
+        combined = f"{question} {draft}"
+        if any(keyword in combined for keyword in ["회사", "조직", "기관", "직무", "고객", "서비스"]):
+            score += 25
+        if any(keyword in draft for keyword in ["입사 후", "기여", "활용", "연결"]):
+            score += 15
+        if score < 70:
+            feedback.append("회사·직무와 본인 경험의 연결이 아직 약하게 들릴 수 있습니다")
+        return min(100, score), feedback
 
     def _detect_question_type(self, question_lower: str) -> Optional[str]:
         """질문 텍스트와 가장 잘 맞는 질문 유형 반환"""

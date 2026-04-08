@@ -1,0 +1,110 @@
+{
+  "framework_name": "NCS 직업공통능력",
+  "reference_date": "2026-03-30",
+  "reference_source": "https://www.ncs.go.kr/web/job/contents/1.%20%EC%A7%81%EC%97%85%EA%B3%B5%ED%86%B5%EB%8A%A5%EB%A0%A5_%EC%9D%98%EC%82%AC%EC%86%8C%ED%86%B5%EB%8A%A5%EB%A0%A5.pdf",
+  "priority_competencies": [
+    "문제해결능력",
+    "의사소통능력",
+    "자원관리능력",
+    "정보능력",
+    "대인관계능력"
+  ],
+  "job_spec_source_titles": [],
+  "ability_units": [],
+  "ability_unit_elements": [],
+  "job_spec_competencies": [],
+  "ability_unit_map": [],
+  "competency_evidence_map": [
+    {
+      "name": "문제해결능력",
+      "score": 4,
+      "matched_keywords": [
+        "문제",
+        "해결"
+      ],
+      "matched_experience_ids": [
+        "exp_er_flow"
+      ],
+      "reasons": [
+        "공공·공기업 지원에서 자주 요구되는 기본 역량"
+      ]
+    },
+    {
+      "name": "의사소통능력",
+      "score": 4,
+      "matched_keywords": [
+        "설명",
+        "문서",
+        "고객",
+        "안내"
+      ],
+      "matched_experience_ids": [
+        "exp_er_flow"
+      ],
+      "reasons": [
+        "공공·공기업 지원에서 자주 요구되는 기본 역량"
+      ]
+    },
+    {
+      "name": "자원관리능력",
+      "score": 2,
+      "matched_keywords": [
+        "시간",
+        "우선순위"
+      ],
+      "matched_experience_ids": [
+        "exp_er_flow"
+      ],
+      "reasons": []
+    },
+    {
+      "name": "정보능력",
+      "score": 2,
+      "matched_keywords": [
+        "정리"
+      ],
+      "matched_experience_ids": [
+        "exp_er_flow"
+      ],
+      "reasons": []
+    },
+    {
+      "name": "대인관계능력",
+      "score": 2,
+      "matched_keywords": [],
+      "matched_experience_ids": [],
+      "reasons": [
+        "공공·공기업 지원에서 자주 요구되는 기본 역량"
+      ]
+    },
+    {
+      "name": "조직이해능력",
+      "score": 2,
+      "matched_keywords": [],
+      "matched_experience_ids": [],
+      "reasons": [
+        "공공·공기업 지원에서 자주 요구되는 기본 역량"
+      ]
+    },
+    {
+      "name": "직업윤리",
+      "score": 2,
+      "matched_keywords": [],
+      "matched_experience_ids": [],
+      "reasons": [
+        "공공·공기업 지원에서 자주 요구되는 기본 역량"
+      ]
+    }
+  ],
+  "question_alignment": [],
+  "coaching_focus": [
+    "문제해결능력을(를) 증명할 수 있는 경험·행동·결과를 한 문항에 하나씩 고정",
+    "의사소통능력을(를) 증명할 수 있는 경험·행동·결과를 한 문항에 하나씩 고정",
+    "자원관리능력을(를) 증명할 수 있는 경험·행동·결과를 한 문항에 하나씩 고정"
+  ],
+  "interview_watchouts": [
+    "문제해결능력 관련 답변은 수치·판단기준·개인기여를 30초 안에 다시 설명할 수 있어야 함",
+    "의사소통능력 관련 답변은 수치·판단기준·개인기여를 30초 안에 다시 설명할 수 있어야 함",
+    "자원관리능력 관련 답변은 수치·판단기준·개인기여를 30초 안에 다시 설명할 수 있어야 함"
+  ]
+}

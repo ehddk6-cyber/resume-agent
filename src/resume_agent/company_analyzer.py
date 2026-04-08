@@ -39,36 +39,109 @@ COMPANY_INTERVIEW_STYLES = {
 # 성공 패턴 키워드 매핑
 SUCCESS_PATTERN_KEYWORDS = {
     SuccessPattern.STAR_STRUCTURE: [
-        "상황", "과제", "행동", "결과", "문제", "해결", "개선",
-        "맡아", "진행", "수행", "달성", "완료",
+        "상황",
+        "과제",
+        "행동",
+        "결과",
+        "문제",
+        "해결",
+        "개선",
+        "맡아",
+        "진행",
+        "수행",
+        "달성",
+        "완료",
     ],
     SuccessPattern.QUANTIFIED_RESULT: [
-        "%", "배", "건", "명", "억", "만원", "개", "시간", "일",
-        "증가", "감소", "향상", "달성", "기록",
+        "%",
+        "배",
+        "건",
+        "명",
+        "억",
+        "만원",
+        "개",
+        "시간",
+        "일",
+        "증가",
+        "감소",
+        "향상",
+        "달성",
+        "기록",
     ],
     SuccessPattern.PROBLEM_SOLVING: [
-        "문제", "어려움", "갈등", "위기", "실패", "극복", "해결",
-        "개선", "대응", "처치", "수습",
+        "문제",
+        "어려움",
+        "갈등",
+        "위기",
+        "실패",
+        "극복",
+        "해결",
+        "개선",
+        "대응",
+        "처치",
+        "수습",
     ],
     SuccessPattern.COLLABORATION: [
-        "팀", "협업", "소통", "조율", "합의", "협력", "공동",
-        "함께", "조원", "팀원", "부서",
+        "팀",
+        "협업",
+        "소통",
+        "조율",
+        "합의",
+        "협력",
+        "공동",
+        "함께",
+        "조원",
+        "팀원",
+        "부서",
     ],
     SuccessPattern.GROWTH_STORY: [
-        "성장", "배움", "학습", "발전", "변화", "개선", "깨달음",
-        "이전", "이후", "처음", "지금",
+        "성장",
+        "배움",
+        "학습",
+        "발전",
+        "변화",
+        "개선",
+        "깨달음",
+        "이전",
+        "이후",
+        "처음",
+        "지금",
     ],
     SuccessPattern.CUSTOMER_FOCUS: [
-        "고객", "민원", "응대", "서비스", "만족", "불편", "편의",
-        "이용객", "사용자", "수요자",
+        "고객",
+        "민원",
+        "응대",
+        "서비스",
+        "만족",
+        "불편",
+        "편의",
+        "이용객",
+        "사용자",
+        "수요자",
     ],
     SuccessPattern.INNOVATION: [
-        "혁신", "개선", "제안", "도입", "변화", "새로운", "창의",
-        "아이디어", "시스템", "자동화",
+        "혁신",
+        "개선",
+        "제안",
+        "도입",
+        "변화",
+        "새로운",
+        "창의",
+        "아이디어",
+        "시스템",
+        "자동화",
     ],
     SuccessPattern.ETHICS: [
-        "정직", "윤리", "청렴", "투명", "공정", "원칙", "규정",
-        "준수", "책임", "성실",
+        "정직",
+        "윤리",
+        "청렴",
+        "투명",
+        "공정",
+        "원칙",
+        "규정",
+        "준수",
+        "책임",
+        "성실",
     ],
 }
 
@@ -156,7 +229,12 @@ class CompanyAnalyzer:
         interview_style = self._determine_interview_style(detected_type, keywords)
 
         # 6. 성공 패턴 분석 (linkareer 데이터 기반)
+        relevant_cases = self._select_relevant_cases(company_name, job_title)
         success_patterns = self._analyze_success_patterns(company_name, job_title)
+        success_case_stats = self._summarize_success_case_stats(
+            company_name, job_title, relevant_cases
+        )
+        discouraged_phrases = self._extract_discouraged_phrases(relevant_cases)
 
         # 7. 선호 증거 유형 분석
         preferred_evidence = self._analyze_preferred_evidence(detected_type)
@@ -174,6 +252,9 @@ class CompanyAnalyzer:
             success_patterns=success_patterns,
             preferred_evidence_types=preferred_evidence,
             tone_guide=tone_guide,
+            success_case_stats=success_case_stats,
+            similar_case_titles=[case.title for case in relevant_cases[:5]],
+            discouraged_phrases=discouraged_phrases,
             role_industry_strategy=build_role_industry_strategy(
                 company_type=detected_type,
                 industry=self._detect_industry(all_text),
@@ -189,17 +270,79 @@ class CompanyAnalyzer:
             ),
         )
 
+    def _normalize_match_text(self, text: str) -> str:
+        return re.sub(r"[\s\(\)\[\]·,./_-]+", "", (text or "").lower())
+
+    def _company_aliases(self, company_name: str) -> set[str]:
+        normalized = self._normalize_match_text(company_name)
+        aliases = {normalized} if normalized else set()
+
+        if any(token in normalized for token in ["새마을금고", "mg"]):
+            aliases.update({"새마을금고", "mg", "상호금융", "지역금융"})
+        if any(token in normalized for token in ["농축협", "농협", "축협"]):
+            aliases.update(
+                {"농축협", "농협", "축협", "협동조합", "상호금융", "지역금융"}
+            )
+        if "신협" in normalized:
+            aliases.update({"신협", "협동조합", "상호금융", "지역금융"})
+        return {alias for alias in aliases if alias}
+
+    def _select_relevant_cases(
+        self, company_name: str, job_title: str
+    ) -> List[SuccessCase]:
+        if not self.success_cases:
+            return []
+
+        company_aliases = self._company_aliases(company_name)
+        normalized_job = self._normalize_match_text(job_title)
+        relevant_cases: List[SuccessCase] = []
+
+        for case in self.success_cases:
+            case_company = self._normalize_match_text(case.company_name)
+            case_job = self._normalize_match_text(case.job_title)
+            company_match = bool(
+                company_aliases
+                and any(alias and alias in case_company for alias in company_aliases)
+            )
+            job_match = bool(normalized_job and normalized_job in case_job)
+            if company_match or job_match:
+                relevant_cases.append(case)
+
+        if not relevant_cases:
+            return self.success_cases[:20]
+        return relevant_cases
+
     def extract_keywords(self, text: str) -> List[str]:
         """텍스트에서 핵심 키워드 추출"""
         # 불용어 제거
         stopwords = {
-            "및", "등", "또한", "그리고", "하지만", "그러나", "때문에",
-            "위해", "통해", "대한", "있는", "하는", "되는", "된", "할",
-            "수", "것", "이", "그", "저", "우리", "여러", "다양한",
+            "및",
+            "등",
+            "또한",
+            "그리고",
+            "하지만",
+            "그러나",
+            "때문에",
+            "위해",
+            "통해",
+            "대한",
+            "있는",
+            "하는",
+            "되는",
+            "된",
+            "할",
+            "수",
+            "것",
+            "이",
+            "그",
+            "저",
+            "우리",
+            "여러",
+            "다양한",
         }
 
         # 한글 2글자 이상 단어 추출
-        words = re.findall(r'[가-힣]{2,}', text)
+        words = re.findall(r"[가-힣]{2,}", text)
 
         # 불용어 제거 및 빈도 계산
         filtered = [w for w in words if w not in stopwords]
@@ -302,9 +445,7 @@ class CompanyAnalyzer:
     ) -> InterviewStyle:
         """면접 스타일 결정"""
         # 기업 유형 기반
-        base_style = COMPANY_INTERVIEW_STYLES.get(
-            company_type, InterviewStyle.FORMAL
-        )
+        base_style = COMPANY_INTERVIEW_STYLES.get(company_type, InterviewStyle.FORMAL)
 
         # 키워드 기반 조정
         tech_keywords = ["기술", "개발", "엔지니어", "시스템", "IT", "데이터"]
@@ -329,24 +470,127 @@ class CompanyAnalyzer:
             ]
 
         # 해당 회사/직무의 합격 사례 필터링
-        relevant_cases = [
-            case
-            for case in self.success_cases
-            if company_name in case.company_name
-            or (job_title and job_title in case.job_title)
-        ]
+        relevant_cases = self._select_relevant_cases(company_name, job_title)
 
-        if not relevant_cases:
-            relevant_cases = self.success_cases[:10]  # 샘플링
-
-        # 패턴 빈도 계산
+        # 패턴 빈도 계산 (detected_patterns가 없으면 텍스트에서 직접 감지)
         pattern_counter = Counter()
         for case in relevant_cases:
-            for pattern in case.detected_patterns:
+            patterns = case.detected_patterns
+            if not patterns and case.answer_text:
+                # detected_patterns가 비어있으면 텍스트에서 키워드 매칭으로 감지
+                patterns = self._detect_patterns_from_text(case.answer_text)
+            for pattern in patterns:
                 pattern_counter[pattern] += 1
+
+        if not pattern_counter:
+            # 패턴이 전혀 감지되지 않으면 기본값 반환
+            return [
+                SuccessPattern.STAR_STRUCTURE,
+                SuccessPattern.QUANTIFIED_RESULT,
+            ]
 
         # 상위 패턴 반환
         return [pattern for pattern, _ in pattern_counter.most_common(5)]
+
+    def _summarize_success_case_stats(
+        self,
+        company_name: str,
+        job_title: str,
+        relevant_cases: List[SuccessCase],
+    ) -> Dict[str, Any]:
+        if not relevant_cases:
+            return {
+                "match_case_count": 0,
+                "exact_company_match_count": 0,
+                "job_match_count": 0,
+                "pattern_distribution": {},
+                "recommended_writing_focus": [],
+            }
+
+        company_aliases = self._company_aliases(company_name)
+        normalized_job = self._normalize_match_text(job_title)
+        exact_company_matches = 0
+        job_matches = 0
+        pattern_counter: Counter[str] = Counter()
+
+        for case in relevant_cases:
+            case_company = self._normalize_match_text(case.company_name)
+            case_job = self._normalize_match_text(case.job_title)
+            if company_aliases and any(alias == case_company for alias in company_aliases):
+                exact_company_matches += 1
+            if normalized_job and normalized_job and normalized_job in case_job:
+                job_matches += 1
+            patterns = case.detected_patterns or self._detect_patterns_from_text(
+                case.answer_text
+            )
+            for pattern in patterns:
+                pattern_counter[pattern.value] += 1
+
+        total = len(relevant_cases)
+
+        def _ratio(pattern_name: SuccessPattern) -> float:
+            return round(pattern_counter.get(pattern_name.value, 0) / total, 3)
+
+        recommended_focus: List[str] = []
+        if _ratio(SuccessPattern.QUANTIFIED_RESULT) >= 0.35:
+            recommended_focus.append("정량 결과를 포함한 문장을 우선 배치")
+        if _ratio(SuccessPattern.STAR_STRUCTURE) >= 0.35:
+            recommended_focus.append("상황-행동-결과가 분리된 STAR 구조 유지")
+        if _ratio(SuccessPattern.CUSTOMER_FOCUS) >= 0.3:
+            recommended_focus.append("고객/이용자 관점의 가치 연결 강조")
+        if _ratio(SuccessPattern.PROBLEM_SOLVING) >= 0.3:
+            recommended_focus.append("문제 원인과 해결 판단 기준을 구체화")
+        if _ratio(SuccessPattern.COLLABORATION) >= 0.3:
+            recommended_focus.append("협업 시 개인 판단과 조율 역할을 분리해 설명")
+
+        return {
+            "match_case_count": total,
+            "exact_company_match_count": exact_company_matches,
+            "job_match_count": job_matches,
+            "pattern_distribution": dict(pattern_counter.most_common(6)),
+            "quantified_result_rate": _ratio(SuccessPattern.QUANTIFIED_RESULT),
+            "star_structure_rate": _ratio(SuccessPattern.STAR_STRUCTURE),
+            "customer_focus_rate": _ratio(SuccessPattern.CUSTOMER_FOCUS),
+            "problem_solving_rate": _ratio(SuccessPattern.PROBLEM_SOLVING),
+            "collaboration_rate": _ratio(SuccessPattern.COLLABORATION),
+            "recommended_writing_focus": recommended_focus[:4],
+        }
+
+    def _extract_discouraged_phrases(
+        self, relevant_cases: List[SuccessCase], limit: int = 5
+    ) -> List[str]:
+        if not relevant_cases:
+            return []
+
+        sentence_counter: Counter[str] = Counter()
+        for case in relevant_cases:
+            for raw_sentence in re.split(r"[.!?\n]+", case.answer_text or ""):
+                sentence = re.sub(r"\s+", " ", raw_sentence).strip()
+                if len(sentence) < 8 or len(sentence) > 42:
+                    continue
+                if not re.search(r"[가-힣A-Za-z]", sentence):
+                    continue
+                sentence_counter[sentence] += 1
+
+        repeated = [
+            sentence
+            for sentence, count in sentence_counter.most_common()
+            if count >= 2
+            and any(
+                keyword in sentence
+                for keyword in ["기여", "성장", "노력", "역량", "최선을 다", "배웠"]
+            )
+        ]
+        return repeated[:limit]
+
+    def _detect_patterns_from_text(self, text: str) -> List[SuccessPattern]:
+        """텍스트에서 키워드 매칭으로 성공 패턴 감지 (폴백용)"""
+        detected: List[SuccessPattern] = []
+        for pattern, keywords in SUCCESS_PATTERN_KEYWORDS.items():
+            matches = sum(1 for kw in keywords if kw in text)
+            if matches >= 2:
+                detected.append(pattern)
+        return detected
 
     def _analyze_preferred_evidence(self, company_type: str) -> List[str]:
         """선호 증거 유형 분석"""
@@ -463,7 +707,10 @@ def build_role_industry_strategy(
             "팀 성과와 개인 기여를 구분해서 답한다.",
             "단일 출처 정보는 확정 표현 대신 검증 예정 표현으로 낮춘다.",
         ]
-        + [f"{theme} 관점의 압박 질문을 대비한다." for theme in interview_pressure_themes[:3]]
+        + [
+            f"{theme} 관점의 압박 질문을 대비한다."
+            for theme in interview_pressure_themes[:3]
+        ]
     )
     committee_personas = _build_committee_personas(
         company_type=company_type,
@@ -661,6 +908,8 @@ def _build_committee_personas(
 
     if interview_style == InterviewStyle.TECHNICAL.value:
         base_personas[1]["name"] = "기술위원"
-        base_personas[1]["focus"] = _dedupe(base_personas[1]["focus"] + ["기술 선택 기준"])
+        base_personas[1]["focus"] = _dedupe(
+            base_personas[1]["focus"] + ["기술 선택 기준"]
+        )
 
     return base_personas

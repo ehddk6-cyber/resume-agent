@@ -162,6 +162,55 @@ def test_build_coach_artifact_includes_risks_and_recommendations():
     assert "정량 근거를 보강하세요." in artifact["rendered"]
 
 
+def test_build_coach_artifact_renders_question_strategies_and_writer_contract():
+    project = ApplicationProject(
+        company_name="테스트기업",
+        job_title="백엔드",
+        questions=[
+            Question(
+                id="q1",
+                order_no=1,
+                question_text="지원 동기를 설명해 주세요.",
+                detected_type=QuestionType.TYPE_A,
+            )
+        ],
+    )
+    experiences = [
+        Experience(
+            id="exp1",
+            title="민원 기준 정비",
+            organization="기관",
+            period_start="2024-01-01",
+            tags=["직무역량"],
+        )
+    ]
+    artifact = build_coach_artifact(
+        project,
+        experiences,
+        {"needs_verification": [], "question_risks": [], "recommendations": []},
+        question_strategies=[
+            {
+                "question_order": 1,
+                "core_message": "운영 안정성을 입증한다.",
+                "winning_angle": "열정보다 운영 기준으로 간다.",
+                "losing_angle": "추상적 성장담으로 흐른다.",
+                "primary_experience_title": "민원 기준 정비",
+                "differentiation_line": "평균 지원자와 다르게 기준과 증빙을 말한다.",
+            }
+        ],
+        writer_contract={
+            "mode_label": "adaptive mode",
+            "headline": "문항별 단일 전략을 고정한다.",
+            "answer_checklist": ["핵심 주장 1개"],
+        },
+    )
+
+    assert "## QUESTION STRATEGIES" in artifact["rendered"]
+    assert "## WRITER CONTRACT" in artifact["rendered"]
+    assert "운영 안정성을 입증한다." in artifact["rendered"]
+    assert "adaptive mode" in artifact["rendered"]
+
+
 def test_allocate_experiences_uses_outcome_summary_to_prefer_defensible_experience():
     question = Question(
         id="q1",
@@ -296,6 +345,65 @@ def test_allocate_experiences_uses_strategy_outcome_summary_for_question_type():
 
     assert allocations[0]["experience_id"] == "exp-stable"
     assert "실제 결과 통계" in allocations[0]["reason"]
+
+
+def test_allocate_experiences_uses_feedback_adaptation_plan():
+    question = Question(
+        id="q1",
+        order_no=1,
+        question_text="지원 동기와 적합성을 설명하세요.",
+        detected_type=QuestionType.TYPE_A,
+    )
+    risky = Experience(
+        id="exp-risky",
+        title="지원 업무 참여",
+        organization="기관B",
+        period_start="2024-01-01",
+        situation="지원 업무를 수행했습니다.",
+        task="지원 동기와 적합성을 설명할 자료 정리를 맡았습니다.",
+        action="지원 근거와 적합성 자료를 정리했습니다.",
+        result="지원 동기 자료를 정리했습니다.",
+        personal_contribution="지원 근거 문구를 직접 정리했습니다.",
+        tags=["직무역량", "지원동기"],
+    )
+    stable = Experience(
+        id="exp-stable",
+        title="민원 기준 정비",
+        organization="기관A",
+        period_start="2024-01-01",
+        situation="반복 민원이 많았습니다.",
+        task="응대 기준을 정리해야 했습니다.",
+        action="기준표를 만들어 안내 문구를 통일했습니다.",
+        result="응대 흐름을 정리했습니다.",
+        tags=["의사소통"],
+    )
+
+    baseline = allocate_experiences(
+        [question],
+        [risky, stable],
+        [],
+    )
+    allocations = allocate_experiences(
+        [question],
+        [risky, stable],
+        [],
+        feedback_adaptation_plan={
+            "risky_question_types": [
+                {
+                    "question_type": "TYPE_A",
+                    "weak_experiences": [
+                        {
+                            "experience_id": "exp-risky",
+                            "top_rejection_reasons": [{"reason": "근거 부족", "count": 2}],
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+
+    assert baseline[0]["experience_id"] == "exp-risky"
+    assert allocations[0]["experience_id"] == "exp-stable"
 
 
 def test_allocate_experiences_limits_strategy_adjustment_when_samples_are_small():

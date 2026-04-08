@@ -1,0 +1,31 @@
+{
+  "id": "093491c80ab9",
+  "source_type": "local_text",
+  "title": "원동아 청년인턴수료증",
+  "url": null,
+  "raw_text": "청년인턴 수료증\n위 사람은 국민연금공단에서 청년인턴으로 계약기간동안\n성실하게 근무하였기에 이 수료증을 수여합니다.\n성        명 : 원동아\n생 년  월 일 : 1992년 06월 01일\n주        소 : \n근 무 부 서 : 강남역삼지사 연금지급부\n담 당 업 무 : 기초연금 안내 등 국민연금 급여 관련 업무\n근 무 기 간 : 2024년 10월 04일  ~ 2024년 12월 31일\n \n2026년03월09일\n국민연금공단 강남역삼지사장\n제 2026-0001 호",
+  "cleaned_text": "청년인턴 수료증\n위 사람은 국민연금공단에서 청년인턴으로 계약기간동안\n성실하게 근무하였기에 이 수료증을 수여합니다.\n성        명 : 원동아\n생 년  월 일 : 1992년 06월 01일\n주        소 :\n근 무 부 서 : 강남역삼지사 연금지급부\n담 당 업 무 : 기초연금 안내 등 국민연금 급여 관련 업무\n근 무 기 간 : 2024년 10월 04일  ~ 2024년 12월 31일\n\n2026년03월09일\n국민연금공단 강남역삼지사장\n제 2026-0001 호",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

@@ -1,0 +1,310 @@
+[
+  {
+    "id": "coach-20260331_155225",
+    "artifact_type": "COACH",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "신한은행",
+        "job_title": "일반직 신입행원 (개인/기업금융)",
+        "career_stage": "JUNIOR",
+        "company_type": "금융",
+        "research_notes": "",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [],
+        "questions": []
+      },
+      "experience_count": 8
+    },
+    "output_path": "artifacts/coach.md",
+    "raw_output_path": "artifacts/coach.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## NEEDS VERIFICATION"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-03-31T15:52:25.263785+00:00"
+  },
+  {
+    "id": "coach-20260331_155500",
+    "artifact_type": "COACH",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "신한은행",
+        "job_title": "일반직 신입행원 (개인/기업금융)",
+        "career_stage": "JUNIOR",
+        "company_type": "금융",
+        "research_notes": "",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [],
+        "questions": [
+          {
+            "id": "q1_strength",
+            "order_no": 1,
+            "question_text": "다른 지원자와 차별화되는 본인만의 강점을 한가지 선택하여, 이를 신한은행에서 어떻게 발휘할 수 있을지 작성해 주세요.",
+            "char_limit": 800,
+            "detected_type": "TYPE_B"
+          },
+          {
+            "id": "q2_value_conflict",
+            "order_no": 2,
+            "question_text": "본인이 중요하게 생각하는 가치관이 타인과 충돌했던 경험은 무엇이며, 이를 어떻게 해결했는지 작성해 주세요.",
+            "char_limit": 800,
+            "detected_type": "TYPE_H"
+          },
+          {
+            "id": "q3_social_issue",
+            "order_no": 3,
+            "question_text": "최근 사회 이슈 중 중요하다고 생각되는 한 가지를 선택하고 해당 이슈가 은행업에 어떤 영향을 끼칠 것으로 예상되는지 본인의 생각을 작성해 주세요.",
+            "char_limit": 1000,
+            "detected_type": "TYPE_H"
+          },
+          {
+            "id": "q4_future_vision",
+            "order_no": 4,
+            "question_text": "은행 입행 10년 혹은 20년 후 본인의 모습을 상상해보고 어떤 분야의 전문가로 성장하고 싶은지 기술해 주세요.",
+            "char_limit": 1000,
+            "detected_type": "TYPE_D"
+          }
+        ]
+      },
+      "experience_count": 8
+    },
+    "output_path": "artifacts/coach.md",
+    "raw_output_path": "artifacts/coach.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## NEEDS VERIFICATION"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-03-31T15:55:00.960580+00:00"
+  },
+  {
+    "id": "coach-20260331_160323",
+    "artifact_type": "COACH",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "신한은행",
+        "job_title": "일반직 신입행원 (개인/기업금융)",
+        "career_stage": "JUNIOR",
+        "company_type": "금융",
+        "research_notes": "",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [],
+        "questions": [
+          {
+            "id": "q1_strength",
+            "order_no": 1,
+            "question_text": "다른 지원자와 차별화되는 본인만의 강점을 한가지 선택하여, 이를 신한은행에서 어떻게 발휘할 수 있을지 작성해 주세요.",
+            "char_limit": 800,
+            "detected_type": "TYPE_B"
+          },
+          {
+            "id": "q2_value_conflict",
+            "order_no": 2,
+            "question_text": "본인이 중요하게 생각하는 가치관이 타인과 충돌했던 경험은 무엇이며, 이를 어떻게 해결했는지 작성해 주세요.",
+            "char_limit": 800,
+            "detected_type": "TYPE_H"
+          },
+          {
+            "id": "q3_social_issue",
+            "order_no": 3,
+            "question_text": "최근 사회 이슈 중 중요하다고 생각되는 한 가지를 선택하고 해당 이슈가 은행업에 어떤 영향을 끼칠 것으로 예상되는지 본인의 생각을 작성해 주세요.",
+            "char_limit": 1000,
+            "detected_type": "TYPE_H"
+          },
+          {
+            "id": "q4_future_vision",
+            "order_no": 4,
+            "question_text": "은행 입행 10년 혹은 20년 후 본인의 모습을 상상해보고 어떤 분야의 전문가로 성장하고 싶은지 기술해 주세요.",
+            "char_limit": 1000,
+            "detected_type": "TYPE_D"
+          }
+        ]
+      },
+      "experience_count": 13
+    },
+    "output_path": "artifacts/coach.md",
+    "raw_output_path": "artifacts/coach.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## NEEDS VERIFICATION"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-03-31T16:03:23.690462+00:00"
+  },
+  {
+    "id": "export-20260401_004319",
+    "artifact_type": "EXPORT",
+    "accepted": true,
+    "input_snapshot": {
+      "accepted_artifact_count": 0
+    },
+    "output_path": "artifacts/export.md",
+    "raw_output_path": "artifacts/export.json",
+    "validation": {
+      "passed": true,
+      "missing": [],
+      "out_of_order": []
+    },
+    "created_at": "2026-04-01T00:43:19.704682+00:00"
+  },
+  {
+    "id": "self-intro-20260401_005020",
+    "artifact_type": "SELF_INTRO",
+    "accepted": true,
+    "input_snapshot": {
+      "project": {
+        "company_name": "신한은행",
+        "job_title": "일반직 신입행원 (개인/기업금융)",
+        "career_stage": "JUNIOR",
+        "company_type": "금융",
+        "research_notes": "",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [],
+        "questions": [
+          {
+            "id": "q1_strength",
+            "order_no": 1,
+            "question_text": "다른 지원자와 차별화되는 본인만의 강점을 한가지 선택하여, 이를 신한은행에서 어떻게 발휘할 수 있을지 작성해 주세요.",
+            "char_limit": 800,
+            "detected_type": "TYPE_B"
+          },
+          {
+            "id": "q2_value_conflict",
+            "order_no": 2,
+            "question_text": "본인이 중요하게 생각하는 가치관이 타인과 충돌했던 경험은 무엇이며, 이를 어떻게 해결했는지 작성해 주세요.",
+            "char_limit": 800,
+            "detected_type": "TYPE_H"
+          },
+          {
+            "id": "q3_social_issue",
+            "order_no": 3,
+            "question_text": "최근 사회 이슈 중 중요하다고 생각되는 한 가지를 선택하고 해당 이슈가 은행업에 어떤 영향을 끼칠 것으로 예상되는지 본인의 생각을 작성해 주세요.",
+            "char_limit": 1000,
+            "detected_type": "TYPE_H"
+          },
+          {
+            "id": "q4_future_vision",
+            "order_no": 4,
+            "question_text": "은행 입행 10년 혹은 20년 후 본인의 모습을 상상해보고 어떤 분야의 전문가로 성장하고 싶은지 기술해 주세요.",
+            "char_limit": 1000,
+            "detected_type": "TYPE_D"
+          }
+        ]
+      },
+      "committee_feedback": {
+        "session_count": 0,
+        "latest_session_mode": "",
+        "latest_turn_count": 0,
+        "latest_committee_verdict": "",
+        "recurring_risks": [],
+        "persona_panel": []
+      },
+      "self_intro_pack": {
+        "opening_hook": "신한은행의 일반직 신입행원 (개인/기업금융)에서 매출/효율, 프로젝트 성과, 조직 기여, 수리능력를 만드는 지원자입니다.",
+        "thirty_second_frame": [
+          "현재 지원 직무와 가장 직접 연결되는 경험 1개를 먼저 말한다.",
+          "핵심 경험: 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감, 국민연금공단 기초연금 수급 대상자 발굴 자동화",
+          "마무리는 신한은행에서의 첫 기여 포인트로 닫는다."
+        ],
+        "sixty_second_frame": [
+          "지원 직무와 연결되는 문제 인식",
+          "본인 행동과 판단 기준",
+          "정량 또는 정성 결과",
+          "입사 후 적용 계획"
+        ],
+        "focus_keywords": [
+          "매출/효율",
+          "프로젝트 성과",
+          "조직 기여",
+          "수리능력"
+        ],
+        "banned_patterns": [
+          "검증 불가 수치 확대",
+          "회사 정보 복붙형 지원동기",
+          "팀 성과를 개인 성과처럼 포장"
+        ],
+        "committee_watchouts": [],
+        "ncs_priority_competencies": [
+          "수리능력",
+          "대인관계능력",
+          "의사소통능력"
+        ]
+      }
+    },
+    "output_path": "artifacts/self_intro.md",
+    "raw_output_path": "analysis/self_intro_pack.json",
+    "validation": {
+      "passed": true,
+      "missing": [],
+      "out_of_order": []
+    },
+    "created_at": "2026-04-01T00:50:20.502878+00:00"
+  },
+  {
+    "id": "coach-20260406_064016",
+    "artifact_type": "COACH",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "신한은행",
+        "job_title": "일반직 신입행원 (개인/기업금융)",
+        "career_stage": "JUNIOR",
+        "company_type": "금융",
+        "research_notes": "",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [],
+        "questions": [
+          {
+            "id": "q1_strength",
+            "order_no": 1,
+            "question_text": "다른 지원자와 차별화되는 본인만의 강점을 한가지 선택하여, 이를 신한은행에서 어떻게 발휘할 수 있을지 작성해 주세요.",
+            "char_limit": 800,
+            "detected_type": "TYPE_B"
+          },
+          {
+            "id": "q2_value_conflict",
+            "order_no": 2,
+            "question_text": "본인이 중요하게 생각하는 가치관이 타인과 충돌했던 경험은 무엇이며, 이를 어떻게 해결했는지 작성해 주세요.",
+            "char_limit": 800,
+            "detected_type": "TYPE_H"
+          },
+          {
+            "id": "q3_social_issue",
+            "order_no": 3,
+            "question_text": "최근 사회 이슈 중 중요하다고 생각되는 한 가지를 선택하고 해당 이슈가 은행업에 어떤 영향을 끼칠 것으로 예상되는지 본인의 생각을 작성해 주세요.",
+            "char_limit": 1000,
+            "detected_type": "TYPE_H"
+          },
+          {
+            "id": "q4_future_vision",
+            "order_no": 4,
+            "question_text": "은행 입행 10년 혹은 20년 후 본인의 모습을 상상해보고 어떤 분야의 전문가로 성장하고 싶은지 기술해 주세요.",
+            "char_limit": 1000,
+            "detected_type": "TYPE_E"
+          }
+        ]
+      },
+      "experience_count": 13
+    },
+    "output_path": "artifacts/coach.md",
+    "raw_output_path": "artifacts/coach.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## NEEDS VERIFICATION"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-04-06T06:40:16.304204+00:00"
+  }
+]

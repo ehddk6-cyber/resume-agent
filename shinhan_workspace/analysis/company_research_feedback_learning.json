@@ -1,0 +1,133 @@
+{
+  "artifact": "company_research",
+  "total_feedback": 0,
+  "recent_rejection_comments": [],
+  "top_patterns": [],
+  "recommended_pattern": "company_research|금융|TYPE_B-TYPE_D-TYPE_UNKNOWN",
+  "current_pattern": "company_research|금융|TYPE_B-TYPE_D-TYPE_UNKNOWN",
+  "question_experience_map": [
+    {
+      "question_id": "q1_strength",
+      "question_type": "TYPE_B",
+      "experience_id": "exp_seoul_covid_budget",
+      "question_order": 1
+    },
+    {
+      "question_id": "q2_value_conflict",
+      "question_type": "TYPE_H",
+      "experience_id": "exp_nps_intern",
+      "question_order": 2
+    },
+    {
+      "question_id": "q3_social_issue",
+      "question_type": "TYPE_H",
+      "experience_id": "exp_seoul_covid_fraud",
+      "question_order": 3
+    },
+    {
+      "question_id": "q4_future_vision",
+      "question_type": "TYPE_E",
+      "experience_id": "exp_saemaul_bank",
+      "question_order": 4
+    }
+  ],
+  "question_strategy_map": [
+    {
+      "question_id": "q1_strength",
+      "question_order": 1,
+      "question_type": "QuestionType.TYPE_B",
+      "experience_id": "exp_seoul_covid_budget",
+      "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_B 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_B 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    },
+    {
+      "question_id": "q2_value_conflict",
+      "question_order": 2,
+      "question_type": "QuestionType.TYPE_H",
+      "experience_id": "exp_nps_intern",
+      "core_message": "국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_H 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_H 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    },
+    {
+      "question_id": "q3_social_issue",
+      "question_order": 3,
+      "question_type": "QuestionType.TYPE_H",
+      "experience_id": "exp_seoul_covid_fraud",
+      "core_message": "서울시청 코로나19 지원팀 부정수급 적발 경험으로 QuestionType.TYPE_H 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_H 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 부정수급 적발의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    },
+    {
+      "question_id": "q4_future_vision",
+      "question_order": 4,
+      "question_type": "QuestionType.TYPE_E",
+      "experience_id": "exp_saemaul_bank",
+      "core_message": "새마을금고 은행 디지털 취약 계층 고객 응대 경험으로 QuestionType.TYPE_E 문항에서 검증 가능한 기여를 입증한다.",
+      "winning_angle": "QuestionType.TYPE_E 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+      "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+      "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 새마을금고 은행 디지털 취약 계층 고객 응대의 운영 기준·증빙·재현성을 제시한다.",
+      "tone": "기술능력, 대인관계능력를 검증 가능하게 보여주는 사람"
+    }
+  ],
+  "overall_success_rate": 0,
+  "similar_context": {
+    "artifact_type": "company_research",
+    "artifact": "company_research",
+    "stage": "company_research",
+    "company_name": "신한은행",
+    "job_title": "일반직 신입행원 (개인/기업금융)",
+    "company_type": "금융",
+    "question_types": [
+      "TYPE_B",
+      "TYPE_UNKNOWN",
+      "TYPE_UNKNOWN",
+      "TYPE_D"
+    ]
+  },
+  "recent_rejection_reasons": [],
+  "outcome_summary": {
+    "matched_feedback_count": 0,
+    "outcome_breakdown": {},
+    "top_rejection_reasons": []
+  },
+  "strategy_outcome_summary": {
+    "matched_feedback_count": 0,
+    "learned_outcome_weights": {
+      "offer": 4.0,
+      "final_pass": 3.0,
+      "pass": 3.0,
+      "interview_pass": 2.0,
+      "document_pass": 2.0,
+      "fail_interview": 3.0,
+      "interview_fail": 3.0,
+      "document_fail": 1.0,
+      "reject": 2.0,
+      "rejected": 2.0
+    },
+    "experience_stats_by_question_type": {},
+    "strategy_stats_by_question_type": {},
+    "differentiation_stats_by_question_type": {},
+    "tone_stats_by_company_type": {}
+  },
+  "insights": {
+    "total_feedback": 0,
+    "overall_success_rate": 0,
+    "average_rating": 0,
+    "top_patterns": [],
+    "improvement_areas": []
+  },
+  "adaptation_plan": {
+    "recommended_pattern": "company_research|금융|TYPE_B-TYPE_D-TYPE_UNKNOWN",
+    "focus_actions": [],
+    "risky_question_types": [],
+    "matched_feedback_count": 0
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "feedback": [
+    {
+      "draft_id": "writer-manual-1775368999",
+      "pattern_used": "writer|공공|NONE",
+      "accepted": true,
+      "rating": 5,
+      "comment": "새마을금고 3문항 공백 포함 500자 준수. 경험 분산 적절(금융기관아르바이트, 서울시청파견, 성북구청). 블라인드 규정 준수. 면접 방어 가능한 수치 포함.",
+      "artifact_type": "writer",
+      "company_name": "",
+      "job_title": "",
+      "company_type": "공공",
+      "question_types": [],
+      "stage": "writer",
+      "final_outcome": "document_pass",
+      "rejection_reason": null,
+      "selected_experience_ids": [],
+      "question_experience_map": [],
+      "timestamp": "2026-04-05T15:03:19.236298"
+    },
+    {
+      "draft_id": "writer-20260405_060906",
+      "pattern_used": "writer|공공|NONE",
+      "accepted": false,
+      "rating": null,
+      "comment": null,
+      "artifact_type": "writer",
+      "company_name": "",
+      "job_title": "",
+      "company_type": "공공",
+      "question_types": [],
+      "stage": "writer",
+      "final_outcome": null,
+      "rejection_reason": null,
+      "selected_experience_ids": [],
+      "question_experience_map": [],
+      "timestamp": "2026-04-05T15:09:06.955711"
+    }
+  ]
+}

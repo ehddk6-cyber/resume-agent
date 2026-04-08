@@ -38,7 +38,7 @@ def read_json_if_exists(path: Path) -> Any:
 
 def relative(root: Path, path: Path) -> str:
     """root 기준 상대 경로 문자열 반환"""
-    return str(path.relative_to(root))
+    return str(path.resolve().relative_to(root.resolve()))
 
 
 def write_if_missing(path: Path, content: str) -> None:

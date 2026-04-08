@@ -1,0 +1,33 @@
+{
+  "id": "2bc12a00137e",
+  "source_type": "local_text",
+  "title": "한국사능력",
+  "url": null,
+  "raw_text": "원동아\n1992-06-01\n1 급\n54-100040\n54\n2021 08 20\n26. 1. 2. 오후  1:37 인증서발급\nhttps://www.historyexam.go.kr/mypage/info/printCerti.do?idx=1004424655&trans_yn=Y 1/1",
+  "cleaned_text": "원동아\n1992-06-01\n1 급\n54-100040\n54\n2021 08 20\n26. 1. 2. 오후  1:37 인증서발급\nhttps://www.historyexam.go.kr/mypage/info/printCerti.do?idx=1004424655&trans_yn=Y 1/1",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 1
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [
+      "TYPE_A"
+    ],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

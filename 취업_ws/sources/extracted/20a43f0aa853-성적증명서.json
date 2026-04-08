@@ -1,0 +1,31 @@
+{
+  "id": "20a43f0aa853",
+  "source_type": "local_text",
+  "title": "성적증명서",
+  "url": null,
+  "raw_text": "2023 / 01 / 13\n 23 : 17\n KST\n",
+  "cleaned_text": "2023 / 01 / 13\n 23 : 17\n KST",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

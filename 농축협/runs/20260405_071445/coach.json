@@ -1,0 +1,290 @@
+{
+  "artifact": {
+    "current_stage": "HANDOFF_READY",
+    "purpose": "농·축협 / 신규직원 문항에 대한 경험 배분과 리스크를 정리합니다.",
+    "current_summary": [
+      "1번 문항은 성장과 학습 루프으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감입니다.",
+      "2번 문항은 상황판단과 우선순위으로 분류했고, 주력 경험은 국민연금공단 기준소득월액 변경 특례 민원 응대입니다.",
+      "3번 문항은 원칙과 신뢰으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재입니다.",
+      "4번 문항은 원칙과 신뢰으로 분류했고, 주력 경험은 국민연금공단 기초연금 수급 대상자 발굴 자동화입니다.",
+      "5번 문항은 입사 후 기여으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 부정수급 적발입니다."
+    ],
+    "required_inputs": [
+      "추가 입력 없음"
+    ],
+    "next_step": "WRITER_HANDOFF",
+    "assumptions": [
+      "[ASSUMPTION] 답변 톤은 '담백하고 근거 중심' 기준으로 유지합니다."
+    ],
+    "needs_verification": [],
+    "question_risks": [
+      "1번 문항 / 성장과 학습 루프 / best_score=18 / risk=low",
+      "2번 문항 / 상황판단과 우선순위 / best_score=17 / risk=low",
+      "3번 문항 / 원칙과 신뢰 / best_score=15 / risk=low",
+      "4번 문항 / 원칙과 신뢰 / best_score=15 / risk=low",
+      "5번 문항 / 입사 후 기여 / best_score=15 / risk=low"
+    ],
+    "recommendations": [
+      "즉시 보강이 필요한 위험 신호가 크지 않습니다."
+    ],
+    "allocations": [
+      {
+        "question_id": "q1_nh_growth",
+        "order_no": 1,
+        "question_type": "TYPE_D",
+        "experience_id": "exp_seoul_covid_budget",
+        "experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+        "score": 18,
+        "reason": "질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(본인의, 발전을, 위해)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      },
+      {
+        "question_id": "q2_nh_decision",
+        "order_no": 2,
+        "question_type": "TYPE_I",
+        "experience_id": "exp_nps_income_adjustment",
+        "experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+        "score": 14,
+        "reason": "질문 기대: 상황판단과 우선순위 문항이며, 질문 키워드(판단이, 쉽지, 않은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(민원 응대 및 서류 검토 정확도 향상) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      },
+      {
+        "question_id": "q3_nh_trust",
+        "order_no": 3,
+        "question_type": "TYPE_F",
+        "experience_id": "exp_seoul_covid_conflict",
+        "experience_title": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+        "score": 15,
+        "reason": "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(조직이나, 팀에서, 맡은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      },
+      {
+        "question_id": "q4_nh_value",
+        "order_no": 4,
+        "question_type": "TYPE_F",
+        "experience_id": "exp_nps_intern",
+        "experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+        "score": 13,
+        "reason": "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(농협의, 구성원으로서, 본인이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      },
+      {
+        "question_id": "q5_nh_structure",
+        "order_no": 5,
+        "question_type": "TYPE_E",
+        "experience_id": "exp_seoul_covid_fraud",
+        "experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+        "score": 13,
+        "reason": "질문 기대: 입사 후 기여 문항이며, 질문 키워드(농협이, 교육지원, 경제)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+        "reuse_reason": null
+      }
+    ],
+    "question_strategies": [
+      {
+        "question_id": "q1_nh_growth",
+        "question_order": 1,
+        "question_type": "QuestionType.TYPE_D",
+        "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+        "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람",
+        "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+        "primary_experience_id": "exp_seoul_covid_budget",
+        "primary_experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+        "supporting_experience_ids": [],
+        "supporting_experience_titles": [],
+        "winning_angle": "QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+        "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+        "forbidden_points": [
+          "성장/노력/배움만 반복하는 추상 서술",
+          "팀 성과만 말하고 개인 판단과 기여를 숨기는 서술"
+        ],
+        "required_evidence": [
+          "1억 원 예산 절감",
+          "서울시청 파견 근무 경험",
+          "질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(본인의, 발전을, 위해)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+        ],
+        "recommended_structure": [
+          "상황/과제 1문장",
+          "개인 판단과 행동 2문장",
+          "수치·증빙 1문장",
+          "직무 연결 1문장"
+        ],
+        "expected_attack_points": [
+          "왜 본인 판단이었는지 설명 부족"
+        ],
+        "mitigation_line": "개인 판단 기준과 수치 근거를 먼저 말하고, 팀 성과는 보조로만 언급한다.",
+        "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+        "common_cliche": "성장, 노력, 배움을 반복하며 직무 적합성을 추상적으로 주장하는 답변",
+        "top001_signal": ""
+      },
+      {
+        "question_id": "q2_nh_decision",
+        "question_order": 2,
+        "question_type": "QuestionType.TYPE_I",
+        "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+        "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람",
+        "core_message": "국민연금공단 기준소득월액 변경 특례 민원 응대 경험으로 QuestionType.TYPE_I 문항에서 검증 가능한 기여를 입증한다.",
+        "primary_experience_id": "exp_nps_income_adjustment",
+        "primary_experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+        "supporting_experience_ids": [],
+        "supporting_experience_titles": [],
+        "winning_angle": "QuestionType.TYPE_I 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+        "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+        "forbidden_points": [
+          "성장/노력/배움만 반복하는 추상 서술",
+          "팀 성과만 말하고 개인 판단과 기여를 숨기는 서술"
+        ],
+        "required_evidence": [
+          "민원 응대 및 서류 검토 정확도 향상",
+          "국민연금공단 인턴 업무 정리 메모와 청년인턴 수료증",
+          "질문 기대: 상황판단과 우선순위 문항이며, 질문 키워드(판단이, 쉽지, 않은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(민원 응대 및 서류 검토 정확도 향상) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+        ],
+        "recommended_structure": [
+          "상황/과제 1문장",
+          "개인 판단과 행동 2문장",
+          "수치·증빙 1문장",
+          "직무 연결 1문장"
+        ],
+        "expected_attack_points": [
+          "왜 본인 판단이었는지 설명 부족"
+        ],
+        "mitigation_line": "개인 판단 기준과 수치 근거를 먼저 말하고, 팀 성과는 보조로만 언급한다.",
+        "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기준소득월액 변경 특례 민원 응대의 운영 기준·증빙·재현성을 제시한다.",
+        "common_cliche": "성장, 노력, 배움을 반복하며 직무 적합성을 추상적으로 주장하는 답변",
+        "top001_signal": ""
+      },
+      {
+        "question_id": "q3_nh_trust",
+        "question_order": 3,
+        "question_type": "QuestionType.TYPE_F",
+        "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+        "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람",
+        "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+        "primary_experience_id": "exp_seoul_covid_conflict",
+        "primary_experience_title": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+        "supporting_experience_ids": [],
+        "supporting_experience_titles": [],
+        "winning_angle": "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+        "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+        "forbidden_points": [
+          "성장/노력/배움만 반복하는 추상 서술",
+          "팀 성과만 말하고 개인 판단과 기여를 숨기는 서술"
+        ],
+        "required_evidence": [
+          "업무 효율 30% 증가",
+          "서울시청 파견 근무 경험",
+          "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(조직이나, 팀에서, 맡은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+        ],
+        "recommended_structure": [
+          "상황/과제 1문장",
+          "개인 판단과 행동 2문장",
+          "수치·증빙 1문장",
+          "직무 연결 1문장"
+        ],
+        "expected_attack_points": [
+          "왜 본인 판단이었는지 설명 부족"
+        ],
+        "mitigation_line": "개인 판단 기준과 수치 근거를 먼저 말하고, 팀 성과는 보조로만 언급한다.",
+        "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+        "common_cliche": "성장, 노력, 배움을 반복하며 직무 적합성을 추상적으로 주장하는 답변",
+        "top001_signal": ""
+      },
+      {
+        "question_id": "q4_nh_value",
+        "question_order": 4,
+        "question_type": "QuestionType.TYPE_F",
+        "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+        "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람",
+        "core_message": "국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+        "primary_experience_id": "exp_nps_intern",
+        "primary_experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+        "supporting_experience_ids": [],
+        "supporting_experience_titles": [],
+        "winning_angle": "QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+        "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+        "forbidden_points": [
+          "성장/노력/배움만 반복하는 추상 서술",
+          "팀 성과만 말하고 개인 판단과 기여를 숨기는 서술"
+        ],
+        "required_evidence": [
+          "3,000페이지 2일 완수, 목표 150건 초과 달성",
+          "국민연금공단 인턴 근무 경험",
+          "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(농협의, 구성원으로서, 본인이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+        ],
+        "recommended_structure": [
+          "상황/과제 1문장",
+          "개인 판단과 행동 2문장",
+          "수치·증빙 1문장",
+          "직무 연결 1문장"
+        ],
+        "expected_attack_points": [
+          "왜 본인 판단이었는지 설명 부족"
+        ],
+        "mitigation_line": "개인 판단 기준과 수치 근거를 먼저 말하고, 팀 성과는 보조로만 언급한다.",
+        "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.",
+        "common_cliche": "성장, 노력, 배움을 반복하며 직무 적합성을 추상적으로 주장하는 답변",
+        "top001_signal": ""
+      },
+      {
+        "question_id": "q5_nh_structure",
+        "question_order": 5,
+        "question_type": "QuestionType.TYPE_E",
+        "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+        "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람",
+        "core_message": "서울시청 코로나19 지원팀 부정수급 적발 경험으로 QuestionType.TYPE_E 문항에서 검증 가능한 기여를 입증한다.",
+        "primary_experience_id": "exp_seoul_covid_fraud",
+        "primary_experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+        "supporting_experience_ids": [],
+        "supporting_experience_titles": [],
+        "winning_angle": "QuestionType.TYPE_E 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+        "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+        "forbidden_points": [
+          "성장/노력/배움만 반복하는 추상 서술",
+          "팀 성과만 말하고 개인 판단과 기여를 숨기는 서술"
+        ],
+        "required_evidence": [
+          "부정수급 20건 적발, 예산 40% 절감",
+          "서울시청 파견 근무 경험",
+          "질문 기대: 입사 후 기여 문항이며, 질문 키워드(농협이, 교육지원, 경제)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+        ],
+        "recommended_structure": [
+          "상황/과제 1문장",
+          "개인 판단과 행동 2문장",
+          "수치·증빙 1문장",
+          "직무 연결 1문장"
+        ],
+        "expected_attack_points": [
+          "왜 본인 판단이었는지 설명 부족"
+        ],
+        "mitigation_line": "개인 판단 기준과 수치 근거를 먼저 말하고, 팀 성과는 보조로만 언급한다.",
+        "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 부정수급 적발의 운영 기준·증빙·재현성을 제시한다.",
+        "common_cliche": "성장, 노력, 배움을 반복하며 직무 적합성을 추상적으로 주장하는 답변",
+        "top001_signal": ""
+      }
+    ],
+    "writer_contract": {
+      "mode": "heuristic",
+      "mode_label": "heuristic mode",
+      "headline": "문항당 하나의 핵심 메시지와 하나의 주력 경험만 밀어붙입니다.",
+      "answer_checklist": [
+        "핵심 주장 1개",
+        "근거 경험 1개",
+        "수치/증빙 1개",
+        "조직 적합 신호 1개",
+        "면접 방어 취약점 1개와 완화 문장 1개"
+      ],
+      "decision_principles": [
+        "문항마다 single best strategy를 유지한다.",
+        "흔한 성장/노력/배움 클리셰보다 검증 가능한 결과와 판단 기준을 우선한다.",
+        "평균 지원자 톤이 아니라 조직이 안심할 수 있는 기여 신호를 우선한다."
+      ]
+    },
+    "rendered": "## CURRENT STAGE\nHANDOFF_READY\n\n## PURPOSE\n농·축협 / 신규직원 문항에 대한 경험 배분과 리스크를 정리합니다.\n\n## CURRENT SUMMARY\n- 1번 문항은 성장과 학습 루프으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감입니다.\n- 2번 문항은 상황판단과 우선순위으로 분류했고, 주력 경험은 국민연금공단 기준소득월액 변경 특례 민원 응대입니다.\n- 3번 문항은 원칙과 신뢰으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재입니다.\n- 4번 문항은 원칙과 신뢰으로 분류했고, 주력 경험은 국민연금공단 기초연금 수급 대상자 발굴 자동화입니다.\n- 5번 문항은 입사 후 기여으로 분류했고, 주력 경험은 서울시청 코로나19 지원팀 부정수급 적발입니다.\n\n## REQUIRED INPUTS\n- 추가 입력 없음\n\n## NEXT STEP\nWRITER_HANDOFF\n\n## ASSUMPTIONS\n- [ASSUMPTION] 답변 톤은 '담백하고 근거 중심' 기준으로 유지합니다.\n\n## QUESTION RISKS\n- 1번 문항 / 성장과 학습 루프 / best_score=18 / risk=low\n- 2번 문항 / 상황판단과 우선순위 / best_score=17 / risk=low\n- 3번 문항 / 원칙과 신뢰 / best_score=15 / risk=low\n- 4번 문항 / 원칙과 신뢰 / best_score=15 / risk=low\n- 5번 문항 / 입사 후 기여 / best_score=15 / risk=low\n\n## RECOMMENDATIONS\n- 즉시 보강이 필요한 위험 신호가 크지 않습니다.\n\n## ALLOCATIONS\n### Q1\n- Experience: 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감\n- Type: QuestionType.TYPE_D\n- Score: 18\n- Reason: 질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(본인의, 발전을, 위해)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n### Q2\n- Experience: 국민연금공단 기준소득월액 변경 특례 민원 응대\n- Type: QuestionType.TYPE_I\n- Score: 14\n- Reason: 질문 기대: 상황판단과 우선순위 문항이며, 질문 키워드(판단이, 쉽지, 않은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(민원 응대 및 서류 검토 정확도 향상) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n### Q3\n- Experience: 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재\n- Type: QuestionType.TYPE_F\n- Score: 15\n- Reason: 질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(조직이나, 팀에서, 맡은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n### Q4\n- Experience: 국민연금공단 기초연금 수급 대상자 발굴 자동화\n- Type: QuestionType.TYPE_F\n- Score: 13\n- Reason: 질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(농협의, 구성원으로서, 본인이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n### Q5\n- Experience: 서울시청 코로나19 지원팀 부정수급 적발\n- Type: QuestionType.TYPE_E\n- Score: 13\n- Reason: 질문 기대: 입사 후 기여 문항이며, 질문 키워드(농협이, 교육지원, 경제)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n\n## QUESTION STRATEGIES\n### Q1\n- Core message: 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.\n- Winning angle: QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.\n- Losing angle: 의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.\n- Primary experience: 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감\n- Forbidden points: 성장/노력/배움만 반복하는 추상 서술, 팀 성과만 말하고 개인 판단과 기여를 숨기는 서술\n- Expected attacks: 왜 본인 판단이었는지 설명 부족\n- Required evidence: 1억 원 예산 절감, 서울시청 파견 근무 경험, 질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(본인의, 발전을, 위해)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n- Differentiation line: 평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.\n### Q2\n- Core message: 국민연금공단 기준소득월액 변경 특례 민원 응대 경험으로 QuestionType.TYPE_I 문항에서 검증 가능한 기여를 입증한다.\n- Winning angle: QuestionType.TYPE_I 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.\n- Losing angle: 의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.\n- Primary experience: 국민연금공단 기준소득월액 변경 특례 민원 응대\n- Forbidden points: 성장/노력/배움만 반복하는 추상 서술, 팀 성과만 말하고 개인 판단과 기여를 숨기는 서술\n- Expected attacks: 왜 본인 판단이었는지 설명 부족\n- Required evidence: 민원 응대 및 서류 검토 정확도 향상, 국민연금공단 인턴 업무 정리 메모와 청년인턴 수료증, 질문 기대: 상황판단과 우선순위 문항이며, 질문 키워드(판단이, 쉽지, 않은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(민원 응대 및 서류 검토 정확도 향상) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n- Differentiation line: 평균 지원자처럼 열정만 말하지 않고 국민연금공단 기준소득월액 변경 특례 민원 응대의 운영 기준·증빙·재현성을 제시한다.\n### Q3\n- Core message: 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.\n- Winning angle: QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.\n- Losing angle: 의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.\n- Primary experience: 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재\n- Forbidden points: 성장/노력/배움만 반복하는 추상 서술, 팀 성과만 말하고 개인 판단과 기여를 숨기는 서술\n- Expected attacks: 왜 본인 판단이었는지 설명 부족\n- Required evidence: 업무 효율 30% 증가, 서울시청 파견 근무 경험, 질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(조직이나, 팀에서, 맡은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n- Differentiation line: 평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.\n### Q4\n- Core message: 국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.\n- Winning angle: QuestionType.TYPE_F 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.\n- Losing angle: 의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.\n- Primary experience: 국민연금공단 기초연금 수급 대상자 발굴 자동화\n- Forbidden points: 성장/노력/배움만 반복하는 추상 서술, 팀 성과만 말하고 개인 판단과 기여를 숨기는 서술\n- Expected attacks: 왜 본인 판단이었는지 설명 부족\n- Required evidence: 3,000페이지 2일 완수, 목표 150건 초과 달성, 국민연금공단 인턴 근무 경험, 질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(농협의, 구성원으로서, 본인이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n- Differentiation line: 평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.\n### Q5\n- Core message: 서울시청 코로나19 지원팀 부정수급 적발 경험으로 QuestionType.TYPE_E 문항에서 검증 가능한 기여를 입증한다.\n- Winning angle: QuestionType.TYPE_E 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.\n- Losing angle: 의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.\n- Primary experience: 서울시청 코로나19 지원팀 부정수급 적발\n- Forbidden points: 성장/노력/배움만 반복하는 추상 서술, 팀 성과만 말하고 개인 판단과 기여를 숨기는 서술\n- Expected attacks: 왜 본인 판단이었는지 설명 부족\n- Required evidence: 부정수급 20건 적발, 예산 40% 절감, 서울시청 파견 근무 경험, 질문 기대: 입사 후 기여 문항이며, 질문 키워드(농협이, 교육지원, 경제)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n- Differentiation line: 평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 부정수급 적발의 운영 기준·증빙·재현성을 제시한다.\n\n## WRITER CONTRACT\n- Mode: heuristic mode\n- Headline: 문항당 하나의 핵심 메시지와 하나의 주력 경험만 밀어붙입니다.\n- Checklist: 핵심 주장 1개\n- Checklist: 근거 경험 1개\n- Checklist: 수치/증빙 1개\n- Checklist: 조직 적합 신호 1개\n- Checklist: 면접 방어 취약점 1개와 완화 문장 1개\n- Principle: 문항마다 single best strategy를 유지한다.\n- Principle: 흔한 성장/노력/배움 클리셰보다 검증 가능한 결과와 판단 기준을 우선한다.\n- Principle: 평균 지원자 톤이 아니라 조직이 안심할 수 있는 기여 신호를 우선한다."
+  },
+  "validation": {
+    "passed": false,
+    "missing": [
+      "## NEEDS VERIFICATION"
+    ],
+    "out_of_order": []
+  }
+}

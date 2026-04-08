@@ -1,0 +1,62 @@
+[
+  {
+    "question_id": "q1_nh_growth",
+    "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+    "question_type": "TYPE_D",
+    "primary_experience_id": "exp_seoul_covid_conflict",
+    "primary_experience_title": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+    "primary_reason": "질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(본인의, 발전을, 위해)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_nps_income_adjustment",
+    "secondary_experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q2_nh_decision",
+    "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+    "question_type": "TYPE_I",
+    "primary_experience_id": "exp_nps_intern",
+    "primary_experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+    "primary_reason": "질문 기대: 상황판단과 우선순위 문항이며, 질문 키워드(판단이, 쉽지, 않은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_nps_income_adjustment",
+    "secondary_experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q3_nh_trust",
+    "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+    "question_type": "TYPE_F",
+    "primary_experience_id": "exp_seoul_covid_fraud",
+    "primary_experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+    "primary_reason": "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(조직이나, 팀에서, 맡은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_nps_income_adjustment",
+    "secondary_experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q4_nh_value",
+    "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+    "question_type": "TYPE_F",
+    "primary_experience_id": "exp_seoul_covid_crisis",
+    "primary_experience_title": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습",
+    "primary_reason": "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(농협의, 구성원으로서, 본인이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(수백 통 민원 당일 수습) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_seoul_covid_budget",
+    "secondary_experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q5_nh_structure",
+    "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+    "question_type": "TYPE_E",
+    "primary_experience_id": "exp_mg_bank_parttime",
+    "primary_experience_title": "새마을금고 아르바이트 - 디지털 취약 고객 응대",
+    "primary_reason": "질문 기대: 입사 후 기여 문항이며, 질문 키워드(농협이, 교육지원, 경제)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(디지털 취약 계층 응대 성공) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_seoul_covid_budget",
+    "secondary_experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  }
+]

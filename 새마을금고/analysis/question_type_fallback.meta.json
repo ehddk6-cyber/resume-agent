@@ -1,0 +1,55 @@
+{
+  "status": "success",
+  "attempt_count": 5,
+  "timeout_seconds": 300,
+  "attempts": [
+    {
+      "tool": "codex",
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 15522,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-06T06:35:51.653563Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:35:51.654732Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:35:51.655831Z  WAR"
+    },
+    {
+      "tool": "codex",
+      "attempt": 2,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 15056,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-06T06:36:07.275808Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:36:07.276935Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:36:07.278144Z  WAR"
+    },
+    {
+      "tool": "codex",
+      "attempt": 3,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 16233,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-06T06:36:28.363104Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:36:28.364399Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:36:28.365358Z  WAR"
+    },
+    {
+      "tool": "opencode",
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "failure_kind": "nonzero_exit",
+      "error": "opencode SDK가 설치되어 있지 않습니다.\n설치: pip install opencode"
+    },
+    {
+      "tool": "claude",
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "failure_kind": null
+    }
+  ],
+  "output_path": "/home/ehddk/ai/ai/ai/resume-agent/새마을금고/analysis/question_type_fallback.json",
+  "selected_tool": "claude",
+  "attempted_tools": [
+    "codex",
+    "opencode",
+    "claude"
+  ],
+  "fallback_reason": "nonzero_exit"
+}

@@ -1,0 +1,22 @@
+{
+  "project": {
+    "company_name": "",
+    "job_title": "",
+    "career_stage": "ENTRY",
+    "company_type": "공공",
+    "research_notes": "",
+    "tone_style": "담백하고 근거 중심",
+    "priority_experience_order": [],
+    "questions": []
+  },
+  "accepted_artifacts": [],
+  "paths": {
+    "coach": "artifacts/coach.md",
+    "self_intro": "artifacts/self_intro.md",
+    "writer": "artifacts/writer.md",
+    "interview": "artifacts/interview.md",
+    "narrative_ssot": "analysis/narrative_ssot.json",
+    "outcome_dashboard": "analysis/outcome_dashboard.json",
+    "export": "artifacts/export.md"
+  }
+}

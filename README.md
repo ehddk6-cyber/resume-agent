@@ -43,12 +43,15 @@ These are implemented now:
 
 ```bash
 uv run --python 3.11 python -m resume_agent init my_run
+uv run --python 3.11 python -m resume_agent sync my_run
 
 uv run --python 3.11 python -m resume_agent ingest-examples my_run
 uv run --python 3.11 python -m resume_agent analyze my_run
 uv run --python 3.11 python -m resume_agent draft my_run --target profile/targets/example_target.md
 uv run --python 3.11 python -m resume_agent review my_run --draft outputs/latest_draft.md
 ```
+
+`init` and `wizard` automatically run `crawl-base` once after the workspace is created or saved, so the latest `linkareer.csv` is reflected immediately. Use `sync` later whenever you want to refresh an existing workspace without recreating it.
 
 If you already have Python available, the editable install flow still works:
 
@@ -62,6 +65,7 @@ The full target command model is documented as:
 ```text
 resume-agent setup
 resume-agent crawl-base
+resume-agent sync
 resume-agent my-profile
 resume-agent my-gaps
 resume-agent coach
@@ -88,6 +92,9 @@ my_run/
     latest_draft_prompt.md
     latest_draft.md
     latest_review_prompt.md
+    latest_coach_prompt.md
+    latest_interview_prompt.md
+    latest_company_research_prompt.md
   prompts/
 ```
 

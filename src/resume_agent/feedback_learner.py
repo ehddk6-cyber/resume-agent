@@ -53,6 +53,7 @@ class UserFeedback:
     rejection_reason: Optional[str] = None
     selected_experience_ids: List[str] = field(default_factory=list)
     question_experience_map: List[Dict[str, str]] = field(default_factory=list)
+    question_strategy_map: List[Dict[str, Any]] = field(default_factory=list)
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
 
 
@@ -261,6 +262,7 @@ class FeedbackLearner:
         rejection_reason: Optional[str] = None,
         selected_experience_ids: Optional[List[str]] = None,
         question_experience_map: Optional[List[Dict[str, str]]] = None,
+        question_strategy_map: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
         """
         사용자 피드백 기록
@@ -288,6 +290,7 @@ class FeedbackLearner:
             rejection_reason=rejection_reason,
             selected_experience_ids=selected_experience_ids or [],
             question_experience_map=question_experience_map or [],
+            question_strategy_map=question_strategy_map or [],
         )
 
         self.db.save_feedback(feedback)
@@ -403,6 +406,9 @@ class FeedbackLearner:
         ]
         learned_weights = self.get_learned_outcome_weights(context)
         experience_stats_by_question_type: Dict[str, Dict[str, Any]] = {}
+        strategy_stats_by_question_type: Dict[str, Dict[str, Any]] = {}
+        differentiation_stats_by_question_type: Dict[str, Dict[str, Any]] = {}
+        tone_stats_by_company_type: Dict[str, Dict[str, Any]] = {}
 
         for feedback in matched:
             for item in feedback.question_experience_map:
@@ -490,10 +496,104 @@ class FeedbackLearner:
                     )[:5]
                 ]
 
+        for feedback in matched:
+            pass_weight, fail_weight = _feedback_outcome_weights(
+                feedback, learned_weights
+            )
+            company_type = (feedback.company_type or "UNKNOWN").strip() or "UNKNOWN"
+            for item in feedback.question_strategy_map:
+                question_type = str(item.get("question_type") or "").strip()
+                strategy_key = (
+                    str(item.get("winning_angle") or "").strip()
+                    or str(item.get("core_message") or "").strip()
+                )
+                differentiation_key = str(item.get("differentiation_line") or "").strip()
+                tone_key = str(item.get("tone") or "").strip()
+
+                if question_type and strategy_key:
+                    type_bucket = strategy_stats_by_question_type.setdefault(
+                        question_type, {}
+                    )
+                    strategy_bucket = type_bucket.setdefault(
+                        strategy_key,
+                        {
+                            "total_uses": 0,
+                            "pass_count": 0,
+                            "fail_count": 0,
+                            "weighted_pass_score": 0,
+                            "weighted_fail_score": 0,
+                            "weighted_net_score": 0,
+                            "pass_rate": 0.0,
+                        },
+                    )
+                    strategy_bucket["total_uses"] += 1
+                    if _feedback_is_pass(feedback):
+                        strategy_bucket["pass_count"] += 1
+                    else:
+                        strategy_bucket["fail_count"] += 1
+                    strategy_bucket["weighted_pass_score"] += pass_weight
+                    strategy_bucket["weighted_fail_score"] += fail_weight
+
+                if question_type and differentiation_key:
+                    type_bucket = differentiation_stats_by_question_type.setdefault(
+                        question_type, {}
+                    )
+                    diff_bucket = type_bucket.setdefault(
+                        differentiation_key,
+                        {
+                            "total_uses": 0,
+                            "pass_count": 0,
+                            "fail_count": 0,
+                            "pass_rate": 0.0,
+                        },
+                    )
+                    diff_bucket["total_uses"] += 1
+                    if _feedback_is_pass(feedback):
+                        diff_bucket["pass_count"] += 1
+                    else:
+                        diff_bucket["fail_count"] += 1
+
+                if tone_key:
+                    tone_bucket = tone_stats_by_company_type.setdefault(company_type, {})
+                    tone_stats = tone_bucket.setdefault(
+                        tone_key,
+                        {
+                            "total_uses": 0,
+                            "pass_count": 0,
+                            "fail_count": 0,
+                            "pass_rate": 0.0,
+                        },
+                    )
+                    tone_stats["total_uses"] += 1
+                    if _feedback_is_pass(feedback):
+                        tone_stats["pass_count"] += 1
+                    else:
+                        tone_stats["fail_count"] += 1
+
+        for buckets in (
+            strategy_stats_by_question_type,
+            differentiation_stats_by_question_type,
+            tone_stats_by_company_type,
+        ):
+            for inner_bucket in buckets.values():
+                for stats in inner_bucket.values():
+                    total_uses = int(stats.get("total_uses", 0))
+                    pass_count = int(stats.get("pass_count", 0))
+                    stats["pass_rate"] = (
+                        round(pass_count / total_uses, 3) if total_uses else 0.0
+                    )
+                    if "weighted_pass_score" in stats:
+                        stats["weighted_net_score"] = int(
+                            stats.get("weighted_pass_score", 0)
+                        ) - int(stats.get("weighted_fail_score", 0))
+
         return {
             "matched_feedback_count": len(matched),
             "learned_outcome_weights": learned_weights,
             "experience_stats_by_question_type": experience_stats_by_question_type,
+            "strategy_stats_by_question_type": strategy_stats_by_question_type,
+            "differentiation_stats_by_question_type": differentiation_stats_by_question_type,
+            "tone_stats_by_company_type": tone_stats_by_company_type,
         }
 
     def _calculate_confidence(self, stats: PatternStats) -> float:

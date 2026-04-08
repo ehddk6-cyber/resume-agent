@@ -113,6 +113,7 @@ def _get_defaults() -> Dict[str, Any]:
         "codex": {
             "max_retries": 3,
             "retry_delay_base": 2,
+            "timeout_seconds": 300,
         },
         "validation": {
             "star_min_lengths": {
@@ -125,5 +126,16 @@ def _get_defaults() -> Dict[str, Any]:
         "export": {
             "char_limit_ratio_min": 0.90,
             "char_limit_ratio_max": 0.97,
+        },
+        "tokenizer": {
+            "use_kiwi": True,
+            "min_morpheme_length": 2,
+        },
+        "embedding": {
+            "model_name": "paraphrase-multilingual-MiniLM-L12-v2",
+            "dimension": 384,
+            "similarity_threshold": 0.35,
+            "max_semantic_bonus": 3,
+            "lazy_load": True,
         },
     }

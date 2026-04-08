@@ -1,0 +1,50 @@
+[
+  {
+    "question_id": "q1_responsibility",
+    "question_text": "맡은 업무(역할)를 수행하면서 책임감을 발휘해 업무(역할)를 완수했던 경험에 대해 당시 상황, 본인의 행동, 그리고 결과를 중심으로 상세히 기술해 주십시오.",
+    "question_type": "TYPE_B",
+    "primary_experience_id": "exp_seoul_covid_budget",
+    "primary_experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+    "primary_reason": "질문 기대: 핵심 역량 문항이며, 질문 키워드(맡은, 업무, 역할)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.\n결과 학습 반영: 실제 결과 통계에서 TYPE_B 문항에 이 경험의 통과 비중이 높아 가점 / 표본 수가 적어 결과 통계 가중치는 약하게 반영.",
+    "secondary_experience_id": "exp_nps_income_adjustment",
+    "secondary_experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q2_adaptation",
+    "question_text": "새로운 조직이나 팀에 합류했을 당시 구성원들과 관계를 형성하고 조직에 적응하기 위해 노력했던 경험에 대해 구체적으로 기술해 주십시오.",
+    "question_type": "TYPE_C",
+    "primary_experience_id": "exp_seoul_covid_conflict",
+    "primary_experience_title": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+    "primary_reason": "질문 기대: 협업과 조정 문항이며, 질문 키워드(새로운, 조직이나, 팀에)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_seoul_covid_fraud",
+    "secondary_experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q3_competency",
+    "question_text": "본인이 보유한 직무역량이 우리 조직의 목표 달성 또는 주요 현안 해결에 어떻게 기여할 수 있는지 설명하고 입사 후 실무 현장에서 실천할 수 있는 구체적인 행동 계획을 기술해 주십시오.",
+    "question_type": "TYPE_B",
+    "primary_experience_id": "exp_nps_intern",
+    "primary_experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+    "primary_reason": "질문 기대: 핵심 역량 문항이며, 질문 키워드(본인이, 보유한, 직무역량이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_seongbuk",
+    "secondary_experience_title": "성북구청 자치회의 참여자 타겟 마케팅 모집",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q4_persuasion",
+    "question_text": "이해관계가 상충하거나 규정에 반하는 요구를 하는 고객 또는 상대방을 설득하여 원칙을 지키면서도 합의를 도출한 경험에 대해 기술해 주십시오. 특히 상대방을 설득하기 위해 활용한 본인만의 논리나 소통 전략은 무엇이었는지 구체적으로 기술해 주십시오.",
+    "question_type": "TYPE_C",
+    "primary_experience_id": "exp_seoul_covid_crisis",
+    "primary_experience_title": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습",
+    "primary_reason": "질문 기대: 협업과 조정 문항이며, 질문 키워드(이해관계가, 상충하거나, 규정에)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(수백 통 민원 당일 수습) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_nps_income_adjustment",
+    "secondary_experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  }
+]

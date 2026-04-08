@@ -1,0 +1,51 @@
+{
+  "project": {
+    "company_name": "신한은행",
+    "job_title": "일반직 신입행원 (개인/기업금융)",
+    "career_stage": "JUNIOR",
+    "company_type": "금융",
+    "research_notes": "",
+    "tone_style": "담백하고 근거 중심",
+    "priority_experience_order": [],
+    "questions": [
+      {
+        "id": "q1_strength",
+        "order_no": 1,
+        "question_text": "다른 지원자와 차별화되는 본인만의 강점을 한가지 선택하여, 이를 신한은행에서 어떻게 발휘할 수 있을지 작성해 주세요.",
+        "char_limit": 800,
+        "detected_type": "TYPE_B"
+      },
+      {
+        "id": "q2_value_conflict",
+        "order_no": 2,
+        "question_text": "본인이 중요하게 생각하는 가치관이 타인과 충돌했던 경험은 무엇이며, 이를 어떻게 해결했는지 작성해 주세요.",
+        "char_limit": 800,
+        "detected_type": "TYPE_H"
+      },
+      {
+        "id": "q3_social_issue",
+        "order_no": 3,
+        "question_text": "최근 사회 이슈 중 중요하다고 생각되는 한 가지를 선택하고 해당 이슈가 은행업에 어떤 영향을 끼칠 것으로 예상되는지 본인의 생각을 작성해 주세요.",
+        "char_limit": 1000,
+        "detected_type": "TYPE_H"
+      },
+      {
+        "id": "q4_future_vision",
+        "order_no": 4,
+        "question_text": "은행 입행 10년 혹은 20년 후 본인의 모습을 상상해보고 어떤 분야의 전문가로 성장하고 싶은지 기술해 주세요.",
+        "char_limit": 1000,
+        "detected_type": "TYPE_D"
+      }
+    ]
+  },
+  "accepted_artifacts": [],
+  "paths": {
+    "coach": "artifacts/coach.md",
+    "self_intro": "artifacts/self_intro.md",
+    "writer": "artifacts/writer.md",
+    "interview": "artifacts/interview.md",
+    "narrative_ssot": "analysis/narrative_ssot.json",
+    "outcome_dashboard": "analysis/outcome_dashboard.json",
+    "export": "artifacts/export.md"
+  }
+}

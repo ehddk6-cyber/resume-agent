@@ -1,0 +1,96 @@
+{
+  "minimum_samples": 3,
+  "sample_count": 3,
+  "minimum_sample_met": true,
+  "average_overall_delta": -0.017,
+  "average_humanization_delta": 0.0,
+  "average_ncs_delta": 0.167,
+  "average_ssot_delta": -0.11,
+  "average_result_quality_delta": -0.024,
+  "rows": [
+    {
+      "question_order": 1,
+      "overall_before": 0.7,
+      "overall_after": 0.68,
+      "humanization_before": 1.0,
+      "humanization_after": 1.0,
+      "ncs_before": 0.5,
+      "ncs_after": 1.0,
+      "ssot_before": 0.67,
+      "ssot_after": 0.67,
+      "ncs_expected_competencies": [
+        "의사소통능력",
+        "조직이해능력"
+      ],
+      "ncs_matched_competencies": [
+        "의사소통능력",
+        "조직이해능력"
+      ],
+      "ncs_missing_competencies": [],
+      "overall_delta": -0.02,
+      "humanization_delta": 0.0,
+      "ncs_delta": 0.5,
+      "ssot_delta": 0.0,
+      "result_quality_before": 0.924,
+      "result_quality_after": 0.85,
+      "result_quality_delta": -0.074
+    },
+    {
+      "question_order": 2,
+      "overall_before": 0.67,
+      "overall_after": 0.66,
+      "humanization_before": 1.0,
+      "humanization_after": 1.0,
+      "ncs_before": 0.5,
+      "ncs_after": 0.5,
+      "ssot_before": 1.0,
+      "ssot_after": 0.67,
+      "ncs_expected_competencies": [
+        "의사소통능력",
+        "대인관계능력"
+      ],
+      "ncs_matched_competencies": [
+        "의사소통능력"
+      ],
+      "ncs_missing_competencies": [
+        "대인관계능력"
+      ],
+      "overall_delta": -0.01,
+      "humanization_delta": 0.0,
+      "ncs_delta": 0.0,
+      "ssot_delta": -0.33,
+      "result_quality_before": 0.828,
+      "result_quality_after": 0.842,
+      "result_quality_delta": 0.014
+    },
+    {
+      "question_order": 3,
+      "overall_before": 0.68,
+      "overall_after": 0.66,
+      "humanization_before": 1.0,
+      "humanization_after": 1.0,
+      "ncs_before": 0.5,
+      "ncs_after": 0.5,
+      "ssot_before": 0.33,
+      "ssot_after": 0.33,
+      "ncs_expected_competencies": [
+        "정보능력",
+        "자기관리능력"
+      ],
+      "ncs_matched_competencies": [
+        "정보능력"
+      ],
+      "ncs_missing_competencies": [
+        "자기관리능력"
+      ],
+      "overall_delta": -0.02,
+      "humanization_delta": 0.0,
+      "ncs_delta": 0.0,
+      "ssot_delta": 0.0,
+      "result_quality_before": 0.905,
+      "result_quality_after": 0.892,
+      "result_quality_delta": -0.013
+    }
+  ],
+  "markdown": "# Writer Rewrite Quality Comparison\n\n- 샘플 수: 3\n- 최소 샘플 기준(>= 3): 충족\n- 평균 overall 변화: -0.017\n- 평균 humanization 변화: +0.000\n- 평균 JD/NCS 변화: +0.167\n- 평균 SSOT 변화: -0.110\n- 평균 result quality 변화: -0.024\n\n| 문항 | Overall (전→후) | Human (전→후) | JD/NCS (전→후) | SSOT (전→후) | JD/NCS 근거 |\n| --- | --- | --- | --- | --- | --- |\n| Q1 | 0.70→0.68 (-0.02) | 1.00→1.00 (+0.00) | 0.50→1.00 (+0.50) | 0.67→0.67 (+0.00) | 기대=의사소통능력, 조직이해능력; 매칭=의사소통능력, 조직이해능력; 미충족=없음 |\n| Q2 | 0.67→0.66 (-0.01) | 1.00→1.00 (+0.00) | 0.50→0.50 (+0.00) | 1.00→0.67 (-0.33) | 기대=의사소통능력, 대인관계능력; 매칭=의사소통능력; 미충족=대인관계능력 |\n| Q3 | 0.68→0.66 (-0.02) | 1.00→1.00 (+0.00) | 0.50→0.50 (+0.00) | 0.33→0.33 (+0.00) | 기대=정보능력, 자기관리능력; 매칭=정보능력; 미충족=자기관리능력 |"
+}

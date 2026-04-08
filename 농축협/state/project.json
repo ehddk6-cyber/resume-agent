@@ -1,0 +1,51 @@
+{
+  "company_name": "농·축협",
+  "job_title": "신규직원",
+  "career_stage": "ENTRY",
+  "company_type": "협동조합",
+  "research_notes": "2026년 상반기 농·축협 신규직원 채용 자기소개서 기준. 교육지원·경제·금융의 복합 구조, 조합원 신뢰, 현장 밀착 서비스, 정직과 도덕성, 실무 개선 역량 강조.",
+  "tone_style": "담백하고 근거 중심",
+  "priority_experience_order": [
+    "exp_nps_intern",
+    "exp_seoul_covid_fraud",
+    "exp_seoul_covid_conflict",
+    "exp_mg_bank_parttime"
+  ],
+  "questions": [
+    {
+      "id": "q1_nh_growth",
+      "order_no": 1,
+      "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+      "char_limit": 600,
+      "detected_type": "TYPE_D"
+    },
+    {
+      "id": "q2_nh_decision",
+      "order_no": 2,
+      "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+      "char_limit": 600,
+      "detected_type": "TYPE_I"
+    },
+    {
+      "id": "q3_nh_trust",
+      "order_no": 3,
+      "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+      "char_limit": 600,
+      "detected_type": "TYPE_F"
+    },
+    {
+      "id": "q4_nh_value",
+      "order_no": 4,
+      "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+      "char_limit": 600,
+      "detected_type": "TYPE_F"
+    },
+    {
+      "id": "q5_nh_structure",
+      "order_no": 5,
+      "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+      "char_limit": 600,
+      "detected_type": "TYPE_E"
+    }
+  ]
+}

@@ -16,6 +16,8 @@ from resume_agent.state import (
     save_experiences,
     load_knowledge_sources,
     save_knowledge_sources,
+    load_success_cases,
+    save_success_cases,
     load_artifacts,
     save_artifacts,
     upsert_artifact,
@@ -27,6 +29,8 @@ from resume_agent.models import (
     GeneratedArtifact,
     ArtifactType,
     EvidenceLevel,
+    SuccessCase,
+    SuccessPattern,
 )
 from datetime import datetime, timezone
 
@@ -113,6 +117,7 @@ class TestInitializeState:
             ws.state_dir / "experiences.json",
             ws.state_dir / "project.json",
             ws.state_dir / "knowledge_sources.json",
+            ws.state_dir / "success_cases.json",
             ws.state_dir / "artifacts.json",
         ]
         for f in state_files:
@@ -205,3 +210,52 @@ class TestArtifacts:
         artifacts = load_artifacts(ws)
         assert len(artifacts) == 1
         assert artifacts[0].accepted is True
+
+
+class TestSuccessCases:
+    def test_save_and_load(self, ws):
+        cases = [
+            SuccessCase(
+                title="A / 사무 / 2025",
+                company_name="테스트회사",
+                job_title="사무",
+                detected_patterns=[
+                    SuccessPattern.STAR_STRUCTURE,
+                    SuccessPattern.QUANTIFIED_RESULT,
+                ],
+            ),
+            SuccessCase(
+                title="B / 개발 / 2025",
+                company_name="테스트회사2",
+                job_title="개발",
+                detected_patterns=[SuccessPattern.COLLABORATION],
+            ),
+        ]
+        save_success_cases(ws, cases)
+        loaded = load_success_cases(ws)
+        assert len(loaded) == 2
+        assert loaded[0].company_name == "테스트회사"
+        assert loaded[0].detected_patterns[0] == SuccessPattern.STAR_STRUCTURE
+        assert loaded[1].detected_patterns[0] == SuccessPattern.COLLABORATION
+
+    def test_empty_list(self, ws):
+        save_success_cases(ws, [])
+        assert load_success_cases(ws) == []
+
+    def test_roundtrip_preserves_enum_values(self, ws):
+        cases = [
+            SuccessCase(
+                title="C",
+                company_name="회사C",
+                detected_patterns=[
+                    SuccessPattern.PROBLEM_SOLVING,
+                    SuccessPattern.GROWTH_STORY,
+                ],
+            )
+        ]
+        save_success_cases(ws, cases)
+        loaded = load_success_cases(ws)
+        for pattern in loaded[0].detected_patterns:
+            assert isinstance(pattern, SuccessPattern)
+        assert SuccessPattern.PROBLEM_SOLVING in loaded[0].detected_patterns
+        assert SuccessPattern.GROWTH_STORY in loaded[0].detected_patterns

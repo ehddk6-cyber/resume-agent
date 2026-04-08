@@ -1,0 +1,38 @@
+[
+  {
+    "question_id": "q1_mg_motivation",
+    "question_text": "새마을금고에 지원한 이유와 새마을금고가 지원자를 채용해야 하는 이유를 기술해 주십시오.",
+    "question_type": "TYPE_A",
+    "primary_experience_id": "exp_seoul_covid_fraud",
+    "primary_experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+    "primary_reason": "질문 기대: 지원동기와 직무 적합성 문항이며, 질문 키워드(새마을금고에, 지원한, 이유와)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_seoul_covid_budget",
+    "secondary_experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q2_mg_talent",
+    "question_text": "새마을금고 인재상 중 본인이 가장 부합하는 요소를 고르고 그 이유를 구체적인 경험과 함께 기술해 주십시오.",
+    "question_type": "TYPE_H",
+    "primary_experience_id": "exp_nps_intern",
+    "primary_experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+    "primary_reason": "질문 기대: 고객응대 문항이며, 질문 키워드(새마을금고, 인재상, 본인이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_seoul_covid_conflict",
+    "secondary_experience_title": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  },
+  {
+    "question_id": "q3_mg_goal",
+    "question_text": "높은 목표를 설정하여 성공 또는 실패한 경험과 그 과정에서 얻은 교훈을 기술해 주십시오.",
+    "question_type": "TYPE_D",
+    "primary_experience_id": "exp_seoul_covid_crisis",
+    "primary_experience_title": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습",
+    "primary_reason": "질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(높은, 목표를, 설정하여)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(수백 통 민원 당일 수습) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "secondary_experience_id": "exp_nps_income_adjustment",
+    "secondary_experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+    "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+    "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+  }
+]

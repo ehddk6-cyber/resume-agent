@@ -11,6 +11,11 @@ try:
 except ImportError:
     PdfReader = None
 
+try:
+    from docx import Document
+except ImportError:
+    Document = None
+
 
 def extract_text_from_pdf(pdf_path: Path) -> str:
     """PDF 파일(또는 폴더 내의 모든 PDF)에서 텍스트를 추출합니다."""
@@ -43,6 +48,22 @@ def extract_text_from_pdf(pdf_path: Path) -> str:
                 logger.error(f"Error reading PDF {file}: {e}")
 
     return "\n\n".join(texts)
+
+
+def extract_text_from_docx(docx_path: Path) -> str:
+    """DOCX 파일에서 텍스트를 추출합니다."""
+    if not Document:
+        return ""
+
+    if not docx_path.is_file() or docx_path.suffix.lower() != ".docx":
+        return ""
+
+    try:
+        doc = Document(docx_path)
+        return "\n".join(paragraph.text for paragraph in doc.paragraphs if paragraph.text)
+    except Exception as e:
+        logger.error(f"Error reading DOCX {docx_path}: {e}")
+        return ""
 
 
 def extract_jd_keywords(text: str) -> List[str]:

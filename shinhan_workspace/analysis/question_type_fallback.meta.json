@@ -1,0 +1,55 @@
+{
+  "status": "success",
+  "attempt_count": 5,
+  "timeout_seconds": 300,
+  "attempts": [
+    {
+      "tool": "codex",
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 14736,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-06T06:39:07.622305Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:39:07.623622Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:39:07.624714Z  WAR"
+    },
+    {
+      "tool": "codex",
+      "attempt": 2,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 21508,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-06T06:39:24.327903Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:39:24.329015Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session found\n2026-04-06T06:39:24.330130Z  WAR"
+    },
+    {
+      "tool": "codex",
+      "attempt": 3,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 15393,
+      "failure_kind": "plugin_sync_error",
+      "stderr_excerpt": "2026-04-06T06:39:42.485795Z  WARN codex_core::plugins::manager: failed to warm featured plugin ids cache error=remote plugin sync request to https://chatgpt.com/backend-api/plugins/featured failed with status 403 Forbidden: <html>\n  <head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:"
+    },
+    {
+      "tool": "opencode",
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "failure_kind": "nonzero_exit",
+      "error": "opencode SDK가 설치되어 있지 않습니다.\n설치: pip install opencode"
+    },
+    {
+      "tool": "claude",
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "failure_kind": null
+    }
+  ],
+  "output_path": "/home/ehddk/ai/ai/ai/resume-agent/shinhan_workspace/analysis/question_type_fallback.json",
+  "selected_tool": "claude",
+  "attempted_tools": [
+    "codex",
+    "opencode",
+    "claude"
+  ],
+  "fallback_reason": "plugin_sync_error"
+}

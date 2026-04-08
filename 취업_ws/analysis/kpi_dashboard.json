@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-04-06T06:37:29.241154+00:00",
+  "artifact_type": "company_research",
+  "question_experience_match_accuracy": 1.0,
+  "self_intro_follow_up_hit_rate": 0.0,
+  "interview_defense_success_rate": 0.0,
+  "company_signal_reuse_rate": 1.0,
+  "document_pass_rate": 0.0,
+  "interview_pass_rate": 0.0,
+  "offer_rate": 0.0,
+  "company_signal_summary": {
+    "core_values": [
+      "공익",
+      "책임"
+    ],
+    "competencies": [
+      "정량적 성과",
+      "제도 개선",
+      "고객 만족"
+    ],
+    "differentiation": [
+      "귀사 국민연금공단에서 필요로 하는",
+      "일반 특화 역량"
+    ]
+  },
+  "writer_quality_metrics": {},
+  "result_quality_metrics": {},
+  "tracked_outcomes": {
+    "unknown": 2
+  }
+}

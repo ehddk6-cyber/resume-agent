@@ -1,0 +1,50 @@
+{
+  "step": "writer",
+  "timestamp": "2026-04-05T20:39:57.956116",
+  "status": "failed",
+  "error": "## 블록 1: ASSUMPTIONS & MISSING FACTS, ## 블록 2: OUTLINE, ## 블록 3: DRAFT ANSWERS, ## 블록 4: SELF-CHECK, 문항별 글자수 표기",
+  "state": {
+    "artifact_path": "artifacts/writer.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## 블록 1: ASSUMPTIONS & MISSING FACTS",
+        "## 블록 2: OUTLINE",
+        "## 블록 3: DRAFT ANSWERS",
+        "## 블록 4: SELF-CHECK",
+        "문항별 글자수 표기",
+        "SELF-CHECK PASS/FAIL",
+        "Q1 답변 본문이 비어 있습니다",
+        "Q2 답변 본문이 비어 있습니다",
+        "Q3 답변 본문이 비어 있습니다"
+      ],
+      "out_of_order": []
+    },
+    "target_path": "profile/targets/example_target.md",
+    "tool": "codex",
+    "rewrite_count": 0,
+    "char_limit_adjusted": false,
+    "fact_warnings": [],
+    "readability": {
+      "score": 80,
+      "feedback": [
+        "STAR(상황/행동/결과) 구조를 나타내는 명확한 표현이 부족합니다."
+      ]
+    },
+    "quality_evaluations": [],
+    "result_quality_evaluations": [],
+    "quality_evaluation_status": "ok",
+    "quality_evaluation_error": null,
+    "result_quality_evaluation_status": "ok",
+    "result_quality_evaluation_error": null,
+    "writer_quality_path": "artifacts/writer_quality.json",
+    "writer_result_quality_path": "artifacts/writer_result_quality.json",
+    "writer_differentiation_path": "artifacts/writer_differentiation.json",
+    "writer_defensibility_path": "artifacts/writer_defensibility.json",
+    "writer_message_discipline_path": "artifacts/writer_message_discipline.json",
+    "writer_committee_reaction_path": "artifacts/writer_committee_reaction.json",
+    "writer_brief_path": "analysis/writer_brief.json",
+    "rewrite_report_md_path": null,
+    "rewrite_report_json_path": null
+  }
+}

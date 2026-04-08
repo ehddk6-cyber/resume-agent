@@ -1,0 +1,94 @@
+{
+  "summary": [
+    "질문 수: 4",
+    "경험 수: 13",
+    "L3 경험 수: 5",
+    "검증 필요 경험 수: 0"
+  ],
+  "missing_metrics": [],
+  "missing_evidence": [],
+  "needs_verification": [],
+  "question_risks": [
+    {
+      "question_id": "q1_strength",
+      "order_no": 1,
+      "question_type": "TYPE_B",
+      "best_score": 16,
+      "risk": "low"
+    },
+    {
+      "question_id": "q2_value_conflict",
+      "order_no": 2,
+      "question_type": "TYPE_H",
+      "best_score": 15,
+      "risk": "low"
+    },
+    {
+      "question_id": "q3_social_issue",
+      "order_no": 3,
+      "question_type": "TYPE_H",
+      "best_score": 15,
+      "risk": "low"
+    },
+    {
+      "question_id": "q4_future_vision",
+      "order_no": 4,
+      "question_type": "TYPE_D",
+      "best_score": 13,
+      "risk": "low"
+    }
+  ],
+  "recommendations": [
+    "즉시 보강이 필요한 위험 신호가 크지 않습니다."
+  ],
+  "experience_competition": [
+    {
+      "question_id": "q1_strength",
+      "question_text": "다른 지원자와 차별화되는 본인만의 강점을 한가지 선택하여, 이를 신한은행에서 어떻게 발휘할 수 있을지 작성해 주세요.",
+      "question_type": "TYPE_B",
+      "primary_experience_id": "exp_seoul_covid_budget",
+      "primary_experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+      "primary_reason": "질문 기대: 핵심 역량 문항이며, 질문 키워드(다른, 지원자와, 차별화되는)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+      "secondary_experience_id": "exp_seoul_covid_crisis",
+      "secondary_experience_title": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습",
+      "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+      "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+    },
+    {
+      "question_id": "q2_value_conflict",
+      "question_text": "본인이 중요하게 생각하는 가치관이 타인과 충돌했던 경험은 무엇이며, 이를 어떻게 해결했는지 작성해 주세요.",
+      "question_type": "TYPE_H",
+      "primary_experience_id": "exp_nps_intern",
+      "primary_experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+      "primary_reason": "질문 기대: 고객응대 문항이며, 질문 키워드(본인이, 중요하게, 생각하는)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+      "secondary_experience_id": "exp_seoul_covid_crisis",
+      "secondary_experience_title": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습",
+      "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+      "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+    },
+    {
+      "question_id": "q3_social_issue",
+      "question_text": "최근 사회 이슈 중 중요하다고 생각되는 한 가지를 선택하고 해당 이슈가 은행업에 어떤 영향을 끼칠 것으로 예상되는지 본인의 생각을 작성해 주세요.",
+      "question_type": "TYPE_H",
+      "primary_experience_id": "exp_seoul_covid_fraud",
+      "primary_experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+      "primary_reason": "질문 기대: 고객응대 문항이며, 질문 키워드(최근, 사회, 이슈)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+      "secondary_experience_id": "exp_seoul_covid_crisis",
+      "secondary_experience_title": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습",
+      "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+      "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+    },
+    {
+      "question_id": "q4_future_vision",
+      "question_text": "은행 입행 10년 혹은 20년 후 본인의 모습을 상상해보고 어떤 분야의 전문가로 성장하고 싶은지 기술해 주세요.",
+      "question_type": "TYPE_E",
+      "primary_experience_id": "exp_saemaul_bank",
+      "primary_experience_title": "새마을금고 은행 디지털 취약 계층 고객 응대",
+      "primary_reason": "질문 기대: 입사 후 기여 문항이며, 질문 키워드(은행, 입행, 혹은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(디지털 취약 계층 응대 성공) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+      "secondary_experience_id": "exp_seoul_covid_crisis",
+      "secondary_experience_title": "서울시청 코로나19 지원팀 위기 대응 - 군의관 배정 혼란 수습",
+      "secondary_reason": "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다.",
+      "exclusion_reason": "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+    }
+  ]
+}

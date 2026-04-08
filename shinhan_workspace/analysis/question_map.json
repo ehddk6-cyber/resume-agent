@@ -1,0 +1,42 @@
+[
+  {
+    "question_id": "q1_strength",
+    "order_no": 1,
+    "question_type": "TYPE_B",
+    "experience_id": "exp_seoul_covid_budget",
+    "experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+    "score": 16,
+    "reason": "질문 기대: 핵심 역량 문항이며, 질문 키워드(다른, 지원자와, 차별화되는)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "reuse_reason": null
+  },
+  {
+    "question_id": "q2_value_conflict",
+    "order_no": 2,
+    "question_type": "TYPE_H",
+    "experience_id": "exp_nps_intern",
+    "experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+    "score": 13,
+    "reason": "질문 기대: 고객응대 문항이며, 질문 키워드(본인이, 중요하게, 생각하는)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "reuse_reason": null
+  },
+  {
+    "question_id": "q3_social_issue",
+    "order_no": 3,
+    "question_type": "TYPE_H",
+    "experience_id": "exp_seoul_covid_fraud",
+    "experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+    "score": 15,
+    "reason": "질문 기대: 고객응대 문항이며, 질문 키워드(최근, 사회, 이슈)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "reuse_reason": null
+  },
+  {
+    "question_id": "q4_future_vision",
+    "order_no": 4,
+    "question_type": "TYPE_E",
+    "experience_id": "exp_saemaul_bank",
+    "experience_title": "새마을금고 은행 디지털 취약 계층 고객 응대",
+    "score": 11,
+    "reason": "질문 기대: 입사 후 기여 문항이며, 질문 키워드(은행, 입행, 혹은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(디지털 취약 계층 응대 성공) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다.",
+    "reuse_reason": null
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "stats": {
+    "writer|상호금융|TYPE_A-TYPE_G-TYPE_UNKNOWN": {
+      "pattern_id": "writer|상호금융|TYPE_A-TYPE_G-TYPE_UNKNOWN",
+      "total_uses": 3,
+      "accepted_count": 0,
+      "rejected_count": 3,
+      "avg_rating": 0.0,
+      "success_rate": 0.0,
+      "last_used": "2026-04-05T20:39:57.956510"
+    }
+  }
+}

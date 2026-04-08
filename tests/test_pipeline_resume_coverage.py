@@ -106,11 +106,26 @@ def test_build_feedback_selection_payload_skips_blank_ids():
             {"question_id": "q1", "question_type": "TYPE_A", "experience_id": "exp-1"},
             {"question_id": "q2", "question_type": "TYPE_B", "experience_id": "  "},
             {"question_id": "q3", "question_type": "TYPE_C", "experience_id": "exp-1"},
-        ]
+        ],
+        writer_brief={
+            "question_strategies": [
+                {
+                    "question_id": "q1",
+                    "question_order": 1,
+                    "question_type": "TYPE_A",
+                    "primary_experience_id": "exp-1",
+                    "core_message": "운영 안정성을 입증한다.",
+                    "winning_angle": "운영 기준 중심",
+                    "differentiation_line": "기준과 증빙으로 차별화",
+                    "target_impression": "책임감 있는 운영형",
+                }
+            ]
+        },
     )
 
     assert payload["selected_experience_ids"] == ["exp-1"]
     assert len(payload["question_experience_map"]) == 2
+    assert payload["question_strategy_map"][0]["winning_angle"] == "운영 기준 중심"
 
 
 def test_build_feedback_learning_context_handles_learner_failure(tmp_path: Path):
@@ -414,6 +429,11 @@ def test_classify_project_questions_with_llm_fallback_handles_multiple_payload_s
         with patch("resume_agent.pipeline.run_codex", return_value=1):
             unchanged = classify_project_questions_with_llm_fallback(ws, project)
     assert unchanged.questions[0].detected_type == QuestionType.TYPE_UNKNOWN
+
+    with patch("resume_agent.pipeline.classify_question_with_confidence", return_value=(QuestionType.TYPE_UNKNOWN, 0.1)):
+        with patch("resume_agent.pipeline.run_codex", side_effect=RuntimeError("oauth failure")):
+            exception_fallback = classify_project_questions_with_llm_fallback(ws, project)
+    assert exception_fallback.questions[0].detected_type == QuestionType.TYPE_UNKNOWN
 
     with patch("resume_agent.pipeline.classify_question_with_confidence", return_value=(QuestionType.TYPE_UNKNOWN, 0.1)):
         with patch("resume_agent.pipeline.run_codex", return_value=0):

@@ -1,0 +1,13 @@
+{
+  "step": "coach",
+  "timestamp": "2026-04-05T13:30:46.094331",
+  "status": "failed",
+  "error": "## NEEDS VERIFICATION",
+  "state": {
+    "question_map_path": "analysis/question_map.json",
+    "gap_report_path": "analysis/gap_report.json",
+    "coach_path": "artifacts/coach.md",
+    "artifact_id": "coach-20260405_043046",
+    "application_strategy_path": "analysis/application_strategy.json"
+  }
+}

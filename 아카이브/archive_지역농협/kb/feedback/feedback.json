@@ -1,0 +1,22 @@
+{
+  "feedback": [
+    {
+      "draft_id": "writer-manual-1775369010",
+      "pattern_used": "writer|공공|NONE",
+      "accepted": true,
+      "rating": 5,
+      "comment": "농축협 5문항 공백 포함 500자 준수. 경험 분산 적절(국민연금공단강남역삼지사, 서울시청파견, 반포한강공원, 새마을금고아르바이트, 성북구청). 교육지원·경제·금융 3대 부문 구조 이해 반영. 블라인드 규정 준수.",
+      "artifact_type": "writer",
+      "company_name": "",
+      "job_title": "",
+      "company_type": "공공",
+      "question_types": [],
+      "stage": "writer",
+      "final_outcome": "document_pass",
+      "rejection_reason": null,
+      "selected_experience_ids": [],
+      "question_experience_map": [],
+      "timestamp": "2026-04-05T15:03:30.139493"
+    }
+  ]
+}

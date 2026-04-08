@@ -1,0 +1,58 @@
+{
+  "artifact": "writer",
+  "total_feedback": 0,
+  "recent_rejection_comments": [],
+  "top_patterns": [],
+  "recommended_pattern": "writer|공공|NONE",
+  "current_pattern": "writer|공공|NONE",
+  "question_experience_map": [],
+  "question_strategy_map": [],
+  "overall_success_rate": 0,
+  "similar_context": {
+    "artifact_type": "writer",
+    "artifact": "writer",
+    "stage": "writer",
+    "company_name": "",
+    "job_title": "",
+    "company_type": "공공",
+    "question_types": []
+  },
+  "recent_rejection_reasons": [],
+  "outcome_summary": {
+    "matched_feedback_count": 0,
+    "outcome_breakdown": {},
+    "top_rejection_reasons": []
+  },
+  "strategy_outcome_summary": {
+    "matched_feedback_count": 0,
+    "learned_outcome_weights": {
+      "offer": 4.0,
+      "final_pass": 3.0,
+      "pass": 3.0,
+      "interview_pass": 2.0,
+      "document_pass": 2.0,
+      "fail_interview": 3.0,
+      "interview_fail": 3.0,
+      "document_fail": 1.0,
+      "reject": 2.0,
+      "rejected": 2.0
+    },
+    "experience_stats_by_question_type": {},
+    "strategy_stats_by_question_type": {},
+    "differentiation_stats_by_question_type": {},
+    "tone_stats_by_company_type": {}
+  },
+  "insights": {
+    "total_feedback": 0,
+    "overall_success_rate": 0,
+    "average_rating": 0,
+    "top_patterns": [],
+    "improvement_areas": []
+  },
+  "adaptation_plan": {
+    "recommended_pattern": "writer|공공|NONE",
+    "focus_actions": [],
+    "risky_question_types": [],
+    "matched_feedback_count": 0
+  }
+}

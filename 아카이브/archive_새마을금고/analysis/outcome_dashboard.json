@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-04-05T06:08:53.761498+00:00",
+  "artifact_type": "writer",
+  "current_pattern": "writer|공공|NONE",
+  "overall_success_rate": 1.0,
+  "outcome_summary": {
+    "matched_feedback_count": 1,
+    "outcome_breakdown": {
+      "document_pass": 1
+    },
+    "top_rejection_reasons": []
+  },
+  "recommended_pattern": "writer|공공|NONE",
+  "high_risk_hotspots": []
+}

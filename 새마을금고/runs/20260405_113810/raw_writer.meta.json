@@ -1,0 +1,32 @@
+{
+  "status": "failed",
+  "attempt_count": 3,
+  "timeout_seconds": 300,
+  "attempts": [
+    {
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 14535,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:38:59.286425Z  WARN codex_core::plugins::manager: failed to warm featured plugin ids cache error=remote plugin sync request to https://chatgpt.com/backend-api/plugins/featured failed with status 403 Forbidden: <html>\n  <head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:"
+    },
+    {
+      "attempt": 2,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 16055,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:39:19.546147Z ERROR codex_core::codex: failed to load skill /mnt/c/Users/ehddk/.codex/skills/figma-create-new-file/SKILL.md: invalid YAML: mapping values are not allowed in this context at line 2 column 201\n2026-04-05T11:39:19.553532Z  WARN codex_rmcp_client::oauth: failed to read OAuth tokens from keyring: Platform secure storage failure: no secret service provider or dbus session f"
+    },
+    {
+      "attempt": 3,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 12763,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:39:34.524330Z  WARN codex_core::plugins::manager: failed to warm featured plugin ids cache error=remote plugin sync request to https://chatgpt.com/backend-api/plugins/featured failed with status 403 Forbidden: <html>\n  <head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:"
+    }
+  ],
+  "output_path": "/home/ehddk/ai/ai/ai/resume-agent/새마을금고_ws/runs/20260405_113810/raw_writer.md"
+}

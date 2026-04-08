@@ -1,0 +1,12 @@
+# Source: 예전 자기소개서/새마을금고중앙회 일반직 6급_catch.pdf metadata
+
+{
+  "title": "새마을금고중앙회 일반직 6급_catch.pdf",
+  "metadata": {
+    "sourceAddedTimestamp": "2024-11-18T02:18:21.622663Z",
+    "revisionData": {
+      "dateAdded": "2024-11-18T02:18:06.832102Z"
+    },
+    "originalSourceContentType": "SOURCE_CONTENT_TYPE_PDF"
+  }
+}

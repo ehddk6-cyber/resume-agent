@@ -1,0 +1,31 @@
+{
+  "id": "8ed2ee27c94e",
+  "source_type": "local_text",
+  "title": "컴활2급-1081102436-원동아",
+  "url": null,
+  "raw_text": "제 호24-000018\n종      목\n성      명\n자격번호\n원동아\n컴퓨터활용능력 2급\n생년월일\n22-K9-097568\n2026 년 01 월 02 일\n대한상공회의소  회장\n인터넷으로 본 증명서를 발급받는 과정에서 위,변조하는 행위는 형법 제 225조 (공문서등의 위조,변조)또는 227조의 2\n (공전자기록 위작,변작)의 규정에 따라 10년 이하의 징역을 받을 수 있습니다.\n1992 년 06 월 01 일\n자 격 취 득 확 인 서 \n     2022 년 11 월 18 일  국 가 기 술 자 격  검 정 의  자 격 을  취 득 하 였 \n음 을  확 인  합 니 다 .\n",
+  "cleaned_text": "제 호24-000018\n종      목\n성      명\n자격번호\n원동아\n컴퓨터활용능력 2급\n생년월일\n22-K9-097568\n2026 년 01 월 02 일\n대한상공회의소  회장\n인터넷으로 본 증명서를 발급받는 과정에서 위,변조하는 행위는 형법 제 225조 (공문서등의 위조,변조)또는 227조의 2\n (공전자기록 위작,변작)의 규정에 따라 10년 이하의 징역을 받을 수 있습니다.\n1992 년 06 월 01 일\n자 격 취 득 확 인 서\n     2022 년 11 월 18 일  국 가 기 술 자 격  검 정 의  자 격 을  취 득 하 였\n음 을  확 인  합 니 다 .",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

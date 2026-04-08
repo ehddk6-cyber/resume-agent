@@ -1,0 +1,244 @@
+{
+  "feedback": [
+    {
+      "draft_id": "writer-20260405_104254",
+      "pattern_used": "writer|상호금융|TYPE_A-TYPE_G-TYPE_UNKNOWN",
+      "accepted": false,
+      "rating": null,
+      "comment": "AI스러운 연결 표현이 반복됩니다: 기여하겠습니다, STAR 구조 요소가 부족합니다",
+      "artifact_type": "writer",
+      "company_name": "새마을금고",
+      "job_title": "신입직원",
+      "company_type": "상호금융",
+      "question_types": [
+        "TYPE_A",
+        "TYPE_UNKNOWN",
+        "TYPE_G"
+      ],
+      "stage": "writer",
+      "final_outcome": null,
+      "rejection_reason": null,
+      "selected_experience_ids": [
+        "exp_seoul_covid_conflict",
+        "exp_mg_bank_parttime",
+        "exp_seoul_covid_budget"
+      ],
+      "question_experience_map": [
+        {
+          "question_id": "q1_mg_motivation",
+          "question_type": "TYPE_A",
+          "experience_id": "exp_seoul_covid_conflict",
+          "question_order": 1
+        },
+        {
+          "question_id": "q2_mg_talent",
+          "question_type": "TYPE_H",
+          "experience_id": "exp_mg_bank_parttime",
+          "question_order": 2
+        },
+        {
+          "question_id": "q3_mg_goal",
+          "question_type": "TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "question_order": 3
+        }
+      ],
+      "question_strategy_map": [
+        {
+          "question_id": "q1_mg_motivation",
+          "question_order": 1,
+          "question_type": "QuestionType.TYPE_A",
+          "experience_id": "exp_seoul_covid_conflict",
+          "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_A 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_A 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q2_mg_talent",
+          "question_order": 2,
+          "question_type": "QuestionType.TYPE_H",
+          "experience_id": "exp_mg_bank_parttime",
+          "core_message": "새마을금고 아르바이트 - 디지털 취약 고객 응대 경험으로 QuestionType.TYPE_H 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_H 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 새마을금고 아르바이트 - 디지털 취약 고객 응대의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q3_mg_goal",
+          "question_order": 3,
+          "question_type": "QuestionType.TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        }
+      ],
+      "timestamp": "2026-04-05T19:42:54.446576"
+    },
+    {
+      "draft_id": "writer-20260405_113718",
+      "pattern_used": "writer|상호금융|TYPE_A-TYPE_G-TYPE_UNKNOWN",
+      "accepted": false,
+      "rating": null,
+      "comment": null,
+      "artifact_type": "writer",
+      "company_name": "새마을금고",
+      "job_title": "신입직원",
+      "company_type": "상호금융",
+      "question_types": [
+        "TYPE_A",
+        "TYPE_UNKNOWN",
+        "TYPE_G"
+      ],
+      "stage": "writer",
+      "final_outcome": null,
+      "rejection_reason": null,
+      "selected_experience_ids": [
+        "exp_seoul_covid_conflict",
+        "exp_mg_bank_parttime",
+        "exp_seoul_covid_budget"
+      ],
+      "question_experience_map": [
+        {
+          "question_id": "q1_mg_motivation",
+          "question_type": "TYPE_A",
+          "experience_id": "exp_seoul_covid_conflict",
+          "question_order": 1
+        },
+        {
+          "question_id": "q2_mg_talent",
+          "question_type": "TYPE_H",
+          "experience_id": "exp_mg_bank_parttime",
+          "question_order": 2
+        },
+        {
+          "question_id": "q3_mg_goal",
+          "question_type": "TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "question_order": 3
+        }
+      ],
+      "question_strategy_map": [
+        {
+          "question_id": "q1_mg_motivation",
+          "question_order": 1,
+          "question_type": "QuestionType.TYPE_A",
+          "experience_id": "exp_seoul_covid_conflict",
+          "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_A 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_A 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q2_mg_talent",
+          "question_order": 2,
+          "question_type": "QuestionType.TYPE_H",
+          "experience_id": "exp_mg_bank_parttime",
+          "core_message": "새마을금고 아르바이트 - 디지털 취약 고객 응대 경험으로 QuestionType.TYPE_H 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_H 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 새마을금고 아르바이트 - 디지털 취약 고객 응대의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q3_mg_goal",
+          "question_order": 3,
+          "question_type": "QuestionType.TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        }
+      ],
+      "timestamp": "2026-04-05T20:37:18.943928"
+    },
+    {
+      "draft_id": "writer-20260405_113957",
+      "pattern_used": "writer|상호금융|TYPE_A-TYPE_G-TYPE_UNKNOWN",
+      "accepted": false,
+      "rating": null,
+      "comment": null,
+      "artifact_type": "writer",
+      "company_name": "새마을금고",
+      "job_title": "신입직원",
+      "company_type": "상호금융",
+      "question_types": [
+        "TYPE_A",
+        "TYPE_UNKNOWN",
+        "TYPE_G"
+      ],
+      "stage": "writer",
+      "final_outcome": null,
+      "rejection_reason": null,
+      "selected_experience_ids": [
+        "exp_seoul_covid_conflict",
+        "exp_mg_bank_parttime",
+        "exp_seoul_covid_budget"
+      ],
+      "question_experience_map": [
+        {
+          "question_id": "q1_mg_motivation",
+          "question_type": "TYPE_A",
+          "experience_id": "exp_seoul_covid_conflict",
+          "question_order": 1
+        },
+        {
+          "question_id": "q2_mg_talent",
+          "question_type": "TYPE_H",
+          "experience_id": "exp_mg_bank_parttime",
+          "question_order": 2
+        },
+        {
+          "question_id": "q3_mg_goal",
+          "question_type": "TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "question_order": 3
+        }
+      ],
+      "question_strategy_map": [
+        {
+          "question_id": "q1_mg_motivation",
+          "question_order": 1,
+          "question_type": "QuestionType.TYPE_A",
+          "experience_id": "exp_seoul_covid_conflict",
+          "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_A 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_A 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q2_mg_talent",
+          "question_order": 2,
+          "question_type": "QuestionType.TYPE_H",
+          "experience_id": "exp_mg_bank_parttime",
+          "core_message": "새마을금고 아르바이트 - 디지털 취약 고객 응대 경험으로 QuestionType.TYPE_H 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_H 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 새마을금고 아르바이트 - 디지털 취약 고객 응대의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        },
+        {
+          "question_id": "q3_mg_goal",
+          "question_order": 3,
+          "question_type": "QuestionType.TYPE_D",
+          "experience_id": "exp_seoul_covid_budget",
+          "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+          "winning_angle": "QuestionType.TYPE_D 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다.",
+          "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+          "tone": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+        }
+      ],
+      "timestamp": "2026-04-05T20:39:57.956510"
+    }
+  ]
+}

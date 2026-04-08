@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import traceback
 import time
 from pathlib import Path
 from textwrap import dedent
@@ -38,15 +39,24 @@ from .progress import print_status
 from .state import load_artifacts, load_project
 
 
-def main() -> None:
+def main() -> int:
     parser = build_parser()
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except SystemExit as e:
+        return int(e.code) if isinstance(e.code, int) else 1
+
     try:
         args.func(args)
+        return 0
     except KeyboardInterrupt:
         print("\n프로그램을 종료합니다.")
+        return 130
     except Exception as e:
         print(f"\n[오류 발생] {e}")
+        if getattr(args, "debug", False):
+            traceback.print_exc()
+        return 1
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -54,15 +64,24 @@ def build_parser() -> argparse.ArgumentParser:
         prog="resume-agent",
         description="Codex CLI workflow for application drafting.",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Print traceback details on command failure.",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_init = sub.add_parser(
-        "init", help="Create a new workspace with state JSON files."
+        "init",
+        help="Create a new workspace, initialize state, and auto-sync linkareer data.",
     )
     p_init.add_argument("workspace")
     p_init.set_defaults(func=cmd_init)
 
-    p_wizard = sub.add_parser("wizard", help="Interactive wizard for project setup.")
+    p_wizard = sub.add_parser(
+        "wizard",
+        help="Interactive wizard for project setup and automatic linkareer sync.",
+    )
     p_wizard.add_argument("workspace")
     p_wizard.add_argument(
         "--import-experiences", help="Path to experience file to import."
@@ -96,11 +115,26 @@ def build_parser() -> argparse.ArgumentParser:
     p_sync.add_argument("workspace")
     p_sync.set_defaults(func=cmd_sync_vault)
 
+    p_sync_base = sub.add_parser(
+        "sync",
+        help="Refresh the workspace knowledge base from the latest linkareer.csv and local raw sources.",
+    )
+    p_sync_base.add_argument("workspace")
+    p_sync_base.add_argument(
+        "--path",
+        help="Optional file or directory to ingest. If omitted, syncs the workspace defaults.",
+    )
+    p_sync_base.set_defaults(func=cmd_sync_base)
+
     p_crawl = sub.add_parser(
-        "crawl-base", help="Ingest local source files into the knowledge base."
+        "crawl-base",
+        help="Ingest local source files into the knowledge base (extracts docx/pdf to sources/raw).",
     )
     p_crawl.add_argument("workspace")
-    p_crawl.add_argument("--path", help="Optional file or directory to ingest.")
+    p_crawl.add_argument(
+        "--path",
+        help="Optional file or directory to ingest. docx/pdf are extracted into sources/raw.",
+    )
     p_crawl.set_defaults(func=cmd_crawl_base)
 
     p_crawl_web = sub.add_parser(
@@ -146,19 +180,56 @@ def build_parser() -> argparse.ArgumentParser:
     p_coach.add_argument(
         "--tool",
         default="codex",
-        choices=["codex", "claude", "gemini", "cline"],
+        choices=["codex", "claude", "gemini", "kilo", "cline", "opencode"],
         help="CLI tool to use for LLM execution (default: codex).",
     )
     p_coach.set_defaults(func=cmd_coach)
 
     p_writer = sub.add_parser("writer", help="Build writer prompt or run Codex.")
     p_writer.add_argument("workspace")
+    p_writer.add_argument(
+        "--target",
+        default="profile/targets/example_target.md",
+        help="Path relative to workspace root.",
+    )
     p_writer.add_argument("--run-codex", action="store_true")
     p_writer.add_argument(
         "--tool",
         default="codex",
-        choices=["codex", "claude", "gemini", "cline"],
+        choices=["codex", "claude", "gemini", "kilo", "cline", "opencode"],
         help="CLI tool to use for LLM execution (default: codex).",
+    )
+    p_writer.add_argument(
+        "--patina",
+        action="store_true",
+        help="Writer 실행 후 patina AI 패턴 제거를 자동 실행합니다.",
+    )
+    p_writer.add_argument(
+        "--patina-mode",
+        default="audit",
+        choices=["audit", "rewrite", "score", "ouroboros"],
+        help="patina 실행 모드 (default: audit).",
+    )
+    p_writer.add_argument(
+        "--patina-profile",
+        default="resume",
+        help="patina 프로필 이름 (default: resume).",
+    )
+    p_writer.add_argument(
+        "--patina-max",
+        action="store_true",
+        help="Writer 실행 후 patina-max 멀티모델 후처리를 실행합니다.",
+    )
+    p_writer.add_argument(
+        "--patina-max-models",
+        default=None,
+        help="patina-max 모델 목록 (쉼표 구분). 예: claude,codex,opencode,gemini",
+    )
+    p_writer.add_argument(
+        "--patina-max-dispatch",
+        default=None,
+        choices=["direct", "omc"],
+        help="patina-max 디스패치 모드 (v1에서는 omc를 받아도 direct로 강등).",
     )
     p_writer.set_defaults(func=cmd_writer)
 
@@ -170,7 +241,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_interview.add_argument(
         "--tool",
         default="codex",
-        choices=["codex", "claude", "gemini", "cline"],
+        choices=["codex", "claude", "gemini", "kilo", "cline", "opencode"],
         help="CLI tool to use for LLM execution (default: codex).",
     )
     p_interview.set_defaults(func=cmd_interview)
@@ -205,7 +276,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_analyze.add_argument(
         "--tool",
         default="codex",
-        choices=["codex", "claude", "gemini", "cline"],
+        choices=["codex", "claude", "gemini", "kilo", "cline", "opencode"],
         help="CLI tool to use for LLM execution (default: codex).",
     )
     p_analyze.set_defaults(func=cmd_analyze)
@@ -219,7 +290,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_draft.add_argument(
         "--tool",
         default="codex",
-        choices=["codex", "claude", "gemini", "cline"],
+        choices=["codex", "claude", "gemini", "kilo", "cline", "opencode"],
         help="CLI tool to use for LLM execution (default: codex).",
     )
     p_draft.set_defaults(func=cmd_draft)
@@ -234,7 +305,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_review.add_argument(
         "--tool",
         default="codex",
-        choices=["codex", "claude", "gemini", "cline"],
+        choices=["codex", "claude", "gemini", "kilo", "cline", "opencode"],
         help="CLI tool to use for LLM execution (default: codex).",
     )
     p_review.set_defaults(func=cmd_review)
@@ -247,7 +318,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_company.add_argument(
         "--tool",
         default="codex",
-        choices=["codex", "claude", "gemini", "cline"],
+        choices=["codex", "claude", "gemini", "kilo", "cline", "opencode"],
         help="CLI tool to use for LLM execution (default: codex).",
     )
     p_company.add_argument(
@@ -343,10 +414,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def cmd_init(args: argparse.Namespace) -> None:
-    # init_workspace now does both directory creation and state initialization
+    # init_workspace handles directory creation and state initialization
     ws = init_workspace(Path(args.workspace))
     print(f"Initialized workspace at {ws.root}")
     print(f"State files created under {ws.state_dir}")
+    result = crawl_base(ws)
+    print(f"Ingested {result['source_count']} source item(s).")
+    print(f"Knowledge base now has {result['stored_count']} item(s).")
+    print(f"Analysis written to {result['analysis_path']}")
     print(
         f"Edit {ws.profile_dir / 'facts.md'} and {ws.state_dir / 'project.json'} to start."
     )
@@ -356,6 +431,10 @@ def cmd_wizard(args: argparse.Namespace) -> None:
     import_path = Path(args.import_experiences) if args.import_experiences else None
     jd_path = Path(args.jd) if args.jd else None
     result = run_wizard(Path(args.workspace), import_path, jd_path)
+    sync_result = crawl_base(result["workspace"])
+    print(f"Ingested {sync_result['source_count']} source item(s).")
+    print(f"Knowledge base now has {sync_result['stored_count']} item(s).")
+    print(f"Analysis written to {sync_result['analysis_path']}")
     if result:
         print(f"\n🚀 coach를 실행하시겠습니까? (resume-agent coach {args.workspace})")
 
@@ -455,6 +534,15 @@ def cmd_mine_past(args: argparse.Namespace) -> None:
 
 
 def cmd_crawl_base(args: argparse.Namespace) -> None:
+    ws = Workspace(Path(args.workspace))
+    source_path = Path(args.path) if args.path else None
+    result = crawl_base(ws, source_path)
+    print(f"Ingested {result['source_count']} source item(s).")
+    print(f"Knowledge base now has {result['stored_count']} item(s).")
+    print(f"Analysis written to {result['analysis_path']}")
+
+
+def cmd_sync_base(args: argparse.Namespace) -> None:
     ws = Workspace(Path(args.workspace))
     source_path = Path(args.path) if args.path else None
     result = crawl_base(ws, source_path)
@@ -625,12 +713,30 @@ def cmd_writer(args: argparse.Namespace) -> None:
     console = Console()
     ws = Workspace(Path(args.workspace))
 
+    patina_enabled = getattr(args, "patina", False)
+    patina_mode = getattr(args, "patina_mode", "audit")
+    patina_profile = getattr(args, "patina_profile", "resume")
+    patina_max_enabled = getattr(args, "patina_max", False)
+    patina_max_models = getattr(args, "patina_max_models", None)
+    patina_max_dispatch = getattr(args, "patina_max_dispatch", None)
+
     if args.run_codex:
-        result = run_writer_with_codex(ws, tool=args.tool)
+        result = run_writer_with_codex(
+            ws,
+            target_path=ws.resolve(args.target),
+            tool=args.tool,
+            patina=patina_enabled,
+            patina_mode=patina_mode,
+            patina_profile=patina_profile,
+            patina_max=patina_max_enabled,
+            patina_max_models=patina_max_models,
+            patina_max_dispatch=patina_max_dispatch,
+        )
         validation = result["validation"]
+        approved = bool(result.get("approved"))
 
         # 1. 검증 결과 요약 패널
-        if validation["passed"]:
+        if approved:
             console.print(
                 Panel.fit(
                     "[bold green]✅ Writer 검증 통과[/bold green]",
@@ -664,8 +770,9 @@ def cmd_writer(args: argparse.Namespace) -> None:
             from .state import load_artifacts
 
             artifacts = load_artifacts(ws)
-            for art in artifacts:
-                if art.output_path and "writer.md" in art.output_path:
+            for art in reversed(artifacts):
+                artifact_type = getattr(art, "artifact_type", None)
+                if artifact_type and getattr(artifact_type, "name", "") == "WRITER":
                     input_snapshot = art.input_snapshot or {}
                     break
         except Exception:
@@ -740,11 +847,153 @@ def cmd_writer(args: argparse.Namespace) -> None:
                         console.print(f"    - {s}")
 
         # 5. 최종 결과 요약
-        console.print(f"\n[dim]출력 파일: {result['artifact_path']}[/dim]")
-        console.print(f"[dim]Raw 출력: {result['raw_output_path']}[/dim]")
+        artifact_path = Path(result["artifact_path"])
+        draft_path = Path(result.get("draft_path") or "")
+        error_output_path = Path(result.get("error_output_path") or "")
+        raw_output_path = Path(result["raw_output_path"])
+        selected_tool = result.get("selected_tool") or input_snapshot.get(
+            "selected_tool", args.tool
+        )
+        attempted_tools = result.get("attempted_tools") or input_snapshot.get(
+            "attempted_tools", []
+        )
+        fallback_reason = result.get("fallback_reason") or input_snapshot.get(
+            "fallback_reason"
+        )
+        if approved and artifact_path.exists():
+            console.print(f"\n[dim]출력 파일: {artifact_path}[/dim]")
+        else:
+            console.print("\n[dim]출력 파일: 승인 산출물 미생성[/dim]")
+            if str(draft_path) and draft_path.exists():
+                console.print(f"[dim]최종 초안: {draft_path}[/dim]")
+            elif str(error_output_path) and error_output_path.exists():
+                console.print(f"[dim]실행 오류 기록: {error_output_path}[/dim]")
+        console.print(f"[dim]Raw 출력: {raw_output_path}[/dim]")
+        console.print(f"[dim]최종 모델: {selected_tool or args.tool}[/dim]")
+        if attempted_tools:
+            console.print(f"[dim]시도한 모델: {', '.join(attempted_tools)}[/dim]")
+        console.print(
+            f"[dim]폴백 발생: {'예' if fallback_reason else '아니오'}[/dim]"
+        )
+        if fallback_reason:
+            console.print(f"[dim]폴백 사유: {fallback_reason}[/dim]")
+        console.print(f"[dim]승인본 생성: {'예' if approved else '아니오'}[/dim]")
+
+        # 6. patina 결과 표시
+        patina_result = result.get("patina_result")
+        if patina_result:
+            console.print("\n[bold magenta]━━━ patina AI 패턴 분석 ━━━[/bold magenta]")
+
+            p_mode = patina_result.get("mode", "audit")
+            p_tool = patina_result.get("tool", "?")
+
+            if p_mode == "audit":
+                console.print(f"[dim]모드: audit | 도구: {p_tool}[/dim]")
+                raw = patina_result.get("raw_output", "")
+                if raw:
+                    console.print(
+                        Panel(
+                            raw[:3000],
+                            title="🔍 patina 감지 결과",
+                            border_style="magenta",
+                        )
+                    )
+                else:
+                    console.print("[yellow]감지 결과가 없습니다.[/yellow]")
+
+            elif p_mode == "score":
+                console.print(f"[dim]모드: score | 도구: {p_tool}[/dim]")
+                raw = patina_result.get("raw_output", "")
+                if raw:
+                    console.print(
+                        Panel(
+                            raw[:3000],
+                            title="📊 patina AI 유사도 점수",
+                            border_style="magenta",
+                        )
+                    )
+
+            elif p_mode in ("rewrite", "ouroboros"):
+                console.print(f"[dim]모드: {p_mode} | 도구: {p_tool}[/dim]")
+                char_deltas = patina_result.get("char_deltas", {})
+                if char_deltas:
+                    d_table = Table(show_header=True, header_style="bold magenta")
+                    d_table.add_column("문항", width=4)
+                    d_table.add_column("원본", width=8)
+                    d_table.add_column("교정 후", width=8)
+                    d_table.add_column("변동", width=10)
+
+                    for q_id, delta in sorted(char_deltas.items()):
+                        d_style = "red" if abs(delta["delta_pct"]) > 5 else "green"
+                        d_table.add_row(
+                            q_id,
+                            f"{delta['original_chars']}자",
+                            f"{delta['new_chars']}자",
+                            f"[{d_style}]{delta['delta_pct']:+.1f}%[/]",
+                        )
+                    console.print(d_table)
+
+                reassembled = patina_result.get("reassembled_text")
+                if reassembled:
+                    patina_out = ws.artifacts_dir / "writer_draft_patina.md"
+                    patina_out.write_text(reassembled, encoding="utf-8")
+                    console.print(f"[dim]patina 교정 결과: {patina_out}[/dim]")
+
+            # 경고 표시
+            warnings = patina_result.get("warnings", [])
+            for w in warnings:
+                console.print(f"  [yellow]⚠️ {w}[/yellow]")
+
+        patina_max_result = result.get("patina_max_result")
+        if patina_max_result:
+            console.print("\n[bold magenta]━━━ patina-max 멀티모델 분석 ━━━[/bold magenta]")
+            models = patina_max_result.get("models", [])
+            selected_model = patina_max_result.get("selected_model")
+            dispatch = patina_max_result.get("dispatch", "direct")
+            if models:
+                console.print(f"[dim]사용 모델: {', '.join(models)}[/dim]")
+            console.print(f"[dim]디스패치: {dispatch}[/dim]")
+            console.print(
+                f"[dim]선택 모델: {selected_model or '선택 실패 (writer 원문 유지)'}[/dim]"
+            )
+
+            outputs_by_model = patina_max_result.get("outputs_by_model", {})
+            if outputs_by_model:
+                m_table = Table(show_header=True, header_style="bold magenta")
+                m_table.add_column("모델", width=12)
+                m_table.add_column("상태", width=10)
+                m_table.add_column("문항보존", width=8)
+                m_table.add_column("제한이슈", width=10)
+                m_table.add_column("변동합", width=10)
+                for model_name, meta in outputs_by_model.items():
+                    success = bool(meta.get("success"))
+                    processed_count = int(meta.get("processed_count", 0))
+                    issue_count = len(
+                        (meta.get("char_limit_report") or {}).get("issues", [])
+                    )
+                    total_abs_delta = int(meta.get("total_abs_delta", 0))
+                    status_text = "[green]성공[/green]" if success else "[red]실패[/red]"
+                    m_table.add_row(
+                        model_name,
+                        status_text,
+                        str(processed_count),
+                        str(issue_count),
+                        str(total_abs_delta),
+                    )
+                console.print(m_table)
+
+            reassembled = patina_max_result.get("reassembled_text")
+            if reassembled:
+                patina_max_out = ws.artifacts_dir / "writer_draft_patina_max.md"
+                patina_max_out.write_text(reassembled, encoding="utf-8")
+                console.print(f"[dim]patina-max 교정 결과: {patina_max_out}[/dim]")
+
+            warnings = patina_max_result.get("warnings", [])
+            for w in warnings:
+                console.print(f"  [yellow]⚠️ {w}[/yellow]")
 
     else:
-        result = run_writer(ws)
+        result = run_writer(ws, ws.resolve(args.target))
         print(f"Prompt written to {result['prompt_path']}")
         print(next_step("Run with --run-codex to generate a writer artifact."))
 
@@ -954,7 +1203,8 @@ def cmd_feedback(args: argparse.Namespace) -> None:
         if getattr(question, "detected_type", None)
     ]
     selection_payload = _build_feedback_selection_payload(
-        read_json_if_exists(ws.analysis_dir / "question_map.json")
+        read_json_if_exists(ws.analysis_dir / "question_map.json"),
+        writer_brief=read_json_if_exists(ws.analysis_dir / "writer_brief.json"),
     )
 
     learner.record_feedback(
@@ -973,6 +1223,7 @@ def cmd_feedback(args: argparse.Namespace) -> None:
         rejection_reason=args.rejection_reason,
         selected_experience_ids=selection_payload["selected_experience_ids"],
         question_experience_map=selection_payload["question_experience_map"],
+        question_strategy_map=selection_payload.get("question_strategy_map", {}),
     )
 
     status = "수락" if accepted else "거부"
@@ -983,6 +1234,16 @@ def cmd_feedback(args: argparse.Namespace) -> None:
     print(
         f"✅ 피드백 기록 완료: {args.artifact} - {status}{rating_str}{comment_str}{outcome_str}{reason_str}"
     )
+    if not args.final_outcome:
+        print("다음 단계 결과 기록 예시:")
+        print(
+            f"  python -m resume_agent.cli feedback {args.workspace} --artifact {args.artifact} "
+            "--accepted --final-outcome document_pass"
+        )
+        print(
+            f"  python -m resume_agent.cli feedback {args.workspace} --artifact {args.artifact} "
+            '--rejected --final-outcome interview_fail --rejection-reason "근거 부족"'
+        )
 
     # 인사이트 출력
     insights = learner.get_insights()

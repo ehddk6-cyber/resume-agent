@@ -1,0 +1,11 @@
+
+
+```json
+[
+  {"question_id": "q1_nh_growth", "question_type": "TYPE_D", "reason": "성장 경험과 학습 과정을 묻는 문항으로 성장/학습/개선 유형에 해당"},
+  {"question_id": "q2_nh_decision", "question_type": "TYPE_I", "reason": "어려운 판단 상황에서 의사결정 경험을 묻는 문항으로 우선순위/판단/압박 상황 유형에 해당"},
+  {"question_id": "q3_nh_trust", "question_type": "TYPE_F", "reason": "동료와 구성원으로부터 신뢰를 얻은 경험을 묻는 문항으로 원칙/가치관/신뢰 유형에 해당"},
+  {"question_id": "q4_nh_value", "question_type": "TYPE_A", "reason": "농협 구성원으로서의 가치관과 입사 후 역할에 대한 동기를 묻는 문항으로 지원동기/직무 적합성 유형에 해당"},
+  {"question_id": "q5_nh_structure", "question_type": "TYPE_E", "reason": "농협의 경쟁력과 입사 후 기여 방식을 묻는 문항으로 입사 후 포부/기여 유형에 해당"}
+]
+```

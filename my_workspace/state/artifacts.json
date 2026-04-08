@@ -1,0 +1,58 @@
+[
+  {
+    "id": "coach-20260331_144828",
+    "artifact_type": "COACH",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "",
+        "job_title": "",
+        "career_stage": "ENTRY",
+        "company_type": "공공",
+        "research_notes": "",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [],
+        "questions": []
+      },
+      "experience_count": 1
+    },
+    "output_path": "artifacts/coach.md",
+    "raw_output_path": "artifacts/coach.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## NEEDS VERIFICATION"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-03-31T14:48:28.222879+00:00"
+  },
+  {
+    "id": "coach-20260406_063318",
+    "artifact_type": "COACH",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "",
+        "job_title": "",
+        "career_stage": "ENTRY",
+        "company_type": "공공",
+        "research_notes": "",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [],
+        "questions": []
+      },
+      "experience_count": 1
+    },
+    "output_path": "artifacts/coach.md",
+    "raw_output_path": "artifacts/coach.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## NEEDS VERIFICATION"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-04-06T06:33:18.901340+00:00"
+  }
+]

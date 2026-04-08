@@ -188,7 +188,12 @@ class DefenseSimulator:
             answer, question_type, risk_areas
         )
 
-        # 1. 취약점 기반 꼬리질문을 우선 배치
+        # 1. 질문 유형별 기본 꼬리질문을 먼저 배치해 문항 맥락을 보존
+        type_questions = FOLLOW_UP_PATTERNS.get(question_type, [])
+        if type_questions:
+            questions.extend(type_questions[:2])
+
+        # 2. 취약점 기반 꼬리질문
         if "구체적인 수치가 없어 증빙이 어려움" in risk_areas:
             questions.append("그 성과를 수치로 표현한다면 어떻게 설명하시겠어요?")
 
@@ -208,11 +213,6 @@ class DefenseSimulator:
             questions.append(PRESSURE_QUESTIONS["tradeoff"])
             questions.append(PRESSURE_QUESTIONS["failure_plan"])
 
-        # 2. 질문 유형별 기본 꼬리질문
-        type_questions = FOLLOW_UP_PATTERNS.get(question_type, [])
-        if type_questions:
-            questions.extend(type_questions[:2])
-
         # 3. 면접 스타일별 공격적 질문
         if self.company_analysis:
             style = self.company_analysis.interview_style
@@ -226,7 +226,7 @@ class DefenseSimulator:
         if numbers:
             questions.append(f"{numbers[0]}이라는 수치는 어떻게 측정하셨나요?")
 
-        # 중복 제거 및 최대 5개 반환
+        # 중복 제거 및 최대 9개 반환 (상황별/압박형 질문을 함께 유지)
         seen = set()
         unique_questions = []
         for q in questions:
@@ -234,7 +234,7 @@ class DefenseSimulator:
                 seen.add(q)
                 unique_questions.append(q)
 
-        return unique_questions[:7]
+        return unique_questions[:9]
 
     def _build_three_step_follow_up_chain(
         self,

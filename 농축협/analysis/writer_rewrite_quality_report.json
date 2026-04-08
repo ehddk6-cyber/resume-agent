@@ -1,0 +1,157 @@
+{
+  "minimum_samples": 3,
+  "sample_count": 5,
+  "minimum_sample_met": true,
+  "average_overall_delta": -0.012,
+  "average_humanization_delta": 0.0,
+  "average_ncs_delta": 0.236,
+  "average_ssot_delta": -0.068,
+  "average_result_quality_delta": 0.006,
+  "rows": [
+    {
+      "question_order": 1,
+      "overall_before": 0.8,
+      "overall_after": 0.77,
+      "humanization_before": 1.0,
+      "humanization_after": 1.0,
+      "ncs_before": 1.0,
+      "ncs_after": 1.0,
+      "ssot_before": 0.67,
+      "ssot_after": 0.33,
+      "ncs_expected_competencies": [
+        "정보능력",
+        "자기관리능력"
+      ],
+      "ncs_matched_competencies": [
+        "정보능력",
+        "자기관리능력"
+      ],
+      "ncs_missing_competencies": [],
+      "overall_delta": -0.03,
+      "humanization_delta": 0.0,
+      "ncs_delta": 0.0,
+      "ssot_delta": -0.34,
+      "result_quality_before": 0.934,
+      "result_quality_after": 0.925,
+      "result_quality_delta": -0.009
+    },
+    {
+      "question_order": 2,
+      "overall_before": 0.75,
+      "overall_after": 0.73,
+      "humanization_before": 1.0,
+      "humanization_after": 1.0,
+      "ncs_before": 0.5,
+      "ncs_after": 1.0,
+      "ssot_before": 0.67,
+      "ssot_after": 0.67,
+      "ncs_expected_competencies": [
+        "문제해결능력",
+        "직업윤리"
+      ],
+      "ncs_matched_competencies": [
+        "문제해결능력",
+        "직업윤리"
+      ],
+      "ncs_missing_competencies": [],
+      "overall_delta": -0.02,
+      "humanization_delta": 0.0,
+      "ncs_delta": 0.5,
+      "ssot_delta": 0.0,
+      "result_quality_before": 0.89,
+      "result_quality_after": 0.89,
+      "result_quality_delta": 0.0
+    },
+    {
+      "question_order": 3,
+      "overall_before": 0.75,
+      "overall_after": 0.75,
+      "humanization_before": 1.0,
+      "humanization_after": 1.0,
+      "ncs_before": 0.67,
+      "ncs_after": 0.67,
+      "ssot_before": 0.67,
+      "ssot_after": 0.67,
+      "ncs_expected_competencies": [
+        "직업윤리",
+        "조직이해능력",
+        "자기관리능력"
+      ],
+      "ncs_matched_competencies": [
+        "직업윤리",
+        "조직이해능력"
+      ],
+      "ncs_missing_competencies": [
+        "자기관리능력"
+      ],
+      "overall_delta": 0.0,
+      "humanization_delta": 0.0,
+      "ncs_delta": 0.0,
+      "ssot_delta": 0.0,
+      "result_quality_before": 0.926,
+      "result_quality_after": 0.954,
+      "result_quality_delta": 0.028
+    },
+    {
+      "question_order": 4,
+      "overall_before": 0.82,
+      "overall_after": 0.82,
+      "humanization_before": 1.0,
+      "humanization_after": 1.0,
+      "ncs_before": 0.33,
+      "ncs_after": 0.67,
+      "ssot_before": 0.0,
+      "ssot_after": 0.0,
+      "ncs_expected_competencies": [
+        "직업윤리",
+        "조직이해능력",
+        "자기관리능력"
+      ],
+      "ncs_matched_competencies": [
+        "직업윤리",
+        "조직이해능력"
+      ],
+      "ncs_missing_competencies": [
+        "자기관리능력"
+      ],
+      "overall_delta": 0.0,
+      "humanization_delta": 0.0,
+      "ncs_delta": 0.34,
+      "ssot_delta": 0.0,
+      "result_quality_before": 0.97,
+      "result_quality_after": 0.982,
+      "result_quality_delta": 0.012
+    },
+    {
+      "question_order": 5,
+      "overall_before": 0.79,
+      "overall_after": 0.78,
+      "humanization_before": 1.0,
+      "humanization_after": 1.0,
+      "ncs_before": 0.33,
+      "ncs_after": 0.67,
+      "ssot_before": 0.0,
+      "ssot_after": 0.0,
+      "ncs_expected_competencies": [
+        "기술능력",
+        "디지털능력",
+        "조직이해능력"
+      ],
+      "ncs_matched_competencies": [
+        "기술능력",
+        "디지털능력"
+      ],
+      "ncs_missing_competencies": [
+        "조직이해능력"
+      ],
+      "overall_delta": -0.01,
+      "humanization_delta": 0.0,
+      "ncs_delta": 0.34,
+      "ssot_delta": 0.0,
+      "result_quality_before": 0.929,
+      "result_quality_after": 0.928,
+      "result_quality_delta": -0.001
+    }
+  ],
+  "markdown": "# Writer Rewrite Quality Comparison\n\n- 샘플 수: 5\n- 최소 샘플 기준(>= 3): 충족\n- 평균 overall 변화: -0.012\n- 평균 humanization 변화: +0.000\n- 평균 JD/NCS 변화: +0.236\n- 평균 SSOT 변화: -0.068\n- 평균 result quality 변화: +0.006\n\n| 문항 | Overall (전→후) | Human (전→후) | JD/NCS (전→후) | SSOT (전→후) | JD/NCS 근거 |\n| --- | --- | --- | --- | --- | --- |\n| Q1 | 0.80→0.77 (-0.03) | 1.00→1.00 (+0.00) | 1.00→1.00 (+0.00) | 0.67→0.33 (-0.34) | 기대=정보능력, 자기관리능력; 매칭=정보능력, 자기관리능력; 미충족=없음 |\n| Q2 | 0.75→0.73 (-0.02) | 1.00→1.00 (+0.00) | 0.50→1.00 (+0.50) | 0.67→0.67 (+0.00) | 기대=문제해결능력, 직업윤리; 매칭=문제해결능력, 직업윤리; 미충족=없음 |\n| Q3 | 0.75→0.75 (+0.00) | 1.00→1.00 (+0.00) | 0.67→0.67 (+0.00) | 0.67→0.67 (+0.00) | 기대=직업윤리, 조직이해능력, 자기관리능력; 매칭=직업윤리, 조직이해능력; 미충족=자기관리능력 |\n| Q4 | 0.82→0.82 (+0.00) | 1.00→1.00 (+0.00) | 0.33→0.67 (+0.34) | 0.00→0.00 (+0.00) | 기대=직업윤리, 조직이해능력, 자기관리능력; 매칭=직업윤리, 조직이해능력; 미충족=자기관리능력 |\n| Q5 | 0.79→0.78 (-0.01) | 1.00→1.00 (+0.00) | 0.33→0.67 (+0.34) | 0.00→0.00 (+0.00) | 기대=기술능력, 디지털능력, 조직이해능력; 매칭=기술능력, 디지털능력; 미충족=조직이해능력 |"
+}

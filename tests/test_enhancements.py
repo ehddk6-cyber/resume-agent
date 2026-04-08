@@ -51,7 +51,9 @@ def test_checkpoint_manager_persists_failed_status(tmp_path):
     )
 
     info = manager.get_checkpoint_info("writer")
-    raw = json.loads((manager.checkpoint_dir / "writer.json").read_text(encoding="utf-8"))
+    raw = json.loads(
+        (manager.checkpoint_dir / "writer.json").read_text(encoding="utf-8")
+    )
 
     assert info is not None
     assert info["status"] == "failed"
@@ -95,6 +97,19 @@ def test_quality_evaluator_splits_korean_sentences_without_breaking_on_da():
     )
 
     assert len(sentences) == 2
+
+
+def test_quality_evaluator_exposes_result_focused_dimensions():
+    evaluator = QualityEvaluator()
+
+    score = evaluator.evaluate_draft(
+        "저는 직접 기준을 정하고 데이터를 비교해 처리 시간을 20% 줄였습니다. 입사 후에도 이 방식을 직무에 연결해 기여하겠습니다.",
+        "우리 기관 지원동기와 문제해결 경험을 말씀해 주세요.",
+    )
+
+    assert "persuasiveness" in score.details
+    assert "defensibility" in score.details
+    assert "company_fit" in score.details
 
 
 def test_feedback_history_does_not_mutate_internal_order(tmp_path):
@@ -302,6 +317,56 @@ def test_feedback_learner_strategy_outcomes_include_weighted_scores(tmp_path):
     assert stats["weighted_net_score"] > 0
 
 
+def test_feedback_learner_collects_question_strategy_stats(tmp_path):
+    learner = FeedbackLearner(str(tmp_path))
+    learner.record_feedback(
+        "d1",
+        "writer|공공|TYPE_A",
+        True,
+        5,
+        artifact_type="writer",
+        company_type="공공",
+        question_types=["TYPE_A"],
+        final_outcome="offer",
+        question_strategy_map=[
+            {
+                "question_id": "q1",
+                "question_type": "TYPE_A",
+                "winning_angle": "운영 안정성 중심",
+                "differentiation_line": "기준과 증빙으로 차별화",
+                "tone": "책임감 있는 운영형",
+            }
+        ],
+    )
+
+    summary = learner.get_strategy_outcome_summary(
+        {
+            "artifact_type": "writer",
+            "company_type": "공공",
+            "question_types": ["TYPE_A"],
+        }
+    )
+
+    assert (
+        summary["strategy_stats_by_question_type"]["TYPE_A"]["운영 안정성 중심"][
+            "pass_count"
+        ]
+        == 1
+    )
+    assert (
+        summary["differentiation_stats_by_question_type"]["TYPE_A"][
+            "기준과 증빙으로 차별화"
+        ]["pass_rate"]
+        == 1.0
+    )
+    assert (
+        summary["tone_stats_by_company_type"]["공공"]["책임감 있는 운영형"][
+            "pass_count"
+        ]
+        == 1
+    )
+
+
 def test_feedback_learner_learns_contextual_outcome_weights(tmp_path):
     learner = FeedbackLearner(str(tmp_path))
     learner.record_feedback(
@@ -341,7 +406,9 @@ def test_interactive_coach_handles_eof_gracefully(tmp_path, monkeypatch, capsys)
     workspace = Workspace(tmp_path)
     coach = InteractiveCoach(workspace)
     coach.experiences = [
-        Experience(id="exp-1", title="테스트", organization="org", period_start="2024-01-01")
+        Experience(
+            id="exp-1", title="테스트", organization="org", period_start="2024-01-01"
+        )
     ]
 
     monkeypatch.setattr(builtins, "input", lambda _: (_ for _ in ()).throw(EOFError))
@@ -529,6 +596,8 @@ def test_score_experience_uses_runtime_config(monkeypatch):
     )
     monkeypatch.setattr(scoring, "extract_question_keywords", lambda _: [])
     monkeypatch.setattr(scoring, "classify_question", lambda _: "TYPE_UNKNOWN")
+    # Force fallback path to avoid SentenceTransformer model singleton from other tests
+    monkeypatch.setattr(scoring, "_get_st_model_scoring", lambda: None)
 
     question = Question(id="q1", order_no=1, question_text="협업 경험을 말해주세요.")
     experience = Experience(
@@ -588,5 +657,8 @@ def test_defense_simulator_adds_pressure_questions_for_weak_answer():
         question_type=QuestionType.TYPE_C,
     )
 
-    assert any("본인 지분" in item or "산출 기준" in item for item in simulation.follow_up_questions)
+    assert any(
+        "본인 지분" in item or "산출 기준" in item
+        for item in simulation.follow_up_questions
+    )
     assert any("기준" in item or "측정" in item for item in simulation.defense_points)

@@ -1,0 +1,31 @@
+{
+  "id": "a5aa98d55d46",
+  "source_type": "local_text",
+  "title": "붙임5. 자기소개서 작성항목",
+  "url": null,
+  "raw_text": "붙임5  \n자기소개서 작성항목  \n",
+  "cleaned_text": "붙임5\n자기소개서 작성항목",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

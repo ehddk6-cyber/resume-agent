@@ -6,7 +6,123 @@
       "accepted": false,
       "rating": null,
       "comment": null,
+      "artifact_type": "",
+      "company_name": "",
+      "job_title": "",
+      "company_type": "",
+      "question_types": [],
+      "stage": "",
+      "final_outcome": null,
+      "rejection_reason": null,
+      "selected_experience_ids": [],
+      "question_experience_map": [],
       "timestamp": "2026-03-27T11:18:10.405459"
+    },
+    {
+      "draft_id": "writer-20260331_150417",
+      "pattern_used": "writer|공공기관|TYPE_B-TYPE_C-TYPE_F",
+      "accepted": true,
+      "rating": null,
+      "comment": "정량적 성과 표현이 부족합니다, STAR 구조 요소가 부족합니다",
+      "artifact_type": "writer",
+      "company_name": "국민연금공단",
+      "job_title": "6급 사무직",
+      "company_type": "공공기관",
+      "question_types": [
+        "TYPE_F",
+        "TYPE_C",
+        "TYPE_B",
+        "TYPE_C"
+      ],
+      "stage": "writer",
+      "final_outcome": null,
+      "rejection_reason": null,
+      "selected_experience_ids": [
+        "exp_seoul_covid_conflict",
+        "exp_nps_intern",
+        "exp_seoul_covid_budget",
+        "exp_nps_income_adjustment"
+      ],
+      "question_experience_map": [
+        {
+          "question_id": "q1_responsibility",
+          "question_type": "TYPE_F",
+          "experience_id": "exp_seoul_covid_conflict",
+          "question_order": 1
+        },
+        {
+          "question_id": "q2_adaptation",
+          "question_type": "TYPE_C",
+          "experience_id": "exp_nps_intern",
+          "question_order": 2
+        },
+        {
+          "question_id": "q3_competency",
+          "question_type": "TYPE_B",
+          "experience_id": "exp_seoul_covid_budget",
+          "question_order": 3
+        },
+        {
+          "question_id": "q4_persuasion",
+          "question_type": "TYPE_C",
+          "experience_id": "exp_nps_income_adjustment",
+          "question_order": 4
+        }
+      ],
+      "timestamp": "2026-04-01T00:04:17.019978"
+    },
+    {
+      "draft_id": "interview-20260331_150839",
+      "pattern_used": "interview|공공기관|TYPE_B-TYPE_C-TYPE_F",
+      "accepted": true,
+      "rating": null,
+      "comment": null,
+      "artifact_type": "interview",
+      "company_name": "국민연금공단",
+      "job_title": "6급 사무직",
+      "company_type": "공공기관",
+      "question_types": [
+        "TYPE_F",
+        "TYPE_C",
+        "TYPE_B",
+        "TYPE_C"
+      ],
+      "stage": "interview",
+      "final_outcome": "",
+      "rejection_reason": null,
+      "selected_experience_ids": [
+        "exp_seoul_covid_conflict",
+        "exp_nps_intern",
+        "exp_seoul_covid_budget",
+        "exp_nps_income_adjustment"
+      ],
+      "question_experience_map": [
+        {
+          "question_id": "q1_responsibility",
+          "question_type": "TYPE_F",
+          "experience_id": "exp_seoul_covid_conflict",
+          "question_order": 1
+        },
+        {
+          "question_id": "q2_adaptation",
+          "question_type": "TYPE_C",
+          "experience_id": "exp_nps_intern",
+          "question_order": 2
+        },
+        {
+          "question_id": "q3_competency",
+          "question_type": "TYPE_B",
+          "experience_id": "exp_seoul_covid_budget",
+          "question_order": 3
+        },
+        {
+          "question_id": "q4_persuasion",
+          "question_type": "TYPE_C",
+          "experience_id": "exp_nps_income_adjustment",
+          "question_order": 4
+        }
+      ],
+      "timestamp": "2026-04-01T00:08:39.522725"
     }
   ]
 }

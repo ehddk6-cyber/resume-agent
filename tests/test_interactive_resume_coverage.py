@@ -186,6 +186,10 @@ class TestMockInterviewCoachCoverage:
         )
         (ws.analysis_dir / "question_map.json").write_text("[]", encoding="utf-8")
         (ws.analysis_dir / "source_grading.json").write_text("{}", encoding="utf-8")
+        (ws.analysis_dir / "application_strategy.json").write_text(
+            json.dumps({"interview_pressure_points": ["근거"], "self_intro_candidates": {"expected_follow_ups": ["왜 우리 기관인가요?"]}}, ensure_ascii=False),
+            encoding="utf-8",
+        )
 
         learner = SimpleNamespace(
             get_recommendation=lambda _payload: ["추천1", "추천2", "추천3", "추천4"],
@@ -210,6 +214,7 @@ class TestMockInterviewCoachCoverage:
         assert coach.company_analysis is not None
         assert coach.feedback_learning["recommendations"] == ["추천1", "추천2", "추천3"]
         assert coach.committee_personas[0]["name"] == "위원장"
+        assert coach.application_strategy["interview_pressure_points"] == ["근거"]
 
         coach.company_analysis = "sentinel"
         with patch("resume_agent.interactive.analyze_company", side_effect=RuntimeError("boom")):
@@ -282,6 +287,9 @@ class TestMockInterviewCoachCoverage:
         session_path.write_text("{invalid", encoding="utf-8")
         broken_path = ws.analysis_dir / "broken.json"
         broken_path.write_text("{invalid", encoding="utf-8")
+        coach.application_strategy = {
+            "self_intro_candidates": {"expected_follow_ups": ["왜 우리 기관인가요?"]}
+        }
 
         turn = InterviewTurn(
             question="질문",
@@ -299,10 +307,142 @@ class TestMockInterviewCoachCoverage:
         coach._save_session()
         saved = json.loads(session_path.read_text(encoding="utf-8"))
         assert saved[0]["turns"][0]["question_type"] == QuestionType.TYPE_B.value
+        assert "interviewer_profile" in saved[0]["turns"][0]
+        assert saved[0]["training_focus"]
+        assert "growth_snapshot" in saved[0]
 
         with patch("builtins.print") as mock_print:
             coach._show_summary()
         assert mock_print.called
+
+        with patch("builtins.print") as mock_print:
+            coach._print_committee_summary(
+                {"verdict": "borderline", "total_risk_count": 3},
+                {
+                    "verification_style": "압박 검증형",
+                    "scenario_brief": "핵심 근거와 기관 적합성을 함께 검증합니다.",
+                },
+            )
+        printed = " ".join(" ".join(map(str, call.args)) for call in mock_print.call_args_list)
+        assert "압박 검증형" in printed
+        assert "기관 적합성" in printed
+
+    def test_retry_guidance_and_growth_snapshot(self, tmp_path: Path):
+        from resume_agent.interactive import MockInterviewCoach
+
+        ws = _workspace(tmp_path)
+        coach = MockInterviewCoach(ws)
+        coach.turns = [
+            SimpleNamespace(
+                risk_areas=["근거 부족"],
+                follow_up_risk_areas=["개인 기여 부족"],
+            )
+        ]
+        previous_sessions = [
+            {
+                "turns": [
+                    {"risk_areas": ["근거 부족", "수치 부족"], "follow_up_risk_areas": []}
+                ]
+            }
+        ]
+
+        guidance = coach._build_retry_guidance(["근거 부족"], QuestionType.TYPE_A)
+        growth = coach._build_growth_snapshot(previous_sessions)
+
+        assert any("숫자" in item or "근거" in item for item in guidance)
+        assert growth["trend"] in {"improving", "stable", "regressing"}
+
+    def test_training_focus_includes_feedback_adaptation_actions(self, tmp_path: Path):
+        from resume_agent.interactive import MockInterviewCoach
+
+        ws = _workspace(tmp_path)
+        coach = MockInterviewCoach(ws)
+        coach.feedback_learning = {
+            "adaptation_plan": {
+                "focus_actions": ["반복 탈락 사유 '근거 부족' 보강"]
+            }
+        }
+
+        focus = coach._build_training_focus()
+
+        assert any("학습 루프 우선 과제" in item for item in focus)
+
+    def test_build_interviewer_profile_reflects_pressure_and_strategy(self, tmp_path: Path):
+        from resume_agent.interactive import MockInterviewCoach
+
+        ws = _workspace(tmp_path)
+        coach = MockInterviewCoach(ws, mode="hard")
+        coach.application_strategy = {
+            "adaptive_strategy_layer": {
+                "interview_mode": "압박형 검증 + 협업/우선순위 판단 확인"
+            },
+            "interview_pressure_points": ["왜 우리 기관인가요?"],
+        }
+
+        profile = coach._build_interviewer_profile(
+            {"name": "실무위원", "focus": ["구체성", "판단 기준"]},
+            QuestionType.TYPE_A,
+            3,
+        )
+
+        assert profile["verification_style"] == "압박 검증형"
+        assert profile["focus_prompt"] == "구체성, 판단 기준"
+        assert profile["pressure_theme"] == "왜 우리 기관인가요?"
+        assert "기관 적합성" in profile["scenario_brief"]
+
+    def test_select_follow_up_question_respects_interviewer_profile(self, tmp_path: Path):
+        from resume_agent.interactive import MockInterviewCoach
+
+        ws = _workspace(tmp_path)
+        coach = MockInterviewCoach(ws, mode="hard")
+
+        selected = coach._select_follow_up_question(
+            [
+                "지원동기를 한 문장으로 다시 압축해보시겠어요?",
+                "수치로 성과를 다시 설명해보시겠어요?",
+            ],
+            pressure_level=2,
+            interviewer_profile={
+                "scenario_brief": "지원동기의 진정성과 기관 적합성을 교차 검증합니다.",
+                "verification_style": "동기·적합성 검증형",
+                "focus_prompt": "구체성",
+                "pressure_theme": "",
+            },
+        )
+
+        assert "지원동기" in selected
+
+
+class TestSelfIntroDrillCoverage:
+    def test_run_self_intro_drill_saves_attempt(self, tmp_path: Path):
+        from resume_agent.interactive import SelfIntroDrillCoach
+
+        ws = _workspace(tmp_path)
+        (ws.analysis_dir / "application_strategy.json").write_text(
+            json.dumps(
+                {
+                    "self_intro_candidates": {
+                        "opening_hook": "기관 가치와 맞닿은 경험이 있습니다.",
+                        "top001_versions": {"30s": "30초 버전"},
+                        "expected_follow_ups": ["왜 우리 기관인가요?"],
+                    }
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        coach = SelfIntroDrillCoach(ws)
+
+        with patch.object(
+            coach,
+            "_safe_input",
+            return_value="저는 직접 데이터를 정리해 처리 시간을 20% 줄인 경험이 있습니다.",
+        ):
+            coach.run()
+
+        saved = json.loads((ws.state_dir / "self_intro_drills.json").read_text(encoding="utf-8"))
+        assert saved[0]["score"] > 0
+        assert saved[0]["expected_follow_ups"] == ["왜 우리 기관인가요?"]
 
     def test_run_happy_path_and_retry(self, tmp_path: Path):
         from resume_agent.interactive import MockInterviewCoach

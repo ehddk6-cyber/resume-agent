@@ -1,0 +1,31 @@
+{
+  "id": "7006c2a3989b",
+  "source_type": "local_text",
+  "title": "(24-03-27)국민건강보험공단 일반(서울)_행정직.pdf metadata",
+  "url": null,
+  "raw_text": "{\n  \"title\": \"(24-03-27)국민건강보험공단 일반(서울)_행정직.pdf\",\n  \"metadata\": {\n    \"sourceAddedTimestamp\": \"2024-11-18T02:18:26.694044Z\",\n    \"revisionData\": {\n      \"dateAdded\": \"2024-11-18T02:18:07.120334Z\"\n    },\n    \"originalSourceContentType\": \"SOURCE_CONTENT_TYPE_PDF\"\n  }\n}",
+  "cleaned_text": "{\n  \"title\": \"(24-03-27)국민건강보험공단 일반(서울)_행정직.pdf\",\n  \"metadata\": {\n    \"sourceAddedTimestamp\": \"2024-11-18T02:18:26.694044Z\",\n    \"revisionData\": {\n      \"dateAdded\": \"2024-11-18T02:18:07.120334Z\"\n    },\n    \"originalSourceContentType\": \"SOURCE_CONTENT_TYPE_PDF\"\n  }\n}",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

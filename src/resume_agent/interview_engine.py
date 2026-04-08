@@ -8,6 +8,8 @@ from .company_analyzer import analyze_company, build_role_industry_strategy_from
 from .executor import build_exec_prompt, extract_last_codex_message
 from .templates import PROMPT_SIMULATE_ANSWER, PROMPT_GENERATE_FOLLOW_UP
 from .logger import get_logger
+from .state import load_success_cases
+from .workspace import Workspace
 
 logger = get_logger("interview_engine")
 
@@ -28,10 +30,13 @@ def run_recursive_interview_chain(
     strategy_context = project.research_notes or "일반적인 면접 원칙 준수"
     committee_personas: List[dict[str, Any]] = []
     try:
+        _ws = Workspace(root=ws_root)
+        _cases = load_success_cases(_ws)
         company_analysis = analyze_company(
             company_name=project.company_name,
             job_title=project.job_title,
             company_type=project.company_type,
+            success_cases=_cases if _cases else None,
         )
         strategy_pack = build_role_industry_strategy_from_project(
             project,
@@ -59,14 +64,19 @@ def run_recursive_interview_chain(
             simulated_answer = _call_codex_simple(ws_root, sim_prompt)
 
         # 2. 꼬리 질문 생성 (공격적 편향 주입)
-        persona = committee_personas[i % len(committee_personas)] if committee_personas else {}
+        persona = (
+            committee_personas[i % len(committee_personas)]
+            if committee_personas
+            else {}
+        )
         follow_prompt = PROMPT_GENERATE_FOLLOW_UP.format(
             company=project.company_name,
             job=project.job_title,
             simulated_answer=simulated_answer,
             interviewer_name=persona.get("name", "면접위원"),
             interviewer_role=persona.get("role", "논리적 허점을 검증하는 위원"),
-            interviewer_focus=", ".join(persona.get("focus", [])[:3]) or "수치, 개인 기여, 대안 비교",
+            interviewer_focus=", ".join(persona.get("focus", [])[:3])
+            or "수치, 개인 기여, 대안 비교",
         )
 
         # [권고 반영] 면접관에게 '비판적 시각' 강제 지시
@@ -110,9 +120,9 @@ def _build_committee_rounds(
                 "role": persona.get("role", ""),
                 "focus": persona.get("focus", []),
                 "stance": stance,
-                "question": follow_up_question if offset == 0 else _persona_reframe_question(
-                    follow_up_question, persona
-                ),
+                "question": follow_up_question
+                if offset == 0
+                else _persona_reframe_question(follow_up_question, persona),
             }
         )
     return rounds

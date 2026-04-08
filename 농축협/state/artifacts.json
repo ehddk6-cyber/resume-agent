@@ -1,0 +1,1407 @@
+[
+  {
+    "id": "coach-20260405_071445",
+    "artifact_type": "COACH",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "농·축협",
+        "job_title": "신규직원",
+        "career_stage": "ENTRY",
+        "company_type": "협동조합",
+        "research_notes": "2026년 상반기 농·축협 신규직원 채용 자기소개서 기준. 교육지원·경제·금융의 복합 구조, 조합원 신뢰, 현장 밀착 서비스, 정직과 도덕성, 실무 개선 역량 강조.",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [
+          "exp_nps_intern",
+          "exp_seoul_covid_fraud",
+          "exp_seoul_covid_conflict",
+          "exp_mg_bank_parttime"
+        ],
+        "questions": [
+          {
+            "id": "q1_nh_growth",
+            "order_no": 1,
+            "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_D"
+          },
+          {
+            "id": "q2_nh_decision",
+            "order_no": 2,
+            "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_I"
+          },
+          {
+            "id": "q3_nh_trust",
+            "order_no": 3,
+            "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_F"
+          },
+          {
+            "id": "q4_nh_value",
+            "order_no": 4,
+            "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_F"
+          },
+          {
+            "id": "q5_nh_structure",
+            "order_no": 5,
+            "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_E"
+          }
+        ]
+      },
+      "experience_count": 10
+    },
+    "output_path": "artifacts/coach.md",
+    "raw_output_path": "artifacts/coach.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## NEEDS VERIFICATION"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-04-05T07:14:45.082799+00:00"
+  },
+  {
+    "id": "writer-20260405_113751",
+    "artifact_type": "WRITER",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "농·축협",
+        "job_title": "신규직원",
+        "career_stage": "ENTRY",
+        "company_type": "협동조합",
+        "research_notes": "2026년 상반기 농·축협 신규직원 채용 자기소개서 기준. 교육지원·경제·금융의 복합 구조, 조합원 신뢰, 현장 밀착 서비스, 정직과 도덕성, 실무 개선 역량 강조.",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [
+          "exp_nps_intern",
+          "exp_seoul_covid_fraud",
+          "exp_seoul_covid_conflict",
+          "exp_mg_bank_parttime"
+        ],
+        "questions": [
+          {
+            "id": "q1_nh_growth",
+            "order_no": 1,
+            "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_D"
+          },
+          {
+            "id": "q2_nh_decision",
+            "order_no": 2,
+            "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_I"
+          },
+          {
+            "id": "q3_nh_trust",
+            "order_no": 3,
+            "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_F"
+          },
+          {
+            "id": "q4_nh_value",
+            "order_no": 4,
+            "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_F"
+          },
+          {
+            "id": "q5_nh_structure",
+            "order_no": 5,
+            "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_E"
+          }
+        ]
+      },
+      "target_path": "profile/targets/example_target.md",
+      "tool": "codex",
+      "question_map_path": "analysis/question_map.json",
+      "fact_warnings": [],
+      "readability": {
+        "score": 85,
+        "feedback": [
+          "문장이 너무 깁니다. (평균 80자 초과)"
+        ]
+      },
+      "company_analysis": {
+        "company_name": "농·축협",
+        "company_type": "협동조합",
+        "industry": "일반",
+        "core_values": [],
+        "culture_keywords": [],
+        "recent_news": [],
+        "interview_style": "formal",
+        "success_patterns": [
+          "star_structure",
+          "quantified_result",
+          "problem_solving",
+          "collaboration",
+          "growth_story"
+        ],
+        "preferred_evidence_types": [
+          "정량적 성과",
+          "문제 해결",
+          "협업 성과"
+        ],
+        "tone_guide": "명확하고 구체적인 표현. 근거 중심.",
+        "role_industry_strategy": {
+          "target_role": "신규직원",
+          "target_industry": "일반",
+          "company_type": "협동조합",
+          "question_types": [
+            "TYPE_D",
+            "TYPE_I",
+            "TYPE_F",
+            "TYPE_F",
+            "TYPE_E"
+          ],
+          "writer_focus": [
+            "지원동기와 직무 적합성을 사용자 경험으로 연결한다.",
+            "문항별로 한 경험의 역할·행동·성과를 분리해 제시한다.",
+            "입사 후 포부는 실행 가능한 첫 기여 단위까지 내려쓴다."
+          ],
+          "interview_focus": [
+            "수치/기준/비교 근거를 30초 안에 다시 설명할 수 있게 준비한다.",
+            "팀 성과와 개인 기여를 구분해서 답한다.",
+            "단일 출처 정보는 확정 표현 대신 검증 예정 표현으로 낮춘다.",
+            "수치 검증 관점의 압박 질문을 대비한다.",
+            "개인 기여 검증 관점의 압박 질문을 대비한다.",
+            "대안 비교 관점의 압박 질문을 대비한다."
+          ],
+          "evidence_priority": [
+            "정량적 성과",
+            "문제 해결",
+            "협업 성과",
+            "정량 성과",
+            "직무 연관 행동"
+          ],
+          "tone_rules": [
+            "담백하고 근거 중심으로 답변합니다.",
+            "일반 산업 맥락을 과장 없이 연결합니다.",
+            "신규직원 직무에서 바로 쓰일 행동/성과 중심으로 정리합니다."
+          ],
+          "banned_patterns": [
+            "검증 불가 수치 확대",
+            "회사 정보 복붙형 지원동기",
+            "팀 성과를 개인 성과처럼 포장",
+            "입사 후 포부를 추상적 성장 서사로만 마무리하는 표현"
+          ],
+          "interview_pressure_themes": [
+            "수치 검증",
+            "개인 기여 검증",
+            "대안 비교",
+            "일반 도메인 이해도",
+            "입사 후 90일 실행계획"
+          ],
+          "committee_personas": [
+            {
+              "id": "chair",
+              "name": "위원장",
+              "role": "전체 논리와 답변 일관성 점검",
+              "focus": [
+                "지원동기 진정성",
+                "논리 일관성",
+                "직무 적합성"
+              ],
+              "tone": "정중하지만 냉정함"
+            },
+            {
+              "id": "domain",
+              "name": "실무위원",
+              "role": "신규직원 실무 적합성 검증",
+              "focus": [
+                "수치 검증",
+                "개인 기여 검증",
+                "대안 비교"
+              ],
+              "tone": "구체 사례를 집요하게 확인함"
+            },
+            {
+              "id": "risk",
+              "name": "리스크위원",
+              "role": "과장, 단일 출처 주장, 실패 대응 검증",
+              "focus": [
+                "개인 기여 검증",
+                "대안 비교",
+                "실패 복구"
+              ],
+              "tone": "반례와 허점을 먼저 찾음"
+            },
+            {
+              "id": "culture",
+              "name": "조직적합성위원",
+              "role": "협업 방식과 조직 적합성 검증",
+              "focus": [
+                "협업 방식",
+                "조직 적응",
+                "커뮤니케이션"
+              ],
+              "tone": "차분하지만 비교 질문이 많음"
+            }
+          ],
+          "single_source_risks": [],
+          "question_map_signals": []
+        }
+      },
+      "quality_evaluations": [
+        {
+          "question_id": "q_1786",
+          "answer_text": "### 1) 본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.\n문제를 그대로 받아들이지 않고 직접 검증하는 태도를 갖게 된 경험이 있습니다. 서울시청 코로나19지원팀에서 의료인력 급여 데이터를 다루던 중, 엑셀 속도 저하를 이유로 1억 원 규모의 외주 급여 시스템 도입이 추진됐습니다. 저는 단순히 “새 시스템이 필요하다”는 흐름을 따르기보다, 기존 방식과 외주 프로그램을 같은 데이터로 비교해야 한다고 판단했습니다. 그래서 시연 과정에서 처리 속도와 오류를 확인하고, 기존 엑셀 수식과 외주 프로그램 결과를 직접 대조한 보고서를 작성해 팀장께 보고했습니다. 동시에 엑셀 데이터를 분리 저장하는 방식으로 속도 저하 원인도 해결했습니다. 그 결과 외주 계약은 철회됐고 1억 원 예산 낭비를 막았습니다. 이 경험으로 저는 문제를 구조적으로 보고, 근거를 만든 뒤, 실행 가능한 대안을 제시하는 방식으로 성장했습니다. 농협에서도 현장 업무를 하며 익숙한 방식에 머무르지 않고, 자료를 정확히 검토해 비용과 시간을 줄이는 실무 개선으로 연결하겠습니다.",
+          "relevance_score": 0.9200000000000002,
+          "specificity_score": 0.69,
+          "defensibility_score": 0.7150000000000001,
+          "originality_score": 0.8400000000000001,
+          "overall_score": 0.8,
+          "detected_patterns": [
+            "star_structure",
+            "quantified_result",
+            "problem_solving",
+            "growth_story",
+            "innovation"
+          ],
+          "strengths": [
+            "정량적 성과가 구체적으로 표현되어 있습니다",
+            "STAR 구조가 잘 드러나 있습니다",
+            "문제 해결 과정이 명확하게 서술되어 있습니다",
+            "구체적인 수치가 포함되어 있습니다"
+          ],
+          "weaknesses": [
+            "STAR 구조 요소가 부족합니다"
+          ],
+          "suggestions": [
+            "성장 경험은 이전 한계 → 개선 행동 → 현재 변화까지 포함하세요"
+          ],
+          "resolved_question_type": "TYPE_D",
+          "question_order": 1,
+          "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+          "char_count": 578,
+          "char_limit": 600,
+          "char_ratio": 0.963,
+          "experience_title": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감",
+          "humanization_score": 1.0,
+          "humanization_flags": [],
+          "humanization_suggestions": [],
+          "ncs_alignment_score": 1.0,
+          "ncs_expected_competencies": [
+            "정보능력",
+            "자기관리능력"
+          ],
+          "ncs_matched_competencies": [
+            "정보능력",
+            "자기관리능력"
+          ],
+          "ncs_missing_competencies": [],
+          "ncs_expected_ability_units": [],
+          "ncs_matched_ability_units": [],
+          "ncs_missing_ability_units": [],
+          "ncs_suggestions": [],
+          "ssot_alignment_score": 0.67,
+          "ssot_expected_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자",
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_matched_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자"
+          ],
+          "ssot_missing_claims": [
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_offtrack_signals": [],
+          "ssot_suggestions": [
+            "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요."
+          ],
+          "expected_followups": [
+            "[사실] 무엇을 바꾸기 전과 후가 어떻게 달랐는지 사실 기준으로 다시 설명해보세요.",
+            "[판단] 왜 그 개선 방향을 선택했는지 판단 근거를 설명해보세요.",
+            "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+          ],
+          "defense_gaps": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "균형 잡힌 시각 표현 부족"
+          ],
+          "message_discipline_score": 0.65,
+          "message_primary": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+          "message_competing_points": [
+            "문제를 그대로 받아들이지 않고 직접 검증하는 태도를 갖게 된 경험이 있습니다",
+            "서울시청 코로나19지원팀에서 의료인력 급여 데이터를 다루던 중, 엑셀 속도 저하를 이유로 1억 원 규모의 외주 급여 시스템 도입이 추진됐습니다",
+            "저는 단순히 “새 시스템이 필요하다”는 흐름을 따르기보다, 기존 방식과 외주 프로그램을 같은 데이터로 비교해야 한다고 판단했습니다"
+          ],
+          "message_discipline_suggestions": [
+            "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+            "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요."
+          ],
+          "cliche_score": 0.84,
+          "cliche_flags": [
+            "성장",
+            "노력"
+          ],
+          "cliche_suggestions": [
+            "추상어 대신 당시 판단 기준, 수치, 증빙 문장으로 바꾸세요.",
+            "성장/노력/배움 서술을 줄이고 결과와 조직 적합 신호를 앞에 배치하세요."
+          ],
+          "differentiation_score": 0.75,
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감의 운영 기준·증빙·재현성을 제시한다.",
+          "differentiation_gaps": [
+            "주력 경험명이 답변에 직접 드러나지 않습니다.",
+            "writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다."
+          ],
+          "differentiation_suggestions": [
+            "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+          ],
+          "committee_reaction_score": 0.6,
+          "committee_attack_points": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "균형 잡힌 시각 표현 부족",
+            "[사실] 무엇을 바꾸기 전과 후가 어떻게 달랐는지 사실 기준으로 다시 설명해보세요.",
+            "[판단] 왜 그 개선 방향을 선택했는지 판단 근거를 설명해보세요."
+          ],
+          "committee_reaction_summary": "면접관이 바로 파고들 만한 지점이 남아 있습니다.",
+          "committee_mitigation_priority": "STAR 구조가 불완전하여 꼬리질문에 취약",
+          "writer_checklist_status": {
+            "core_message": "서울시청 코로나19 지원팀 외주 시스템 도입 반려 - 1억 예산 절감 경험으로 QuestionType.TYPE_D 문항에서 검증 가능한 기여를 입증한다.",
+            "required_evidence": [
+              "1억 원 예산 절감",
+              "서울시청 파견 근무 경험",
+              "질문 기대: 성장과 학습 루프 문항이며, 질문 키워드(본인의, 발전을, 위해)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(1억 원 예산 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+            ],
+            "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+          },
+          "interviewer_checklist": [
+            "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
+            "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
+            "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가"
+          ],
+          "evaluation_rubric": {
+            "strong_points": [
+              "정량적 성과가 구체적으로 표현되어 있습니다",
+              "STAR 구조가 잘 드러나 있습니다",
+              "문제 해결 과정이 명확하게 서술되어 있습니다"
+            ],
+            "risk_points": [
+              "STAR 구조 요소가 부족합니다",
+              "STAR 구조가 불완전하여 꼬리질문에 취약",
+              "균형 잡힌 시각 표현 부족"
+            ],
+            "improvement_points": [
+              "성장 경험은 이전 한계 → 개선 행동 → 현재 변화까지 포함하세요",
+              "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+              "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요.",
+              "추상어 대신 당시 판단 기준, 수치, 증빙 문장으로 바꾸세요."
+            ]
+          }
+        },
+        {
+          "question_id": "q_934",
+          "answer_text": "### 2) 판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.\n판단이 어려운 상황일수록 저는 규정과 상대의 이해 가능성을 함께 기준으로 둡니다. 국민연금공단 인턴 당시 기준소득월액 변경 특례 신청을 안내하면서, 민원인들이 ‘사후정산’과 ‘소급 적용 불가’ 규정을 받아들이지 못해 접수를 망설이거나 항의하는 경우가 많았습니다. 규정만 반복하면 민원인은 납득하지 못하고, 이해만 맞추려 하면 규정 준수가 흔들릴 수 있는 상황이었습니다. 저는 먼저 규정의 핵심을 정리한 뒤, ‘사후정산’은 연말정산에 비유하고 ‘소급 불가’는 신청일 기준 다음 달부터 바로 반영된다는 실익 중심으로 설명하기로 결정했습니다. 이후 급여대장, 근로계약서, 동의서 등 보완 서류와 서명을 끝까지 확인하며 접수를 마무리했습니다. 그 결과 제도 오해로 신청을 망설이던 민원인의 접수를 도울 수 있었고, 민원 응대와 서류 검토의 정확도도 높일 수 있었습니다. 농협 업무에서도 판단이 쉽지 않은 순간에 규정 준수와 고객 이해를 함께 놓치지 않는 결정을 내리겠습니다.",
+          "relevance_score": 0.9200000000000002,
+          "specificity_score": 0.51,
+          "defensibility_score": 0.7379310344827588,
+          "originality_score": 0.8,
+          "overall_score": 0.75,
+          "detected_patterns": [
+            "star_structure",
+            "quantified_result",
+            "customer_focus",
+            "ethics"
+          ],
+          "strengths": [
+            "정량적 성과가 구체적으로 표현되어 있습니다",
+            "STAR 구조가 잘 드러나 있습니다",
+            "구체적인 수치가 포함되어 있습니다"
+          ],
+          "weaknesses": [],
+          "suggestions": [],
+          "resolved_question_type": "TYPE_I",
+          "question_order": 2,
+          "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+          "char_count": 537,
+          "char_limit": 600,
+          "char_ratio": 0.895,
+          "experience_title": "국민연금공단 기준소득월액 변경 특례 민원 응대",
+          "humanization_score": 1.0,
+          "humanization_flags": [],
+          "humanization_suggestions": [],
+          "ncs_alignment_score": 0.5,
+          "ncs_expected_competencies": [
+            "문제해결능력",
+            "직업윤리"
+          ],
+          "ncs_matched_competencies": [
+            "직업윤리"
+          ],
+          "ncs_missing_competencies": [
+            "문제해결능력"
+          ],
+          "ncs_expected_ability_units": [],
+          "ncs_matched_ability_units": [],
+          "ncs_missing_ability_units": [],
+          "ncs_suggestions": [
+            "문제해결능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+          ],
+          "ssot_alignment_score": 0.67,
+          "ssot_expected_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자",
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_matched_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자"
+          ],
+          "ssot_missing_claims": [
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_offtrack_signals": [],
+          "ssot_suggestions": [
+            "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요."
+          ],
+          "expected_followups": [
+            "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+            "[판단] 당시 왜 그 선택을 했는지 판단 기준을 설명해보세요.",
+            "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+          ],
+          "defense_gaps": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "균형 잡힌 시각 표현 부족"
+          ],
+          "message_discipline_score": 0.65,
+          "message_primary": "국민연금공단 기준소득월액 변경 특례 민원 응대 경험으로 QuestionType.TYPE_I 문항에서 검증 가능한 기여를 입증한다.",
+          "message_competing_points": [
+            "판단이 어려운 상황일수록 저는 규정과 상대의 이해 가능성을 함께 기준으로 둡니다",
+            "국민연금공단 인턴 당시 기준소득월액 변경 특례 신청을 안내하면서, 민원인들이 ‘사후정산’과 ‘소급 적용 불가’ 규정을 받아들이지 못해 접수를 망",
+            "규정만 반복하면 민원인은 납득하지 못하고, 이해만 맞추려 하면 규정 준수가 흔들릴 수 있는 상황이었습니다"
+          ],
+          "message_discipline_suggestions": [
+            "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+            "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요."
+          ],
+          "cliche_score": 1.0,
+          "cliche_flags": [],
+          "cliche_suggestions": [],
+          "differentiation_score": 0.75,
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기준소득월액 변경 특례 민원 응대의 운영 기준·증빙·재현성을 제시한다.",
+          "differentiation_gaps": [
+            "주력 경험명이 답변에 직접 드러나지 않습니다.",
+            "writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다."
+          ],
+          "differentiation_suggestions": [
+            "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+          ],
+          "committee_reaction_score": 0.6,
+          "committee_attack_points": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "균형 잡힌 시각 표현 부족",
+            "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+            "[판단] 당시 왜 그 선택을 했는지 판단 기준을 설명해보세요."
+          ],
+          "committee_reaction_summary": "면접관이 바로 파고들 만한 지점이 남아 있습니다.",
+          "committee_mitigation_priority": "STAR 구조가 불완전하여 꼬리질문에 취약",
+          "writer_checklist_status": {
+            "core_message": "국민연금공단 기준소득월액 변경 특례 민원 응대 경험으로 QuestionType.TYPE_I 문항에서 검증 가능한 기여를 입증한다.",
+            "required_evidence": [
+              "민원 응대 및 서류 검토 정확도 향상",
+              "국민연금공단 인턴 업무 정리 메모와 청년인턴 수료증",
+              "질문 기대: 상황판단과 우선순위 문항이며, 질문 키워드(판단이, 쉽지, 않은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(민원 응대 및 서류 검토 정확도 향상) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+            ],
+            "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+          },
+          "interviewer_checklist": [
+            "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
+            "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
+            "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가"
+          ],
+          "evaluation_rubric": {
+            "strong_points": [
+              "정량적 성과가 구체적으로 표현되어 있습니다",
+              "STAR 구조가 잘 드러나 있습니다",
+              "구체적인 수치가 포함되어 있습니다"
+            ],
+            "risk_points": [
+              "STAR 구조가 불완전하여 꼬리질문에 취약",
+              "균형 잡힌 시각 표현 부족"
+            ],
+            "improvement_points": [
+              "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+              "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요.",
+              "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요.",
+              "문제해결능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+            ]
+          }
+        },
+        {
+          "question_id": "q_1847",
+          "answer_text": "### 3) 조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.\n신뢰는 먼저 상대의 기준을 이해하고, 모두가 일할 수 있는 방법을 만드는 과정에서 생긴다고 생각합니다. 서울시청 코로나19지원팀에서 중수본 숙박비 지침 변경으로 급여 엑셀 수식을 다시 설정해야 했을 때, 젊은 직원은 자동화 수식을, 50대 공무원은 수동 방식을 고수하며 큰 언쟁이 벌어졌습니다. 저는 갈등을 멈추게 하는 것보다 업무가 다시 돌아가게 하는 것이 우선이라고 보고, 두 사람의 입장을 각각 들었습니다. 기존 직원에게는 새 수식의 장점과 사용법을 여러 차례 설명하며 익숙해질 시간을 드렸고, 젊은 직원에게는 기존 방식이 왜 쉽게 바뀌기 어려운지 이해해 달라고 요청했습니다. 이후 일정 기간 두 방식을 병행하는 절충안을 제시하고, 누구나 따라 할 수 있도록 간단한 매뉴얼도 작성했습니다. 그 결과 서로 사과한 뒤 새 수식이 정착됐고 업무 효율도 30% 높아졌습니다. 저는 역할 수행에서 속도보다 신뢰 가능한 조율을 중시하며, 농협에서도 구성원이 안심하고 협업할 수 있는 실무자가 되겠습니다.",
+          "relevance_score": 0.8,
+          "specificity_score": 0.68,
+          "defensibility_score": 0.7190697674418606,
+          "originality_score": 0.8,
+          "overall_score": 0.75,
+          "detected_patterns": [
+            "star_structure",
+            "quantified_result",
+            "collaboration"
+          ],
+          "strengths": [
+            "정량적 성과가 구체적으로 표현되어 있습니다",
+            "STAR 구조가 잘 드러나 있습니다",
+            "구체적인 수치가 포함되어 있습니다"
+          ],
+          "weaknesses": [
+            "STAR 구조 요소가 부족합니다"
+          ],
+          "suggestions": [],
+          "resolved_question_type": "TYPE_F",
+          "question_order": 3,
+          "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+          "char_count": 564,
+          "char_limit": 600,
+          "char_ratio": 0.94,
+          "experience_title": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재",
+          "humanization_score": 1.0,
+          "humanization_flags": [],
+          "humanization_suggestions": [],
+          "ncs_alignment_score": 0.67,
+          "ncs_expected_competencies": [
+            "직업윤리",
+            "조직이해능력",
+            "자기관리능력"
+          ],
+          "ncs_matched_competencies": [
+            "직업윤리",
+            "조직이해능력"
+          ],
+          "ncs_missing_competencies": [
+            "자기관리능력"
+          ],
+          "ncs_expected_ability_units": [],
+          "ncs_matched_ability_units": [],
+          "ncs_missing_ability_units": [],
+          "ncs_suggestions": [
+            "자기관리능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+          ],
+          "ssot_alignment_score": 0.67,
+          "ssot_expected_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자",
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_matched_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자"
+          ],
+          "ssot_missing_claims": [
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_offtrack_signals": [],
+          "ssot_suggestions": [
+            "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요."
+          ],
+          "expected_followups": [
+            "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+            "[판단] 다른 선택지가 있었는데 왜 그 판단을 했는지 대안 비교 기준으로 설명해보세요.",
+            "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+          ],
+          "defense_gaps": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "과도한 일반화 표현 사용",
+            "균형 잡힌 시각 표현 부족",
+            "대안 비교와 선택 이유가 부족함"
+          ],
+          "message_discipline_score": 0.65,
+          "message_primary": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+          "message_competing_points": [
+            "신뢰는 먼저 상대의 기준을 이해하고, 모두가 일할 수 있는 방법을 만드는 과정에서 생긴다고 생각합니다",
+            "서울시청 코로나19지원팀에서 중수본 숙박비 지침 변경으로 급여 엑셀 수식을 다시 설정해야 했을 때, 젊은 직원은 자동화 수식을, 50대 공무원은",
+            "저는 갈등을 멈추게 하는 것보다 업무가 다시 돌아가게 하는 것이 우선이라고 보고, 두 사람의 입장을 각각 들었습니다"
+          ],
+          "message_discipline_suggestions": [
+            "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+            "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요."
+          ],
+          "cliche_score": 1.0,
+          "cliche_flags": [],
+          "cliche_suggestions": [],
+          "differentiation_score": 0.75,
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재의 운영 기준·증빙·재현성을 제시한다.",
+          "differentiation_gaps": [
+            "주력 경험명이 답변에 직접 드러나지 않습니다.",
+            "writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다."
+          ],
+          "differentiation_suggestions": [
+            "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+          ],
+          "committee_reaction_score": 0.6,
+          "committee_attack_points": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "과도한 일반화 표현 사용",
+            "균형 잡힌 시각 표현 부족",
+            "대안 비교와 선택 이유가 부족함"
+          ],
+          "committee_reaction_summary": "면접관이 바로 파고들 만한 지점이 남아 있습니다.",
+          "committee_mitigation_priority": "STAR 구조가 불완전하여 꼬리질문에 취약",
+          "writer_checklist_status": {
+            "core_message": "서울시청 코로나19 지원팀 세대 간 업무 방식 갈등 중재 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+            "required_evidence": [
+              "업무 효율 30% 증가",
+              "서울시청 파견 근무 경험",
+              "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(조직이나, 팀에서, 맡은)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(업무 효율 30% 증가) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+            ],
+            "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+          },
+          "interviewer_checklist": [
+            "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
+            "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
+            "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가"
+          ],
+          "evaluation_rubric": {
+            "strong_points": [
+              "정량적 성과가 구체적으로 표현되어 있습니다",
+              "STAR 구조가 잘 드러나 있습니다",
+              "구체적인 수치가 포함되어 있습니다"
+            ],
+            "risk_points": [
+              "STAR 구조 요소가 부족합니다",
+              "STAR 구조가 불완전하여 꼬리질문에 취약",
+              "과도한 일반화 표현 사용",
+              "균형 잡힌 시각 표현 부족"
+            ],
+            "improvement_points": [
+              "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+              "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요.",
+              "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요.",
+              "자기관리능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+            ]
+          }
+        },
+        {
+          "question_id": "q_8111",
+          "answer_text": "### 4) 농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.\n제가 중요하게 생각하는 원칙은 정확성과 실질성입니다. 국민연금공단 인턴 당시 기초연금 수급 대상자 발굴 업무를 맡았을 때, 기존에는 연금액 기준으로만 단순 필터링한 뒤 무작위로 전화를 걸고 있었습니다. 저는 이런 방식으로는 실제 대상자를 효율적으로 찾기 어렵다고 판단해, 먼저 3,000페이지 분량의 지급 결정서와 추납·분납 서류를 색상별 폴더로 나누고 시급성에 따라 우선순위를 정했습니다. 이후 VLOOKUP, TEXT, CONCATENATE 함수를 활용해 연금액뿐 아니라 부동산 공시지가와 소득까지 함께 반영하는 자동 필터링 체계를 만들고 연락처 데이터도 표준화했습니다. 그 결과 2일 만에 3,000페이지 정리를 마쳤고, 불필요한 전화 업무를 줄이면서 업무 속도를 1주일 앞당기고 발굴 목표 150건도 초과 달성했습니다. 농협에서도 조합원과 고객을 만나는 현장에서 자료를 정확히 보고, 실제로 도움이 되는 방식으로 업무를 정리하는 역할을 맡겠습니다.",
+          "relevance_score": 0.8800000000000001,
+          "specificity_score": 0.8300000000000001,
+          "defensibility_score": 0.7312280701754388,
+          "originality_score": 0.8400000000000001,
+          "overall_score": 0.82,
+          "detected_patterns": [
+            "star_structure",
+            "quantified_result"
+          ],
+          "strengths": [
+            "정량적 성과가 구체적으로 표현되어 있습니다",
+            "STAR 구조가 잘 드러나 있습니다",
+            "구체적인 수치가 포함되어 있습니다"
+          ],
+          "weaknesses": [
+            "STAR 구조 요소가 부족합니다"
+          ],
+          "suggestions": [],
+          "resolved_question_type": "TYPE_F",
+          "question_order": 4,
+          "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+          "char_count": 545,
+          "char_limit": 600,
+          "char_ratio": 0.908,
+          "experience_title": "국민연금공단 기초연금 수급 대상자 발굴 자동화",
+          "humanization_score": 1.0,
+          "humanization_flags": [],
+          "humanization_suggestions": [],
+          "ncs_alignment_score": 0.33,
+          "ncs_expected_competencies": [
+            "직업윤리",
+            "조직이해능력",
+            "자기관리능력"
+          ],
+          "ncs_matched_competencies": [
+            "직업윤리"
+          ],
+          "ncs_missing_competencies": [
+            "조직이해능력",
+            "자기관리능력"
+          ],
+          "ncs_expected_ability_units": [],
+          "ncs_matched_ability_units": [],
+          "ncs_missing_ability_units": [],
+          "ncs_suggestions": [
+            "조직이해능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요.",
+            "자기관리능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+          ],
+          "ssot_alignment_score": 0.0,
+          "ssot_expected_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자",
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_matched_claims": [],
+          "ssot_missing_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자",
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_offtrack_signals": [
+            "공통 서사에서 우선 선정되지 않은 경험을 사용하고 있습니다."
+          ],
+          "ssot_suggestions": [
+            "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요.",
+            "자소서·자기소개·면접의 공통 근거 경험과 답변 앵커를 더 일치시키세요."
+          ],
+          "expected_followups": [
+            "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+            "[판단] 당시 왜 그 선택을 했는지 판단 기준을 설명해보세요.",
+            "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+          ],
+          "defense_gaps": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "균형 잡힌 시각 표현 부족"
+          ],
+          "message_discipline_score": 0.65,
+          "message_primary": "국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+          "message_competing_points": [
+            "제가 중요하게 생각하는 원칙은 정확성과 실질성입니다",
+            "국민연금공단 인턴 당시 기초연금 수급 대상자 발굴 업무를 맡았을 때, 기존에는 연금액 기준으로만 단순 필터링한 뒤 무작위로 전화를 걸고 있었습니",
+            "저는 이런 방식으로는 실제 대상자를 효율적으로 찾기 어렵다고 판단해, 먼저 3,000페이지 분량의 지급 결정서와 추납·분납 서류를 색상별 폴더로"
+          ],
+          "message_discipline_suggestions": [
+            "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+            "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요."
+          ],
+          "cliche_score": 1.0,
+          "cliche_flags": [],
+          "cliche_suggestions": [],
+          "differentiation_score": 0.75,
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 국민연금공단 기초연금 수급 대상자 발굴 자동화의 운영 기준·증빙·재현성을 제시한다.",
+          "differentiation_gaps": [
+            "주력 경험명이 답변에 직접 드러나지 않습니다.",
+            "writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다."
+          ],
+          "differentiation_suggestions": [
+            "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+          ],
+          "committee_reaction_score": 0.6,
+          "committee_attack_points": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "균형 잡힌 시각 표현 부족",
+            "[사실] 그 경험에서 실제로 일어난 사실을 순서대로 다시 설명해보세요.",
+            "[판단] 당시 왜 그 선택을 했는지 판단 기준을 설명해보세요."
+          ],
+          "committee_reaction_summary": "면접관이 바로 파고들 만한 지점이 남아 있습니다.",
+          "committee_mitigation_priority": "STAR 구조가 불완전하여 꼬리질문에 취약",
+          "writer_checklist_status": {
+            "core_message": "국민연금공단 기초연금 수급 대상자 발굴 자동화 경험으로 QuestionType.TYPE_F 문항에서 검증 가능한 기여를 입증한다.",
+            "required_evidence": [
+              "3,000페이지 2일 완수, 목표 150건 초과 달성",
+              "국민연금공단 인턴 근무 경험",
+              "질문 기대: 원칙과 신뢰 문항이며, 질문 키워드(농협의, 구성원으로서, 본인이)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(3,000페이지 2일 완수, 목표 150건 초과 달성) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+            ],
+            "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+          },
+          "interviewer_checklist": [
+            "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
+            "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
+            "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가"
+          ],
+          "evaluation_rubric": {
+            "strong_points": [
+              "정량적 성과가 구체적으로 표현되어 있습니다",
+              "STAR 구조가 잘 드러나 있습니다",
+              "구체적인 수치가 포함되어 있습니다"
+            ],
+            "risk_points": [
+              "STAR 구조 요소가 부족합니다",
+              "STAR 구조가 불완전하여 꼬리질문에 취약",
+              "균형 잡힌 시각 표현 부족"
+            ],
+            "improvement_points": [
+              "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+              "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요.",
+              "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요.",
+              "조직이해능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+            ]
+          }
+        },
+        {
+          "question_id": "q_8319",
+          "answer_text": "### 5) 농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.\n농협이 교육지원·경제·금융 사업을 함께 수행하는 구조의 경쟁력은 조합원과 지역사회를 한 흐름으로 이해하고 지원할 수 있다는 점이라고 생각합니다. 한 영역의 접점에서 끝나지 않고 현장 지원, 경제 활동, 금융 서비스가 연결되기 때문에 신뢰가 쌓이면 관계가 더 깊어질 수 있습니다. 이런 구조일수록 중요한 것은 화려한 제안보다 정확한 검토와 정직한 운영입니다. 서울시청 코로나19지원팀에서 의료인력 숙박비 청구를 검토하던 중, 고시원 영수증 금액이 실제 시세와 크게 다르다는 점을 발견했습니다. 저는 부동산 앱 검색, 공인중개사 전화 조사, 임대업자 확인을 통해 사실을 교차 검증했고, 그 결과 부정수급 20건을 적발해 관련 예산을 최소 40% 절감했습니다. 제가 농협에서 기여할 수 있는 부분도 여기에 있습니다. 현장에서 접수와 자료를 꼼꼼히 확인하고, 사업 간 연결 지점을 이해해 조합원의 신뢰를 해치지 않는 운영을 만들겠습니다.",
+          "relevance_score": 0.8400000000000001,
+          "specificity_score": 0.7300000000000001,
+          "defensibility_score": 0.773061224489796,
+          "originality_score": 0.8,
+          "overall_score": 0.79,
+          "detected_patterns": [
+            "star_structure",
+            "quantified_result",
+            "collaboration"
+          ],
+          "strengths": [
+            "정량적 성과가 구체적으로 표현되어 있습니다",
+            "STAR 구조가 잘 드러나 있습니다",
+            "구체적인 수치가 포함되어 있습니다"
+          ],
+          "weaknesses": [
+            "STAR 구조 요소가 부족합니다"
+          ],
+          "suggestions": [],
+          "resolved_question_type": "TYPE_E",
+          "question_order": 5,
+          "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+          "char_count": 539,
+          "char_limit": 600,
+          "char_ratio": 0.898,
+          "experience_title": "서울시청 코로나19 지원팀 부정수급 적발",
+          "humanization_score": 1.0,
+          "humanization_flags": [],
+          "humanization_suggestions": [],
+          "ncs_alignment_score": 0.33,
+          "ncs_expected_competencies": [
+            "기술능력",
+            "디지털능력",
+            "조직이해능력"
+          ],
+          "ncs_matched_competencies": [
+            "기술능력"
+          ],
+          "ncs_missing_competencies": [
+            "디지털능력",
+            "조직이해능력"
+          ],
+          "ncs_expected_ability_units": [],
+          "ncs_matched_ability_units": [],
+          "ncs_missing_ability_units": [],
+          "ncs_suggestions": [
+            "디지털능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요.",
+            "조직이해능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+          ],
+          "ssot_alignment_score": 0.0,
+          "ssot_expected_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자",
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_matched_claims": [],
+          "ssot_missing_claims": [
+            "신규직원에 바로 투입 가능한 검증형 실무자",
+            "농·축협에 맞는 근거 중심 문제해결형 지원자",
+            "기술능력"
+          ],
+          "ssot_offtrack_signals": [
+            "공통 서사에서 우선 선정되지 않은 경험을 사용하고 있습니다.",
+            "공통 답변 앵커와 어조가 약하게 연결됩니다."
+          ],
+          "ssot_suggestions": [
+            "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요.",
+            "자소서·자기소개·면접의 공통 근거 경험과 답변 앵커를 더 일치시키세요."
+          ],
+          "expected_followups": [
+            "[사실] 입사 후 기여 방안을 지금까지의 경험 사실과 연결해 설명해보세요.",
+            "[판단] 다른 선택지가 있었는데 왜 그 판단을 했는지 대안 비교 기준으로 설명해보세요.",
+            "[가치관] 그 판단에서 본인이 끝까지 지키려 했던 기준과 균형 감각을 설명해보세요."
+          ],
+          "defense_gaps": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "균형 잡힌 시각 표현 부족",
+            "수치/판단 기준 설명이 부족함",
+            "대안 비교와 선택 이유가 부족함"
+          ],
+          "message_discipline_score": 0.65,
+          "message_primary": "서울시청 코로나19 지원팀 부정수급 적발 경험으로 QuestionType.TYPE_E 문항에서 검증 가능한 기여를 입증한다.",
+          "message_competing_points": [
+            "농협이 교육지원·경제·금융 사업을 함께 수행하는 구조의 경쟁력은 조합원과 지역사회를 한 흐름으로 이해하고 지원할 수 있다는 점이라고 생각합니다",
+            "한 영역의 접점에서 끝나지 않고 현장 지원, 경제 활동, 금융 서비스가 연결되기 때문에 신뢰가 쌓이면 관계가 더 깊어질 수 있습니다",
+            "이런 구조일수록 중요한 것은 화려한 제안보다 정확한 검토와 정직한 운영입니다"
+          ],
+          "message_discipline_suggestions": [
+            "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+            "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요."
+          ],
+          "cliche_score": 1.0,
+          "cliche_flags": [],
+          "cliche_suggestions": [],
+          "differentiation_score": 0.75,
+          "differentiation_line": "평균 지원자처럼 열정만 말하지 않고 서울시청 코로나19 지원팀 부정수급 적발의 운영 기준·증빙·재현성을 제시한다.",
+          "differentiation_gaps": [
+            "주력 경험명이 답변에 직접 드러나지 않습니다.",
+            "writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다."
+          ],
+          "differentiation_suggestions": [
+            "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요."
+          ],
+          "committee_reaction_score": 0.6,
+          "committee_attack_points": [
+            "STAR 구조가 불완전하여 꼬리질문에 취약",
+            "균형 잡힌 시각 표현 부족",
+            "수치/판단 기준 설명이 부족함",
+            "대안 비교와 선택 이유가 부족함"
+          ],
+          "committee_reaction_summary": "면접관이 바로 파고들 만한 지점이 남아 있습니다.",
+          "committee_mitigation_priority": "STAR 구조가 불완전하여 꼬리질문에 취약",
+          "writer_checklist_status": {
+            "core_message": "서울시청 코로나19 지원팀 부정수급 적발 경험으로 QuestionType.TYPE_E 문항에서 검증 가능한 기여를 입증한다.",
+            "required_evidence": [
+              "부정수급 20건 적발, 예산 40% 절감",
+              "서울시청 파견 근무 경험",
+              "질문 기대: 입사 후 기여 문항이며, 질문 키워드(농협이, 교육지원, 경제)와 가장 직접적으로 맞닿아 있습니다.\n이 경험의 강점: 정량 근거(부정수급 20건 적발, 예산 40% 절감) / 면접에서 다시 꺼낼 증빙 문장 보유 / 개인 기여를 분리해 설명 가능.\n면접관 꼬리질문: 왜 다른 경험보다 이 사례가 직무 적합성을 잘 증명하는지를 30초 안에 방어할 준비가 필요합니다."
+            ],
+            "target_impression": "기술능력, 의사소통능력를 검증 가능하게 보여주는 사람"
+          },
+          "interviewer_checklist": [
+            "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
+            "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
+            "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가"
+          ],
+          "evaluation_rubric": {
+            "strong_points": [
+              "정량적 성과가 구체적으로 표현되어 있습니다",
+              "STAR 구조가 잘 드러나 있습니다",
+              "구체적인 수치가 포함되어 있습니다"
+            ],
+            "risk_points": [
+              "STAR 구조 요소가 부족합니다",
+              "STAR 구조가 불완전하여 꼬리질문에 취약",
+              "균형 잡힌 시각 표현 부족",
+              "수치/판단 기준 설명이 부족함"
+            ],
+            "improvement_points": [
+              "문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.",
+              "writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요.",
+              "평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요.",
+              "디지털능력을(를) 보여주는 행동/근거 문장을 한 줄 더 보강하세요."
+            ]
+          }
+        }
+      ],
+      "result_quality_evaluations": [
+        {
+          "question_id": "q1_nh_growth",
+          "question_order": 1,
+          "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+          "overall": 0.934,
+          "details": {
+            "relevance": 1.0,
+            "specificity": 1.0,
+            "logic": 0.75,
+            "originality": 1.0,
+            "readability": 0.8,
+            "persuasiveness": 1.0,
+            "defensibility": 1.0,
+            "company_fit": 0.7
+          },
+          "feedback": [
+            "STAR 구조가 충분히 드러나지 않습니다"
+          ],
+          "suggestions": []
+        },
+        {
+          "question_id": "q2_nh_decision",
+          "question_order": 2,
+          "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+          "overall": 0.89,
+          "details": {
+            "relevance": 1.0,
+            "specificity": 0.8,
+            "logic": 0.8,
+            "originality": 1.0,
+            "readability": 0.8,
+            "persuasiveness": 0.75,
+            "defensibility": 1.0,
+            "company_fit": 0.8
+          },
+          "feedback": [],
+          "suggestions": []
+        },
+        {
+          "question_id": "q3_nh_trust",
+          "question_order": 3,
+          "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+          "overall": 0.926,
+          "details": {
+            "relevance": 1.0,
+            "specificity": 1.0,
+            "logic": 0.9,
+            "originality": 1.0,
+            "readability": 0.8,
+            "persuasiveness": 0.75,
+            "defensibility": 0.8,
+            "company_fit": 0.8
+          },
+          "feedback": [],
+          "suggestions": []
+        },
+        {
+          "question_id": "q4_nh_value",
+          "question_order": 4,
+          "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+          "overall": 0.97,
+          "details": {
+            "relevance": 1.0,
+            "specificity": 1.0,
+            "logic": 1.0,
+            "originality": 1.0,
+            "readability": 0.8,
+            "persuasiveness": 0.85,
+            "defensibility": 1.0,
+            "company_fit": 0.95
+          },
+          "feedback": [],
+          "suggestions": []
+        },
+        {
+          "question_id": "q5_nh_structure",
+          "question_order": 5,
+          "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+          "overall": 0.929,
+          "details": {
+            "relevance": 0.96,
+            "specificity": 1.0,
+            "logic": 0.85,
+            "originality": 1.0,
+            "readability": 0.8,
+            "persuasiveness": 0.85,
+            "defensibility": 0.9,
+            "company_fit": 0.95
+          },
+          "feedback": [
+            "'역량' 관련 키워드가 부족합니다"
+          ],
+          "suggestions": []
+        }
+      ],
+      "writer_run_meta": {
+        "target_path": "profile/targets/example_target.md",
+        "tool": "codex",
+        "rewrite_count": 4,
+        "char_limit_adjusted": true,
+        "quality_evaluation_status": "ok",
+        "quality_evaluation_error": null,
+        "result_quality_evaluation_status": "ok",
+        "result_quality_evaluation_error": null,
+        "writer_brief_path": "analysis/writer_brief.json"
+      },
+      "rewrite_quality_report_path": "analysis/writer_rewrite_quality_report.json",
+      "writer_quality_path": "artifacts/writer_quality.json",
+      "writer_result_quality_path": "artifacts/writer_result_quality.json",
+      "writer_differentiation_path": "artifacts/writer_differentiation.json",
+      "writer_defensibility_path": "artifacts/writer_defensibility.json",
+      "writer_message_discipline_path": "artifacts/writer_message_discipline.json",
+      "writer_committee_reaction_path": "artifacts/writer_committee_reaction.json"
+    },
+    "output_path": "artifacts/writer.md",
+    "raw_output_path": "runs/20260405_112959/raw_writer.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "Q2 분량 부족: 537자 / 제한 600자 / 목표 90% 이상",
+        "Q5 분량 부족: 539자 / 제한 600자 / 목표 90% 이상"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-04-05T11:37:51.370796+00:00"
+  },
+  {
+    "id": "writer-20260405_113858",
+    "artifact_type": "WRITER",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "농·축협",
+        "job_title": "신규직원",
+        "career_stage": "ENTRY",
+        "company_type": "협동조합",
+        "research_notes": "2026년 상반기 농·축협 신규직원 채용 자기소개서 기준. 교육지원·경제·금융의 복합 구조, 조합원 신뢰, 현장 밀착 서비스, 정직과 도덕성, 실무 개선 역량 강조.",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [
+          "exp_nps_intern",
+          "exp_seoul_covid_fraud",
+          "exp_seoul_covid_conflict",
+          "exp_mg_bank_parttime"
+        ],
+        "questions": [
+          {
+            "id": "q1_nh_growth",
+            "order_no": 1,
+            "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_D"
+          },
+          {
+            "id": "q2_nh_decision",
+            "order_no": 2,
+            "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_I"
+          },
+          {
+            "id": "q3_nh_trust",
+            "order_no": 3,
+            "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_F"
+          },
+          {
+            "id": "q4_nh_value",
+            "order_no": 4,
+            "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_F"
+          },
+          {
+            "id": "q5_nh_structure",
+            "order_no": 5,
+            "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_E"
+          }
+        ]
+      },
+      "target_path": "profile/targets/example_target.md",
+      "tool": "codex",
+      "question_map_path": "analysis/question_map.json",
+      "fact_warnings": [],
+      "readability": {
+        "score": 80,
+        "feedback": [
+          "STAR(상황/행동/결과) 구조를 나타내는 명확한 표현이 부족합니다."
+        ]
+      },
+      "company_analysis": {
+        "company_name": "농·축협",
+        "company_type": "협동조합",
+        "industry": "일반",
+        "core_values": [],
+        "culture_keywords": [],
+        "recent_news": [],
+        "interview_style": "formal",
+        "success_patterns": [
+          "star_structure",
+          "quantified_result",
+          "problem_solving",
+          "collaboration",
+          "growth_story"
+        ],
+        "preferred_evidence_types": [
+          "정량적 성과",
+          "문제 해결",
+          "협업 성과"
+        ],
+        "tone_guide": "명확하고 구체적인 표현. 근거 중심.",
+        "role_industry_strategy": {
+          "target_role": "신규직원",
+          "target_industry": "일반",
+          "company_type": "협동조합",
+          "question_types": [
+            "TYPE_D",
+            "TYPE_I",
+            "TYPE_F",
+            "TYPE_F",
+            "TYPE_E"
+          ],
+          "writer_focus": [
+            "지원동기와 직무 적합성을 사용자 경험으로 연결한다.",
+            "문항별로 한 경험의 역할·행동·성과를 분리해 제시한다.",
+            "입사 후 포부는 실행 가능한 첫 기여 단위까지 내려쓴다."
+          ],
+          "interview_focus": [
+            "수치/기준/비교 근거를 30초 안에 다시 설명할 수 있게 준비한다.",
+            "팀 성과와 개인 기여를 구분해서 답한다.",
+            "단일 출처 정보는 확정 표현 대신 검증 예정 표현으로 낮춘다.",
+            "수치 검증 관점의 압박 질문을 대비한다.",
+            "개인 기여 검증 관점의 압박 질문을 대비한다.",
+            "대안 비교 관점의 압박 질문을 대비한다."
+          ],
+          "evidence_priority": [
+            "정량적 성과",
+            "문제 해결",
+            "협업 성과",
+            "정량 성과",
+            "직무 연관 행동"
+          ],
+          "tone_rules": [
+            "담백하고 근거 중심으로 답변합니다.",
+            "일반 산업 맥락을 과장 없이 연결합니다.",
+            "신규직원 직무에서 바로 쓰일 행동/성과 중심으로 정리합니다."
+          ],
+          "banned_patterns": [
+            "검증 불가 수치 확대",
+            "회사 정보 복붙형 지원동기",
+            "팀 성과를 개인 성과처럼 포장",
+            "입사 후 포부를 추상적 성장 서사로만 마무리하는 표현"
+          ],
+          "interview_pressure_themes": [
+            "수치 검증",
+            "개인 기여 검증",
+            "대안 비교",
+            "일반 도메인 이해도",
+            "입사 후 90일 실행계획"
+          ],
+          "committee_personas": [
+            {
+              "id": "chair",
+              "name": "위원장",
+              "role": "전체 논리와 답변 일관성 점검",
+              "focus": [
+                "지원동기 진정성",
+                "논리 일관성",
+                "직무 적합성"
+              ],
+              "tone": "정중하지만 냉정함"
+            },
+            {
+              "id": "domain",
+              "name": "실무위원",
+              "role": "신규직원 실무 적합성 검증",
+              "focus": [
+                "수치 검증",
+                "개인 기여 검증",
+                "대안 비교"
+              ],
+              "tone": "구체 사례를 집요하게 확인함"
+            },
+            {
+              "id": "risk",
+              "name": "리스크위원",
+              "role": "과장, 단일 출처 주장, 실패 대응 검증",
+              "focus": [
+                "개인 기여 검증",
+                "대안 비교",
+                "실패 복구"
+              ],
+              "tone": "반례와 허점을 먼저 찾음"
+            },
+            {
+              "id": "culture",
+              "name": "조직적합성위원",
+              "role": "협업 방식과 조직 적합성 검증",
+              "focus": [
+                "협업 방식",
+                "조직 적응",
+                "커뮤니케이션"
+              ],
+              "tone": "차분하지만 비교 질문이 많음"
+            }
+          ],
+          "single_source_risks": [],
+          "question_map_signals": []
+        }
+      },
+      "quality_evaluations": [],
+      "result_quality_evaluations": [],
+      "writer_run_meta": {
+        "target_path": "profile/targets/example_target.md",
+        "tool": "codex",
+        "rewrite_count": 0,
+        "char_limit_adjusted": false,
+        "quality_evaluation_status": "ok",
+        "quality_evaluation_error": null,
+        "result_quality_evaluation_status": "ok",
+        "result_quality_evaluation_error": null,
+        "writer_brief_path": "analysis/writer_brief.json"
+      },
+      "rewrite_quality_report_path": null,
+      "writer_quality_path": "artifacts/writer_quality.json",
+      "writer_result_quality_path": "artifacts/writer_result_quality.json",
+      "writer_differentiation_path": "artifacts/writer_differentiation.json",
+      "writer_defensibility_path": "artifacts/writer_defensibility.json",
+      "writer_message_discipline_path": "artifacts/writer_message_discipline.json",
+      "writer_committee_reaction_path": "artifacts/writer_committee_reaction.json"
+    },
+    "output_path": "artifacts/writer.md",
+    "raw_output_path": "runs/20260405_113812/raw_writer.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## 블록 1: ASSUMPTIONS & MISSING FACTS",
+        "## 블록 2: OUTLINE",
+        "## 블록 3: DRAFT ANSWERS",
+        "## 블록 4: SELF-CHECK",
+        "문항별 글자수 표기",
+        "SELF-CHECK PASS/FAIL",
+        "Q1 답변 본문이 비어 있습니다",
+        "Q2 답변 본문이 비어 있습니다",
+        "Q3 답변 본문이 비어 있습니다",
+        "Q4 답변 본문이 비어 있습니다",
+        "Q5 답변 본문이 비어 있습니다"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-04-05T11:38:58.953172+00:00"
+  },
+  {
+    "id": "coach-20260406_063843",
+    "artifact_type": "COACH",
+    "accepted": false,
+    "input_snapshot": {
+      "project": {
+        "company_name": "농·축협",
+        "job_title": "신규직원",
+        "career_stage": "ENTRY",
+        "company_type": "협동조합",
+        "research_notes": "2026년 상반기 농·축협 신규직원 채용 자기소개서 기준. 교육지원·경제·금융의 복합 구조, 조합원 신뢰, 현장 밀착 서비스, 정직과 도덕성, 실무 개선 역량 강조.",
+        "tone_style": "담백하고 근거 중심",
+        "priority_experience_order": [
+          "exp_nps_intern",
+          "exp_seoul_covid_fraud",
+          "exp_seoul_covid_conflict",
+          "exp_mg_bank_parttime"
+        ],
+        "questions": [
+          {
+            "id": "q1_nh_growth",
+            "order_no": 1,
+            "question_text": "본인의 발전을 위해 노력했던 경험 중 성장 가능성을 가장 잘 보여주는 사례와 그것을 농협 업무에 어떻게 활용할 수 있는지 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_D"
+          },
+          {
+            "id": "q2_nh_decision",
+            "order_no": 2,
+            "question_text": "판단이 쉽지 않은 상황에서 의사결정을 내렸던 경험을 구체적으로 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_I"
+          },
+          {
+            "id": "q3_nh_trust",
+            "order_no": 3,
+            "question_text": "조직이나 팀에서 맡은 역할을 수행하며 동료나 구성원의 신뢰를 얻게 되었던 경험을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_F"
+          },
+          {
+            "id": "q4_nh_value",
+            "order_no": 4,
+            "question_text": "농협의 구성원으로서 본인이 중요하게 생각하는 가치나 원칙과 농협에서 수행하고 싶은 역할을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_F"
+          },
+          {
+            "id": "q5_nh_structure",
+            "order_no": 5,
+            "question_text": "농협이 교육지원·경제·금융 사업을 동시에 수행하는 구조가 가지는 경쟁력과 본인이 기여할 수 있는 부분을 기술해 주십시오.",
+            "char_limit": 600,
+            "detected_type": "TYPE_E"
+          }
+        ]
+      },
+      "experience_count": 10
+    },
+    "output_path": "artifacts/coach.md",
+    "raw_output_path": "artifacts/coach.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## NEEDS VERIFICATION"
+      ],
+      "out_of_order": []
+    },
+    "created_at": "2026-04-06T06:38:43.737327+00:00"
+  }
+]

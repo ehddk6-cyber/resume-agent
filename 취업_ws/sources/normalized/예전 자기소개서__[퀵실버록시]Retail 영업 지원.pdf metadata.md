@@ -1,0 +1,12 @@
+# Source: 예전 자기소개서/[퀵실버록시]Retail 영업 지원.pdf metadata
+
+{
+  "title": "[퀵실버록시]Retail 영업 지원.pdf",
+  "metadata": {
+    "sourceAddedTimestamp": "2024-11-17T16:25:34.664629Z",
+    "revisionData": {
+      "dateAdded": "2024-11-17T16:25:34.071812Z"
+    },
+    "originalSourceContentType": "SOURCE_CONTENT_TYPE_PDF"
+  }
+}

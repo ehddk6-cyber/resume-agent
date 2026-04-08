@@ -1,0 +1,31 @@
+{
+  "id": "71cf314da499",
+  "source_type": "local_text",
+  "title": "(24-03-08)하나은행 일반 (1).pdf metadata",
+  "url": null,
+  "raw_text": "{\n  \"title\": \"(24-03-08)하나은행 일반 (1).pdf\",\n  \"metadata\": {\n    \"sourceAddedTimestamp\": \"2024-11-18T02:18:29.731528Z\",\n    \"revisionData\": {\n      \"dateAdded\": \"2024-11-18T02:18:07.204024Z\"\n    },\n    \"originalSourceContentType\": \"SOURCE_CONTENT_TYPE_PDF\"\n  }\n}",
+  "cleaned_text": "{\n  \"title\": \"(24-03-08)하나은행 일반 (1).pdf\",\n  \"metadata\": {\n    \"sourceAddedTimestamp\": \"2024-11-18T02:18:29.731528Z\",\n    \"revisionData\": {\n      \"dateAdded\": \"2024-11-18T02:18:07.204024Z\"\n    },\n    \"originalSourceContentType\": \"SOURCE_CONTENT_TYPE_PDF\"\n  }\n}",
+  "meta": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "일반 참고 문서",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": true,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

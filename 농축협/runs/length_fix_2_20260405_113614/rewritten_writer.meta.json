@@ -1,0 +1,32 @@
+{
+  "status": "failed",
+  "attempt_count": 3,
+  "timeout_seconds": 300,
+  "attempts": [
+    {
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 15723,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:37:03.286974Z  WARN codex_core::plugins::manager: failed to warm featured plugin ids cache error=remote plugin sync request to https://chatgpt.com/backend-api/plugins/featured failed with status 403 Forbidden: <html>\n  <head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n    <style global>body{font-family:Arial,Helvetica,sans-serif}.container{align-items:"
+    },
+    {
+      "attempt": 2,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 12532,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:37:23.417415Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/core (symlink): No such file or directory (os error 2)\n2026-04-05T11:37:23.417973Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/patterns (symlink): No such file or directory (os error 2)\n2026-04-05T11:37:23."
+    },
+    {
+      "attempt": 3,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 14126,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:37:39.790157Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/core (symlink): No such file or directory (os error 2)\n2026-04-05T11:37:39.790833Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/patterns (symlink): No such file or directory (os error 2)\n2026-04-05T11:37:39."
+    }
+  ],
+  "output_path": "/home/ehddk/ai/ai/ai/resume-agent/농축협_ws/runs/length_fix_2_20260405_113614/rewritten_writer.md"
+}

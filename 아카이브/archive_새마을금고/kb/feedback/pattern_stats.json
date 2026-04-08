@@ -1,0 +1,13 @@
+{
+  "stats": {
+    "writer|공공|NONE": {
+      "pattern_id": "writer|공공|NONE",
+      "total_uses": 2,
+      "accepted_count": 1,
+      "rejected_count": 1,
+      "avg_rating": 5.0,
+      "success_rate": 0.5,
+      "last_used": "2026-04-05T15:09:06.955711"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "mode": "heuristic",
+  "mode_label": "heuristic mode",
+  "question_strategies": [],
+  "writer_contract": {
+    "mode": "heuristic",
+    "mode_label": "heuristic mode",
+    "headline": "문항당 하나의 핵심 메시지와 하나의 주력 경험만 밀어붙입니다.",
+    "answer_checklist": [
+      "핵심 주장 1개",
+      "근거 경험 1개",
+      "수치/증빙 1개",
+      "조직 적합 신호 1개",
+      "면접 방어 취약점 1개와 완화 문장 1개"
+    ],
+    "decision_principles": [
+      "문항마다 single best strategy를 유지한다.",
+      "흔한 성장/노력/배움 클리셰보다 검증 가능한 결과와 판단 기준을 우선한다.",
+      "평균 지원자 톤이 아니라 조직이 안심할 수 있는 기여 신호를 우선한다."
+    ]
+  }
+}

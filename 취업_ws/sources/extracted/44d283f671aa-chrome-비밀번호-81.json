@@ -1,0 +1,33 @@
+{
+  "id": "44d283f671aa",
+  "source_type": "local_csv_row",
+  "title": "Chrome 비밀번호-81",
+  "url": null,
+  "raw_text": "",
+  "cleaned_text": "",
+  "meta": {
+    "company_name": "Chrome 비밀번호-81",
+    "job_title": "",
+    "season": "",
+    "spec_text": "",
+    "question_count": 0
+  },
+  "pattern": {
+    "company_name": "Chrome 비밀번호-81",
+    "job_title": "",
+    "season": "",
+    "question_types": [],
+    "structure_summary": "Chrome 비밀번호-81 직무 기준 구조 참고",
+    "structure_signals": {
+      "has_star": false,
+      "has_metrics": false,
+      "warns_against_copying": true
+    },
+    "spec_keywords": [],
+    "retrieval_terms": [
+      "Chrome 비밀번호-81"
+    ],
+    "caution": "표현 복제 금지. 구조만 참고.",
+    "source_url": null
+  }
+}

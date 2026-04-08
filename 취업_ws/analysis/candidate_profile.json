@@ -1,0 +1,27 @@
+{
+  "style_preference": "담백하고 근거 중심",
+  "communication_style": "logical",
+  "metric_coverage_ratio": 1.0,
+  "personal_contribution_ratio": 1.0,
+  "collaboration_ratio": 0.12,
+  "abstraction_ratio": 0.0,
+  "confidence_style": "assertive",
+  "signature_strengths": [
+    "설득",
+    "데이터분석",
+    "예산절감",
+    "프로세스개선"
+  ],
+  "blind_spots": [
+    "협업 맥락보다 개인 수행 중심으로 들릴 수 있습니다."
+  ],
+  "coaching_focus": [
+    "강한 분석형 톤은 유지하되 고객·협업 맥락을 더 드러내세요."
+  ],
+  "interview_strategy": {
+    "opening": "핵심 결론을 먼저 말하고, 곧바로 행동 근거와 결과를 붙입니다.",
+    "pressure_response": "즉답이 어려우면 기준→행동→결과 순서로 짧게 재정리합니다.",
+    "tone": "담백하고 근거 중심을 유지하되 질문 의도에 맞는 감정 온도를 한 문장 추가합니다."
+  },
+  "profile_summary": "담백하고 근거 중심 톤을 선호하는 logical형 지원자입니다. 주요 강점은 설득, 데이터분석, 예산절감입니다."
+}

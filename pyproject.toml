@@ -11,6 +11,8 @@ dependencies = [
     "tiktoken",
     "scikit-learn",
     "pyyaml>=6.0",
+    "sentence-transformers>=2.2",
+    "kiwipiepy>=0.16",
 ]
 
 [project.scripts]

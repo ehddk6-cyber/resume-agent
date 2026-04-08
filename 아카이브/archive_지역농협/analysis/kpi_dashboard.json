@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-04-05T04:30:45.883927+00:00",
+  "artifact_type": "coach",
+  "question_experience_match_accuracy": 0.0,
+  "self_intro_follow_up_hit_rate": 0.0,
+  "interview_defense_success_rate": 0.0,
+  "company_signal_reuse_rate": 0.0,
+  "document_pass_rate": 0.0,
+  "interview_pass_rate": 0.0,
+  "offer_rate": 0.0,
+  "company_signal_summary": {
+    "core_values": [],
+    "competencies": [],
+    "differentiation": []
+  },
+  "writer_quality_metrics": {},
+  "result_quality_metrics": {},
+  "tracked_outcomes": {}
+}

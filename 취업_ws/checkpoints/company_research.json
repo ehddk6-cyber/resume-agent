@@ -1,0 +1,28 @@
+{
+  "step": "company_research",
+  "timestamp": "2026-04-01T00:12:28.909388",
+  "status": "failed",
+  "error": "## 블록 1: 확정 정보, ## 블록 2: 입력 기반 핵심 신호, ## 블록 3: 직무 분석, ## 블록 4: 회사/조직 적합성 해석, ## 블록 5: 자소서 연결 전략",
+  "state": {
+    "artifact_path": "analysis/company_research.md",
+    "validation": {
+      "passed": false,
+      "missing": [
+        "## 블록 1: 확정 정보",
+        "## 블록 2: 입력 기반 핵심 신호",
+        "## 블록 3: 직무 분석",
+        "## 블록 4: 회사/조직 적합성 해석",
+        "## 블록 5: 자소서 연결 전략",
+        "## 블록 6: 면접 대비 포인트",
+        "## 블록 7: SELF-CHECK",
+        "[NEEDS_VERIFICATION] 표기",
+        "SELF-CHECK PASS/FAIL",
+        "자소서 유형 연결"
+      ],
+      "out_of_order": []
+    },
+    "source_trace_path": "analysis/company_research_sources.json",
+    "research_brief_path": "analysis/research_brief.json",
+    "source_grading_path": "analysis/source_grading.json"
+  }
+}

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -183,6 +183,9 @@ class CompanyAnalysis(BaseModel):
     preferred_evidence_types: List[str] = Field(default_factory=list)
     tone_guide: str = ""
     role_industry_strategy: dict[str, Any] = Field(default_factory=dict)
+    success_case_stats: dict[str, Any] = Field(default_factory=dict)
+    similar_case_titles: List[str] = Field(default_factory=list)
+    discouraged_phrases: List[str] = Field(default_factory=list)
 
 
 class QuestionAnalysis(BaseModel):
@@ -238,6 +241,28 @@ class SuccessCase(BaseModel):
     question_type: Optional[QuestionType] = None
     key_phrases: List[str] = Field(default_factory=list)
 
+    @classmethod
+    def from_csv_row(
+        cls,
+        title: str,
+        company_name: str = "",
+        job_title: str = "",
+        spec_summary: str = "",
+        answer_text: str = "",
+        source_url: Optional[str] = None,
+        detected_patterns: Optional[List[SuccessPattern]] = None,
+    ) -> "SuccessCase":
+        """CSV 행에서 SuccessCase 생성. detected_patterns는 외부에서 주입."""
+        return cls(
+            title=title,
+            company_name=company_name,
+            job_title=job_title,
+            spec_summary=spec_summary,
+            answer_text=answer_text,
+            source_url=source_url,
+            detected_patterns=detected_patterns or [],
+        )
+
 
 class GeneratedArtifact(BaseModel):
     id: str
@@ -254,3 +279,31 @@ class GeneratedArtifact(BaseModel):
     model_config = {
         "populate_by_name": True,
     }
+
+
+class ExperienceCoreCompetency(BaseModel):
+    """경험의 핵심 역량 분석 결과"""
+    competency: str  # 역량명 (예: "고객 중심 사고")
+    confidence: float  # 확신도 0.0~1.0
+    evidence_keywords: List[str]  # 근거 키워드
+    interview_relevance: str  # 면접관 기대값
+
+
+class ExperienceDeepAnalysis(BaseModel):
+    """경험 심층 분석 결과"""
+    experience_id: str
+    core_competencies: List[ExperienceCoreCompetency]
+    estimated_interviewer_impression: Dict[str, str]
+    hidden_strengths: List[str]
+    potential_concerns: List[str]
+    recommended_framing: str
+
+
+class QuestionIntentAnalysis(BaseModel):
+    """질문의 숨겨진 의도 분석"""
+    question_id: str
+    surface_topic: str
+    hidden_intent: str
+    core_competencies_sought: List[str]
+    risk_topics: List[str]
+    recommended_approach: str

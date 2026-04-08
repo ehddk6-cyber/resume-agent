@@ -1,0 +1,32 @@
+{
+  "status": "failed",
+  "attempt_count": 3,
+  "timeout_seconds": 300,
+  "attempts": [
+    {
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 12382,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:35:31.414903Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/core (symlink): No such file or directory (os error 2)\n2026-04-05T11:35:31.415404Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/patterns (symlink): No such file or directory (os error 2)\n2026-04-05T11:35:31."
+    },
+    {
+      "attempt": 2,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 14066,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:35:45.729865Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/core (symlink): No such file or directory (os error 2)\n2026-04-05T11:35:45.730421Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/patterns (symlink): No such file or directory (os error 2)\n2026-04-05T11:35:45."
+    },
+    {
+      "attempt": 3,
+      "timeout_seconds": 300,
+      "returncode": 1,
+      "duration_ms": 12643,
+      "failure_kind": "nonzero_exit",
+      "stderr_excerpt": "2026-04-05T11:36:03.731594Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/core (symlink): No such file or directory (os error 2)\n2026-04-05T11:36:03.732117Z ERROR codex_core_skills::loader: failed to stat skills entry /mnt/c/Users/ehddk/.codex/skills/patina-max/patterns (symlink): No such file or directory (os error 2)\n2026-04-05T11:36:03."
+    }
+  ],
+  "output_path": "/home/ehddk/ai/ai/ai/resume-agent/농축협_ws/runs/length_fix_1_20260405_113404/rewritten_writer.md"
+}

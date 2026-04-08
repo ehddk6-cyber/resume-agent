@@ -1,0 +1,15 @@
+{
+  "status": "success",
+  "attempt_count": 1,
+  "timeout_seconds": 300,
+  "attempts": [
+    {
+      "attempt": 1,
+      "timeout_seconds": 300,
+      "returncode": 0,
+      "duration_ms": 85657,
+      "failure_kind": null
+    }
+  ],
+  "output_path": "/home/ehddk/ai/ai/ai/resume-agent/농축협_ws/runs/20260405_112959/raw_writer.md"
+}

@@ -4,6 +4,7 @@ import json
 import re
 import shutil
 import time
+from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, List, Optional
@@ -35,6 +36,7 @@ from .domain import (
     analyze_gaps,
     auto_classify_project_questions,
     build_knowledge_hints,
+    build_question_specific_knowledge_hints,
     build_coach_artifact,
     summarize_knowledge_sources,
     validate_block_contract,
@@ -46,7 +48,11 @@ from .domain import (
     audit_facts,
 )
 from .parsing import discover_public_urls, ingest_source_file, ingest_public_url
-from .classifier import classify_question, classify_question_with_confidence
+from .classifier import (
+    classify_question,
+    classify_question_regex_only,
+    classify_question_with_confidence,
+)
 from .models import (
     ApplicationProject,
     ArtifactType,
@@ -77,8 +83,10 @@ from .state import (
     load_knowledge_sources,
     load_profile,
     load_project,
+    load_success_cases,
     save_project,
     save_knowledge_sources,
+    save_success_cases,
     upsert_artifact,
     write_json,
 )
@@ -98,6 +106,144 @@ from .templates import (
     STATE_PROFILE_GUIDE,
 )
 from .workspace import Workspace
+from .quality_evaluator import evaluate_draft_quality
+
+
+def _get_success_cases_for_analysis(ws: Workspace) -> Optional[List[SuccessCase]]:
+    """워크스페이스에서 success_cases를 로드하여 분석용으로 반환. 없으면 None."""
+    try:
+        cases = load_success_cases(ws)
+        return cases if cases else None
+    except Exception:
+        return None
+
+
+def _resolve_writer_target_path(ws: Workspace, target_path: Path | None) -> Path:
+    return (target_path or (ws.targets_dir / "example_target.md")).resolve()
+
+
+def _validate_writer_preconditions(
+    ws: Workspace,
+    *,
+    target_path: Path,
+    tool: str | None = None,
+) -> tuple[ApplicationProject, list[dict[str, Any]]]:
+    from .cli_tool_manager import get_available_tools
+
+    project = load_project(ws)
+    question_map = read_json_if_exists(ws.analysis_dir / "question_map.json")
+
+    if not target_path.exists():
+        raise RuntimeError(
+            "writer target 파일이 없습니다.\n"
+            f"- 확인 경로: {target_path}\n"
+            f"- 다음 액션: `resume-agent writer {ws.root} --target <상대경로>`로 올바른 파일을 지정하세요."
+        )
+
+    if not project.questions:
+        raise RuntimeError(
+            "writer를 실행할 질문이 없습니다.\n"
+            f"- 확인 파일: {ws.state_dir / 'project.json'}\n"
+            "- 다음 액션: `project.json`에 questions를 채운 뒤 다시 실행하세요."
+        )
+
+    if not question_map:
+        raise RuntimeError(
+            "writer 선행조건이 충족되지 않았습니다. question_map.json이 없습니다.\n"
+            f"- 확인 경로: {ws.analysis_dir / 'question_map.json'}\n"
+            f"- 다음 액션: `resume-agent coach {ws.root}`를 먼저 실행하세요."
+        )
+
+    if tool:
+        available_tools = get_available_tools()
+        if tool not in available_tools:
+            available_display = ", ".join(available_tools) if available_tools else "없음"
+            raise RuntimeError(
+                f"선택한 CLI 도구를 찾을 수 없습니다: {tool}\n"
+                f"- 사용 가능 도구: {available_display}\n"
+                f"- 다음 액션: 다른 `--tool`을 선택하거나 {tool} CLI를 설치하세요."
+            )
+
+    writer_brief = read_json_if_exists(ws.analysis_dir / "writer_brief.json")
+    if not writer_brief:
+        raise RuntimeError(
+            "writer 선행조건이 충족되지 않았습니다. writer_brief.json이 없습니다.\n"
+            f"- 확인 경로: {ws.analysis_dir / 'writer_brief.json'}\n"
+            f"- 다음 액션: `resume-agent coach {ws.root}`를 다시 실행해 문항 전략 시트를 생성하세요."
+        )
+
+    return project, question_map
+
+
+def _build_writer_prompt_context(
+    ws: Workspace,
+    *,
+    target_path: Path,
+    company_analysis: CompanyAnalysis | None = None,
+) -> dict[str, Any]:
+    prompt_path = build_draft_prompt(ws, target_path, company_analysis=company_analysis)
+    run_dir = ws.runs_dir / timestamp_slug()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    raw_output_path = run_dir / "raw_writer.md"
+    return {
+        "prompt_path": prompt_path,
+        "run_dir": run_dir,
+        "raw_output_path": raw_output_path,
+    }
+
+
+def _run_writer_llm(
+    prompt_path: Path,
+    ws: Workspace,
+    output_path: Path,
+    *,
+    tool: str,
+) -> int:
+    return run_codex(prompt_path, ws.root, output_path, tool=tool)
+
+
+def _read_llm_run_meta(output_path: Path) -> dict[str, Any]:
+    meta = read_json_if_exists(output_path.with_suffix(".meta.json"))
+    return meta if isinstance(meta, dict) else {}
+
+
+def _summarize_llm_run_metas(run_metas: list[dict[str, Any]]) -> dict[str, Any]:
+    attempted_tools: list[str] = []
+    selected_tool: str | None = None
+    fallback_reason: str | None = None
+
+    for meta in run_metas:
+        if not isinstance(meta, dict):
+            continue
+        for tool_name in meta.get("attempted_tools", []):
+            if tool_name not in attempted_tools:
+                attempted_tools.append(str(tool_name))
+        if meta.get("selected_tool"):
+            selected_tool = str(meta["selected_tool"])
+        if not fallback_reason and meta.get("fallback_reason"):
+            fallback_reason = str(meta["fallback_reason"])
+
+    return {
+        "attempted_tools": attempted_tools,
+        "selected_tool": selected_tool,
+        "fallback_reason": fallback_reason,
+    }
+
+
+def _build_writer_quality_status(
+    evaluations: list[dict[str, Any]] | None = None,
+    *,
+    status: str = "ok",
+    error_reason: str | None = None,
+) -> list[dict[str, Any]]:
+    if evaluations:
+        return evaluations
+    if status == "ok":
+        return []
+    payload: dict[str, Any] = {"status": status}
+    if error_reason:
+        payload["error_reason"] = error_reason
+    return [payload]
 
 
 def init_workspace(root: Path) -> Workspace:
@@ -153,28 +299,34 @@ def crawl_base(ws: Workspace, source_path: Path | None = None) -> dict[str, Any]
     initialize_state(ws)
     paths = collect_source_paths(ws, source_path)
     ingested: List[KnowledgeSource] = []
+    all_success_cases: List[SuccessCase] = []
 
     for path in paths:
-        if (
-            path.is_file()
-            and source_path
-            and path.resolve().parent != ws.sources_raw_dir.resolve()
-        ):
-            copied = ws.sources_raw_dir / path.name
-            if not copied.exists():
-                shutil.copy2(path, copied)
-        for source in ingest_source_file(path):
+        raw_path = materialize_source_file(ws, path, source_root=source_path)
+        if raw_path is None:
+            continue
+        sources, cases = ingest_source_file(raw_path)
+        for source in sources:
             write_source_artifacts(ws, source)
             ingested.append(source)
+        all_success_cases.extend(cases)
 
     merged = merge_sources(load_knowledge_sources(ws), ingested)
     save_knowledge_sources(ws, merged)
+
+    # success_cases 병합 및 저장
+    existing_cases = load_success_cases(ws)
+    merged_cases = _merge_success_cases(existing_cases, all_success_cases)
+    save_success_cases(ws, merged_cases)
+
     summary = summarize_knowledge_sources(merged)
     summary_path = ws.analysis_dir / "knowledge_hints.json"
     write_json(summary_path, [item.model_dump() for item in merged])
     return {
         "source_count": len(ingested),
         "stored_count": len(merged),
+        "success_case_count": len(all_success_cases),
+        "total_success_cases": len(merged_cases),
         "summary": summary,
         "analysis_path": str(summary_path),
     }
@@ -218,6 +370,7 @@ def _build_feedback_pattern_id(stage: str, project: ApplicationProject) -> str:
 
 def _build_feedback_selection_payload(
     question_map: list[dict[str, Any]] | None,
+    writer_brief: dict[str, Any] | None = None,
 ) -> dict[str, list[Any]]:
     selected_ids: list[str] = []
     mappings: list[dict[str, str]] = []
@@ -240,9 +393,39 @@ def _build_feedback_selection_payload(
                 ),
             }
         )
+    question_strategy_map: list[dict[str, Any]] = []
+    strategy_by_question = {
+        str(item.get("question_id") or ""): item
+        for item in (writer_brief or {}).get("question_strategies", [])
+        if isinstance(item, dict) and item.get("question_id")
+    }
+    for item in mappings:
+        strategy = strategy_by_question.get(str(item.get("question_id") or ""))
+        if not strategy:
+            continue
+        question_strategy_map.append(
+            {
+                "question_id": str(strategy.get("question_id") or item.get("question_id") or ""),
+                "question_order": int(strategy.get("question_order") or item.get("question_order") or 0),
+                "question_type": str(
+                    strategy.get("question_type") or item.get("question_type") or ""
+                ),
+                "experience_id": str(
+                    strategy.get("primary_experience_id") or item.get("experience_id") or ""
+                ),
+                "core_message": str(strategy.get("core_message") or "").strip(),
+                "winning_angle": str(strategy.get("winning_angle") or "").strip(),
+                "losing_angle": str(strategy.get("losing_angle") or "").strip(),
+                "differentiation_line": str(
+                    strategy.get("differentiation_line") or ""
+                ).strip(),
+                "tone": str(strategy.get("target_impression") or "").strip(),
+            }
+        )
     return {
         "selected_experience_ids": selected_ids,
         "question_experience_map": mappings,
+        "question_strategy_map": question_strategy_map,
     }
 
 
@@ -253,6 +436,10 @@ def build_feedback_learning_context(
 ) -> dict[str, Any]:
     ws.ensure()
     project = project or load_project(ws)
+    selection_payload = _build_feedback_selection_payload(
+        read_json_if_exists(ws.analysis_dir / "question_map.json"),
+        writer_brief=read_json_if_exists(ws.analysis_dir / "writer_brief.json"),
+    )
     context = {
         "artifact": artifact,
         "total_feedback": 0,
@@ -260,9 +447,8 @@ def build_feedback_learning_context(
         "top_patterns": [],
         "recommended_pattern": None,
         "current_pattern": _build_feedback_pattern_id(artifact, project),
-        "question_experience_map": _build_feedback_selection_payload(
-            read_json_if_exists(ws.analysis_dir / "question_map.json")
-        ).get("question_experience_map", []),
+        "question_experience_map": selection_payload.get("question_experience_map", []),
+        "question_strategy_map": selection_payload.get("question_strategy_map", []),
     }
     try:
         from .feedback_learner import create_feedback_learner
@@ -291,16 +477,19 @@ def build_feedback_learning_context(
             if item.artifact_type == artifact
             or str(item.pattern_used).startswith(f"{artifact}|")
         ]
-        top_patterns = recommendations[:5] or [
-            {
-                "pattern_id": item.pattern_id,
-                "success_rate": item.success_rate,
-                "avg_rating": item.avg_rating,
-                "total_uses": item.total_uses,
-            }
-            for item in learner.db.get_top_patterns(10)
-            if str(item.pattern_id).startswith(f"{artifact}|")
-        ][:5]
+        top_patterns = (
+            recommendations[:5]
+            or [
+                {
+                    "pattern_id": item.pattern_id,
+                    "success_rate": item.success_rate,
+                    "avg_rating": item.avg_rating,
+                    "total_uses": item.total_uses,
+                }
+                for item in learner.db.get_top_patterns(10)
+                if str(item.pattern_id).startswith(f"{artifact}|")
+            ][:5]
+        )
         context.update(
             {
                 "total_feedback": insights.get("total_feedback", 0),
@@ -316,9 +505,7 @@ def build_feedback_learning_context(
                     for item in artifact_history
                     if not item.accepted and item.rejection_reason
                 ][:5],
-                "outcome_summary": learner.get_context_outcome_summary(
-                    similar_context
-                ),
+                "outcome_summary": learner.get_context_outcome_summary(similar_context),
                 "strategy_outcome_summary": learner.get_strategy_outcome_summary(
                     similar_context
                 ),
@@ -329,12 +516,267 @@ def build_feedback_learning_context(
                 else context["current_pattern"],
             }
         )
+        context["adaptation_plan"] = build_feedback_adaptation_plan(
+            project,
+            context,
+        )
     except Exception as e:
         logger.debug(f"피드백 학습 컨텍스트 생성 건너뜀: {e}")
 
     out_path = ws.analysis_dir / f"{artifact}_feedback_learning.json"
     write_json(out_path, context)
     return context
+
+
+def _safe_top_rejection_reason(stats: dict[str, Any] | None) -> str:
+    if not isinstance(stats, dict):
+        return ""
+    top_reasons = stats.get("top_rejection_reasons", []) or []
+    if not top_reasons:
+        return ""
+    top_reason = top_reasons[0]
+    if isinstance(top_reason, dict):
+        return str(top_reason.get("reason") or "").strip()
+    return str(top_reason).strip()
+
+
+def _build_writer_contract(
+    feedback_learning: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    matched_feedback = int((feedback_learning or {}).get("total_feedback") or 0)
+    mode = "adaptive" if matched_feedback > 0 else "heuristic"
+    mode_label = "adaptive mode" if mode == "adaptive" else "heuristic mode"
+    return {
+        "mode": mode,
+        "mode_label": mode_label,
+        "headline": "문항당 하나의 핵심 메시지와 하나의 주력 경험만 밀어붙입니다.",
+        "answer_checklist": [
+            "핵심 주장 1개",
+            "근거 경험 1개",
+            "수치/증빙 1개",
+            "조직 적합 신호 1개",
+            "면접 방어 취약점 1개와 완화 문장 1개",
+        ],
+        "decision_principles": [
+            "문항마다 single best strategy를 유지한다.",
+            "흔한 성장/노력/배움 클리셰보다 검증 가능한 결과와 판단 기준을 우선한다.",
+            "평균 지원자 톤이 아니라 조직이 안심할 수 있는 기여 신호를 우선한다.",
+        ],
+    }
+
+
+def build_writer_brief(
+    ws: Workspace,
+    *,
+    project: ApplicationProject,
+    experiences: list[Experience],
+    allocations: list[dict[str, Any]],
+    feedback_learning: dict[str, Any] | None = None,
+    experience_competition: dict[str, Any] | None = None,
+    top001_coach_analysis: dict[str, Any] | None = None,
+    committee_feedback: dict[str, Any] | None = None,
+    self_intro_pack: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    experience_by_id = {item.id: item for item in experiences}
+    competition_entries = []
+    if isinstance(experience_competition, dict):
+        competition_entries = experience_competition.get("questions", []) or []
+    elif isinstance(experience_competition, list):
+        competition_entries = experience_competition
+    competition_rows = {
+        str(item.get("question_id") or ""): item
+        for item in competition_entries
+        if isinstance(item, dict) and item.get("question_id")
+    }
+    risky_map: dict[str, dict[str, Any]] = {}
+    strategy_summary = (feedback_learning or {}).get("strategy_outcome_summary", {})
+    for question_type, rows in (
+        strategy_summary.get("experience_stats_by_question_type", {}) or {}
+    ).items():
+        if not isinstance(rows, dict):
+            continue
+        risky_map[str(question_type)] = rows
+
+    question_text_by_id = {
+        question.id: question.question_text for question in project.questions
+    }
+    question_strategies: list[dict[str, Any]] = []
+    recurring_risks = (committee_feedback or {}).get("recurring_risks", [])[:3]
+    focus_keywords = (self_intro_pack or {}).get("focus_keywords", [])[:2]
+    top001_suggestions = (top001_coach_analysis or {}).get("suggestions", [])[:3]
+
+    for allocation in allocations:
+        question_id = str(allocation.get("question_id") or "").strip()
+        question_type = str(allocation.get("question_type") or "").strip()
+        experience_id = str(allocation.get("experience_id") or "").strip()
+        experience = experience_by_id.get(experience_id)
+        competition = competition_rows.get(question_id, {})
+        ranked = competition.get("ranked_experiences", []) if isinstance(competition, dict) else []
+        supporting_titles = [
+            str(item.get("experience_title") or "").strip()
+            for item in ranked[1:2]
+            if isinstance(item, dict) and str(item.get("experience_title") or "").strip()
+        ]
+        supporting_ids = [
+            str(item.get("experience_id") or "").strip()
+            for item in ranked[1:2]
+            if isinstance(item, dict) and str(item.get("experience_id") or "").strip()
+        ]
+        risky_reason = _safe_top_rejection_reason(
+            ((risky_map.get(question_type) or {}).get(experience_id) or {})
+        )
+        evidence_bits = _dedupe_preserve_order(
+            [
+                getattr(experience, "metrics", "") if experience else "",
+                getattr(experience, "evidence_text", "") if experience else "",
+                allocation.get("reason", ""),
+            ]
+        )[:3]
+        forbidden_points = _dedupe_preserve_order(
+            [
+                "성장/노력/배움만 반복하는 추상 서술",
+                f"{risky_reason}처럼 들리는 표현" if risky_reason else "",
+                "팀 성과만 말하고 개인 판단과 기여를 숨기는 서술",
+            ]
+        )[:3]
+        target_impression = "운영 안정성과 책임감을 주는 사람"
+        if focus_keywords:
+            target_impression = f"{', '.join(focus_keywords)}를 검증 가능하게 보여주는 사람"
+        question_strategies.append(
+            {
+                "question_id": question_id,
+                "question_order": int(allocation.get("order_no") or allocation.get("question_order") or 0),
+                "question_type": question_type,
+                "question_text": question_text_by_id.get(question_id, ""),
+                "target_impression": target_impression,
+                "core_message": (
+                    f"{experience.title} 경험으로 {question_type} 문항에서 검증 가능한 기여를 입증한다."
+                    if experience
+                    else f"{question_type} 문항에서 검증 가능한 기여를 입증한다."
+                ),
+                "primary_experience_id": experience_id,
+                "primary_experience_title": experience.title if experience else allocation.get("experience_title", ""),
+                "supporting_experience_ids": supporting_ids,
+                "supporting_experience_titles": supporting_titles,
+                "winning_angle": (
+                    f"{question_type} 문항은 성실/열정보다 운영 안정성·판단 기준·재현 가능한 성과로 밀어붙인다."
+                ),
+                "losing_angle": "의지만 강조하거나 추상적 성장담으로 흐르면 약해진다.",
+                "forbidden_points": forbidden_points,
+                "required_evidence": evidence_bits,
+                "recommended_structure": [
+                    "상황/과제 1문장",
+                    "개인 판단과 행동 2문장",
+                    "수치·증빙 1문장",
+                    "직무 연결 1문장",
+                ],
+                "expected_attack_points": _dedupe_preserve_order(
+                    recurring_risks
+                    + ([risky_reason] if risky_reason else [])
+                    + ["왜 본인 판단이었는지 설명 부족"]
+                )[:4],
+                "mitigation_line": "개인 판단 기준과 수치 근거를 먼저 말하고, 팀 성과는 보조로만 언급한다.",
+                "differentiation_line": (
+                    f"평균 지원자처럼 열정만 말하지 않고 {experience.title if experience else '핵심 경험'}의 운영 기준·증빙·재현성을 제시한다."
+                ),
+                "common_cliche": "성장, 노력, 배움을 반복하며 직무 적합성을 추상적으로 주장하는 답변",
+                "top001_signal": top001_suggestions[0] if top001_suggestions else "",
+            }
+        )
+
+    writer_contract = _build_writer_contract(feedback_learning)
+    brief = {
+        "mode": writer_contract["mode"],
+        "mode_label": writer_contract["mode_label"],
+        "question_strategies": question_strategies,
+        "writer_contract": writer_contract,
+    }
+    write_json(ws.analysis_dir / "writer_brief.json", brief)
+    lines = [
+        "# Writer Brief",
+        "",
+        f"- Mode: {writer_contract['mode_label']}",
+        f"- Headline: {writer_contract['headline']}",
+        "",
+    ]
+    for strategy in question_strategies:
+        lines.extend(
+            [
+                f"## Q{strategy['question_order']}",
+                f"- 목표 인상: {strategy['target_impression']}",
+                f"- 핵심 메시지: {strategy['core_message']}",
+                f"- Winning angle: {strategy['winning_angle']}",
+                f"- Losing angle: {strategy['losing_angle']}",
+                f"- 금지 메시지: {', '.join(strategy['forbidden_points'])}",
+                f"- 필수 근거: {', '.join(strategy['required_evidence']) or '없음'}",
+                f"- 추천 구조: {', '.join(strategy['recommended_structure'])}",
+                f"- 예상 공격 포인트: {', '.join(strategy['expected_attack_points']) or '없음'}",
+                f"- 차별화 문장: {strategy['differentiation_line']}",
+                "",
+            ]
+        )
+    (ws.artifacts_dir / "writer_brief.md").write_text("\n".join(lines), encoding="utf-8")
+    return brief
+
+
+def build_feedback_adaptation_plan(
+    project: ApplicationProject,
+    feedback_learning: dict[str, Any] | None,
+) -> dict[str, Any]:
+    feedback_learning = feedback_learning or {}
+    strategy_summary = feedback_learning.get("strategy_outcome_summary", {}) or {}
+    outcome_summary = feedback_learning.get("outcome_summary", {}) or {}
+    top_patterns = feedback_learning.get("top_patterns", []) or []
+
+    risky_question_types: list[dict[str, Any]] = []
+    experience_stats = strategy_summary.get("experience_stats_by_question_type", {}) or {}
+    for question_type, exp_map in experience_stats.items():
+        weak_experiences = []
+        for experience_id, stats in (exp_map or {}).items():
+            pass_rate = float(stats.get("pass_rate", 0.0))
+            weighted_net = int(stats.get("weighted_net_score", 0))
+            if pass_rate < 0.5 or weighted_net < 0:
+                weak_experiences.append(
+                    {
+                        "experience_id": experience_id,
+                        "pass_rate": round(pass_rate, 3),
+                        "weighted_net_score": weighted_net,
+                        "top_rejection_reasons": stats.get("top_rejection_reasons", [])[:2],
+                    }
+                )
+        if weak_experiences:
+            risky_question_types.append(
+                {
+                    "question_type": question_type,
+                    "weak_experiences": weak_experiences[:3],
+                    "recommended_action": "해당 문항 유형은 경험 교체 또는 근거 보강을 우선 검토하세요.",
+                }
+            )
+
+    focus_actions: list[str] = []
+    for item in outcome_summary.get("top_rejection_reasons", [])[:3]:
+        reason = str(item.get("reason", "")).strip()
+        if reason:
+            focus_actions.append(f"반복 탈락 사유 '{reason}' 보강")
+    for item in risky_question_types[:2]:
+        focus_actions.append(
+            f"{item['question_type']} 문항은 경험 선택 재검토"
+        )
+    recommended_pattern = (
+        top_patterns[0]["pattern_id"]
+        if top_patterns and isinstance(top_patterns[0], dict)
+        else feedback_learning.get("recommended_pattern")
+    )
+
+    return {
+        "recommended_pattern": recommended_pattern,
+        "focus_actions": _dedupe_preserve_order(focus_actions)[:5],
+        "risky_question_types": risky_question_types[:4],
+        "matched_feedback_count": strategy_summary.get(
+            "matched_feedback_count",
+            outcome_summary.get("matched_feedback_count", 0),
+        ),
+    }
 
 
 def build_candidate_profile(
@@ -411,15 +853,25 @@ def build_candidate_profile(
         blind_spots.append("성과를 설명할 때 비교 기준과 수치가 빠지기 쉽습니다.")
     if contribution_count / total < 0.5:
         coaching_focus.append("개인 기여와 판단 기준을 더 선명하게 분리하세요.")
-        blind_spots.append("팀 성과는 보이지만 본인 판단과 책임 범위가 흐릴 수 있습니다.")
+        blind_spots.append(
+            "팀 성과는 보이지만 본인 판단과 책임 범위가 흐릴 수 있습니다."
+        )
     if communication_style == "logical":
-        coaching_focus.append("강한 분석형 톤은 유지하되 고객·협업 맥락을 더 드러내세요.")
+        coaching_focus.append(
+            "강한 분석형 톤은 유지하되 고객·협업 맥락을 더 드러내세요."
+        )
     elif communication_style == "relational":
-        coaching_focus.append("관계 중심 설명은 강점이지만 근거 수치와 판단 기준을 함께 제시하세요.")
+        coaching_focus.append(
+            "관계 중심 설명은 강점이지만 근거 수치와 판단 기준을 함께 제시하세요."
+        )
     else:
-        coaching_focus.append("균형형 답변이 강점이므로 핵심 메시지를 더 빠르게 압축하세요.")
+        coaching_focus.append(
+            "균형형 답변이 강점이므로 핵심 메시지를 더 빠르게 압축하세요."
+        )
     if abstraction_ratio > 0.55:
-        blind_spots.append("추상 표현 비중이 높아 구체 행동과 결과가 약해질 수 있습니다.")
+        blind_spots.append(
+            "추상 표현 비중이 높아 구체 행동과 결과가 약해질 수 있습니다."
+        )
     if collaboration_count / total < 0.3:
         blind_spots.append("협업 맥락보다 개인 수행 중심으로 들릴 수 있습니다.")
 
@@ -459,16 +911,24 @@ def build_narrative_ssot(
     question_map: list[dict[str, Any]] | None = None,
     company_analysis: CompanyAnalysis | None = None,
 ) -> dict[str, Any]:
-    question_map = question_map or read_json_if_exists(ws.analysis_dir / "question_map.json")
+    question_map = question_map or read_json_if_exists(
+        ws.analysis_dir / "question_map.json"
+    )
     committee_feedback = build_committee_feedback_context(ws)
-    self_intro_pack = read_json_if_exists(ws.analysis_dir / "self_intro_pack.json") or {}
+    self_intro_pack = (
+        read_json_if_exists(ws.analysis_dir / "self_intro_pack.json") or {}
+    )
     prioritized = select_primary_experiences(experiences, question_map)[:3]
     evidence_titles = [item.title for item in prioritized]
     claims = _dedupe_preserve_order(
         [
             f"{project.job_title or '지원 직무'}에 바로 투입 가능한 검증형 실무자",
             f"{project.company_name or '지원 기관'}에 맞는 근거 중심 문제해결형 지원자",
-            *(self_intro_pack.get('focus_keywords', [])[:2] if isinstance(self_intro_pack, dict) else []),
+            *(
+                self_intro_pack.get("focus_keywords", [])[:2]
+                if isinstance(self_intro_pack, dict)
+                else []
+            ),
         ]
     )[:3]
     ssot = {
@@ -494,8 +954,15 @@ def build_research_strategy_translation(
     company_analysis: CompanyAnalysis | None = None,
     source_grading: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    source_grading = source_grading or read_json_if_exists(ws.analysis_dir / "source_grading.json")
-    cross_check = (source_grading or {}).get("cross_check", {}) if isinstance(source_grading, dict) else {}
+    experiences = load_experiences(ws)
+    source_grading = source_grading or read_json_if_exists(
+        ws.analysis_dir / "source_grading.json"
+    )
+    cross_check = (
+        (source_grading or {}).get("cross_check", {})
+        if isinstance(source_grading, dict)
+        else {}
+    )
     single_source = int(cross_check.get("single_source_area_count", 0))
     missing_count = int(cross_check.get("missing_area_count", 0))
     translation = {
@@ -507,16 +974,424 @@ def build_research_strategy_translation(
         "preferred_evidence_style": "행동 기준 + 수치/기록 + 개인 기여를 함께 제시",
         "disliked_expressions": _dedupe_preserve_order(
             ["항상", "최선을 다했습니다", "기여하고자 합니다"]
-            + (getattr(company_analysis, "taboo_phrases", [])[:3] if company_analysis else [])
+            + (
+                getattr(company_analysis, "taboo_phrases", [])[:3]
+                if company_analysis
+                else []
+            )
         )[:5],
-        "essay_usefulness_score": max(0.2, min(0.95, round(0.85 - (single_source * 0.1) - (missing_count * 0.12), 2))),
+        "essay_usefulness_score": max(
+            0.2,
+            min(0.95, round(0.85 - (single_source * 0.1) - (missing_count * 0.12), 2)),
+        ),
         "translation_notes": [
-            "단일 출처에만 기대는 회사 정보는 자소서 주장보다 보조 근거로 사용합니다." if single_source else "핵심 회사 신호는 자소서 첫 문단과 면접 1분 답변에 공통으로 반영합니다.",
-            "근거가 부족한 영역은 [NEEDS_VERIFICATION]로 분리하고 확정 표현을 피합니다." if missing_count else "교차검증된 신호를 지원동기와 직무적합성 문항에 우선 반영합니다.",
+            "단일 출처에만 기대는 회사 정보는 자소서 주장보다 보조 근거로 사용합니다."
+            if single_source
+            else "핵심 회사 신호는 자소서 첫 문단과 면접 1분 답변에 공통으로 반영합니다.",
+            "근거가 부족한 영역은 [NEEDS_VERIFICATION]로 분리하고 확정 표현을 피합니다."
+            if missing_count
+            else "교차검증된 신호를 지원동기와 직무적합성 문항에 우선 반영합니다.",
         ],
     }
+
+    top001_translation: dict[str, Any] = {}
+    if company_analysis:
+        try:
+            from .top001.integrator import Top001ResearchTranslator
+
+            top001_translation = Top001ResearchTranslator().translate_research_to_strategy(
+                company_analysis,
+                experiences,
+                project.questions,
+            )
+        except Exception as e:
+            logger.warning(f"Top001 research translation failed: {e}")
+
+    if top001_translation:
+        translation["top001"] = top001_translation
+        write_json(
+            ws.analysis_dir / "research_strategy_translation_top001.json",
+            _normalize_strategy_payload(top001_translation),
+        )
+
     write_json(ws.analysis_dir / "research_strategy_translation.json", translation)
+    update_application_strategy(
+        ws,
+        project=project,
+        stage="research",
+        experiences=experiences,
+        research_strategy=top001_translation or translation,
+    )
     return translation
+
+
+def _normalize_strategy_payload(value: Any) -> Any:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, Path):
+        return str(value)
+    if hasattr(value, "isoformat") and callable(value.isoformat):
+        return value.isoformat() if hasattr(value, "isoformat") else str(value)
+    if is_dataclass(value):
+        return _normalize_strategy_payload(asdict(value))
+    if isinstance(value, dict):
+        return {
+            str(key): _normalize_strategy_payload(item) for key, item in value.items()
+        }
+    if isinstance(value, (list, tuple, set)):
+        return [_normalize_strategy_payload(item) for item in value]
+    if hasattr(value, "model_dump"):
+        return _normalize_strategy_payload(value.model_dump())
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return _normalize_strategy_payload(value.to_dict())
+    if hasattr(value, "__dict__"):
+        return _normalize_strategy_payload(
+            {
+                key: item
+                for key, item in vars(value).items()
+                if not key.startswith("_")
+            }
+        )
+    return str(value)
+
+
+def _read_application_strategy(ws: Workspace) -> dict[str, Any]:
+    existing = read_json_if_exists(ws.analysis_dir / "application_strategy.json")
+    return existing if isinstance(existing, dict) else {}
+
+
+def _build_experience_priority_summary(
+    experiences: list[Experience],
+    allocations: list[dict[str, Any]] | None = None,
+    coach_analysis: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    prioritized: list[dict[str, Any]] = []
+    if allocations:
+        for item in allocations:
+            if not isinstance(item, dict):
+                continue
+            exp_id = str(item.get("experience_id", "")).strip()
+            if not exp_id:
+                continue
+            prioritized.append(
+                {
+                    "experience_id": exp_id,
+                    "question_id": str(item.get("question_id", "")).strip(),
+                    "question_type": str(item.get("question_type", "")).strip(),
+                    "reason": str(item.get("reason", "")).strip(),
+                }
+            )
+    if prioritized:
+        return prioritized
+
+    coverage = (coach_analysis or {}).get("coverage_report", {})
+    ranked = coverage.get("top_experience_ids", []) if isinstance(coverage, dict) else []
+    by_id = {exp.id: exp for exp in experiences}
+    summary: list[dict[str, Any]] = []
+    for exp_id in ranked:
+        exp = by_id.get(str(exp_id))
+        if not exp:
+            continue
+        summary.append(
+            {
+                "experience_id": exp.id,
+                "title": exp.title,
+                "reason": "질문 커버리지와 증빙 수준 기준 상위 경험",
+            }
+        )
+    if summary:
+        return summary
+    return [
+        {
+            "experience_id": exp.id,
+            "title": exp.title,
+            "reason": "기본 우선 경험",
+        }
+        for exp in experiences[:3]
+    ]
+
+
+def build_adaptive_strategy_layer(
+    project: ApplicationProject,
+    *,
+    candidate_profile: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    company_type = (project.company_type or "일반").strip()
+    if company_type in {"공공", "공기업"}:
+        interview_mode = "구조화 질문 + 공익성/책임감 검증"
+        writer_logic = "정책·서비스 맥락을 먼저 두고, 개인 판단 기준과 증빙을 뒤에 붙입니다."
+    elif company_type in {"대기업", "중견"}:
+        interview_mode = "압박형 검증 + 협업/우선순위 판단 확인"
+        writer_logic = "문제-행동-성과를 빠르게 제시하고 조직 적합성으로 마무리합니다."
+    else:
+        interview_mode = "실행력 검증 + 모호성 대응"
+        writer_logic = "가설-실험-학습 구조를 강조하고, 제한된 자원에서의 판단을 드러냅니다."
+
+    confidence_style = (candidate_profile or {}).get("confidence_style", "balanced")
+    if confidence_style == "logical":
+        coaching_mode = "수치와 비교 기준을 먼저 묻고, 결론을 짧게 압축합니다."
+    elif confidence_style == "relational":
+        coaching_mode = "협업 맥락은 유지하되 개인 기여와 판단 근거를 더 선명하게 끌어냅니다."
+    else:
+        coaching_mode = "핵심 메시지를 먼저 세우고 경험 근거를 뒤에서 지지하는 방식으로 훈련합니다."
+
+    return {
+        "company_profile": company_type,
+        "interview_mode": interview_mode,
+        "writer_logic": writer_logic,
+        "coaching_mode": coaching_mode,
+        "career_stage": project.career_stage.value,
+    }
+
+
+def build_experience_competition_report(
+    project: ApplicationProject,
+    experiences: list[Experience],
+    allocations: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    if not project.questions:
+        return []
+
+    experience_by_id = {exp.id: exp for exp in experiences}
+    selected_ids = [
+        str(item.get("experience_id", "")).strip()
+        for item in allocations or []
+        if isinstance(item, dict) and str(item.get("experience_id", "")).strip()
+    ]
+    selected_set = set(selected_ids)
+
+    rows: list[dict[str, Any]] = []
+    for question in project.questions:
+        mapped = next(
+            (
+                item
+                for item in allocations or []
+                if isinstance(item, dict)
+                and str(item.get("question_id", "")).strip() == question.id
+            ),
+            {},
+        )
+        primary_id = str(mapped.get("experience_id", "")).strip()
+        primary = experience_by_id.get(primary_id)
+        question_keywords = set(
+            re.findall(r"[A-Za-z0-9가-힣]{2,}", (question.question_text or "").lower())
+        )
+
+        secondary_candidates: list[tuple[int, Experience]] = []
+        for exp in experiences:
+            if exp.id == primary_id:
+                continue
+            blob = " ".join(
+                [
+                    exp.title,
+                    exp.situation,
+                    exp.task,
+                    exp.action,
+                    exp.result,
+                    " ".join(exp.tags),
+                ]
+            ).lower()
+            score = sum(1 for keyword in question_keywords if keyword and keyword in blob)
+            if exp.metrics:
+                score += 1
+            if exp.id not in selected_set:
+                score += 1
+            secondary_candidates.append((score, exp))
+        secondary_candidates.sort(key=lambda item: item[0], reverse=True)
+        secondary = secondary_candidates[0][1] if secondary_candidates else None
+
+        exclusion_reason = (
+            "주요 경험이 이미 다른 문항에서 반복 사용되어 차별화가 약해질 수 있습니다."
+            if secondary and secondary.id in selected_set
+            else "정량 근거나 직무 연결성이 더 높은 경험을 우선 배치했습니다."
+        )
+        rows.append(
+            {
+                "question_id": question.id,
+                "question_text": question.question_text,
+                "question_type": _resolve_question_type(question).value,
+                "primary_experience_id": primary.id if primary else "",
+                "primary_experience_title": primary.title if primary else "",
+                "primary_reason": str(mapped.get("reason", "")).strip()
+                or "질문 의도와 가장 직접 연결되는 경험입니다.",
+                "secondary_experience_id": secondary.id if secondary else "",
+                "secondary_experience_title": secondary.title if secondary else "",
+                "secondary_reason": (
+                    "대체 카드로 활용 가능하지만, 현재 1순위 경험보다 직결성이 약합니다."
+                    if secondary
+                    else "대체 경험 후보가 아직 충분하지 않습니다."
+                ),
+                "exclusion_reason": exclusion_reason,
+            }
+        )
+    return rows
+
+
+def build_writer_differentiation_report(
+    project: ApplicationProject,
+    quality_evaluations: list[dict[str, Any]],
+    *,
+    research_strategy_translation: dict[str, Any] | None = None,
+    application_strategy: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    question_strategy = (
+        application_strategy.get("question_strategy", {})
+        if isinstance(application_strategy, dict)
+        else {}
+    )
+    interview_pressure_points = (
+        application_strategy.get("interview_pressure_points", [])
+        if isinstance(application_strategy, dict)
+        else []
+    )
+    top001_strategy = (
+        research_strategy_translation.get("top001", {})
+        if isinstance(research_strategy_translation, dict)
+        else {}
+    )
+    differentiation_signals = (
+        top001_strategy.get("strategic_signals", {}).get("differentiation", [])
+        if isinstance(top001_strategy, dict)
+        else []
+    )
+
+    rows: list[dict[str, Any]] = []
+    for item in quality_evaluations:
+        question_id = str(item.get("question_id", "")).strip()
+        weaknesses = item.get("weaknesses", [])[:2]
+        suggestions = item.get("suggestions", [])[:2]
+        rows.append(
+            {
+                "question_order": item.get("question_order"),
+                "question_id": question_id,
+                "question_text": item.get("question_text", ""),
+                "current_score": float(item.get("overall_score", 0.0)),
+                "ordinary_pattern": (
+                    "지원동기/역량을 일반론으로 설명하고, 개인 기여보다 포부 문장으로 마무리하는 패턴"
+                ),
+                "current_answer_risk": weaknesses or item.get("defense_gaps", [])[:2],
+                "top001_strategy": question_strategy.get(question_id, [])[:2]
+                or differentiation_signals[:2]
+                or ["회사 신호와 경험 연결고리를 문장 첫머리에 배치"],
+                "rewrite_focus": suggestions
+                or ["질문 의도에 맞는 경험 근거를 한 문장 더 앞당겨 배치"],
+            }
+        )
+
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "company_name": project.company_name,
+        "job_title": project.job_title,
+        "pressure_points": interview_pressure_points[:5],
+        "rows": rows,
+    }
+
+
+def update_application_strategy(
+    ws: Workspace,
+    *,
+    project: ApplicationProject,
+    stage: str,
+    experiences: list[Experience] | None = None,
+    allocations: list[dict[str, Any]] | None = None,
+    coach_analysis: dict[str, Any] | None = None,
+    self_intro_pack: dict[str, Any] | None = None,
+    research_strategy: dict[str, Any] | None = None,
+    interview_top001: list[dict[str, Any]] | None = None,
+    experience_competition: list[dict[str, Any]] | None = None,
+    writer_differentiation: dict[str, Any] | None = None,
+    adaptive_strategy: dict[str, Any] | None = None,
+    feedback_adaptation_plan: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    strategy = _read_application_strategy(ws)
+    strategy.update(
+        {
+            "company_name": project.company_name,
+            "job_title": project.job_title,
+            "company_type": project.company_type,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+
+    if research_strategy:
+        signals = research_strategy.get("strategic_signals", {})
+        strategy["company_signal_summary"] = {
+            "core_values": signals.get("core_values", []),
+            "competencies": signals.get("competencies", []),
+            "differentiation": signals.get("differentiation", []),
+        }
+        strategy["question_strategy"] = research_strategy.get("question_hooks", {})
+        strategy["interview_pressure_points"] = [
+            item.get("q", str(item))
+            for item in research_strategy.get("interview_predictions", [])[:5]
+            if item
+        ]
+
+    if experiences:
+        strategy["experience_priority"] = _build_experience_priority_summary(
+            experiences, allocations=allocations, coach_analysis=coach_analysis
+        )
+
+    if coach_analysis:
+        strategy["coach_recommendations"] = coach_analysis.get("suggestions", [])
+        strategy["experience_coverage"] = coach_analysis.get("coverage_report", {})
+    if experience_competition:
+        strategy["experience_competition"] = experience_competition
+
+    if self_intro_pack:
+        strategy["self_intro_candidates"] = {
+            "opening_hook": self_intro_pack.get("opening_hook", ""),
+            "top001_hooks": self_intro_pack.get("top001_hooks", []),
+            "top001_versions": self_intro_pack.get("top001_versions", {}),
+            "expected_follow_ups": self_intro_pack.get(
+                "top001_expected_follow_ups", []
+            ),
+        }
+
+    if interview_top001:
+        pressure_points = strategy.get("interview_pressure_points", [])
+        for item in interview_top001:
+            for vulnerability in item.get("vulnerabilities", [])[:2]:
+                if vulnerability and vulnerability not in pressure_points:
+                    pressure_points.append(vulnerability)
+        strategy["interview_pressure_points"] = pressure_points[:8]
+        strategy["interview_strategy"] = {
+            "weak_response_count": sum(
+                1 for item in interview_top001 if item.get("weak_response")
+            ),
+            "top_recommendations": _dedupe_preserve_order(
+                recommendation
+                for item in interview_top001
+                for recommendation in item.get("recommendations", [])
+            )[:6],
+        }
+    if writer_differentiation:
+        strategy["writer_differentiation"] = writer_differentiation
+    if adaptive_strategy:
+        strategy["adaptive_strategy_layer"] = adaptive_strategy
+    if feedback_adaptation_plan:
+        strategy["feedback_adaptation_plan"] = feedback_adaptation_plan
+
+    stage_payloads = strategy.get("stage_payloads", {})
+    if not isinstance(stage_payloads, dict):
+        stage_payloads = {}
+    stage_payloads[stage] = _normalize_strategy_payload(
+        {
+            "coach_analysis": coach_analysis,
+            "self_intro_pack": self_intro_pack,
+            "research_strategy": research_strategy,
+            "interview_top001": interview_top001,
+            "allocations": allocations,
+            "experience_competition": experience_competition,
+            "writer_differentiation": writer_differentiation,
+            "adaptive_strategy": adaptive_strategy,
+            "feedback_adaptation_plan": feedback_adaptation_plan,
+        }
+    )
+    strategy["stage_payloads"] = stage_payloads
+
+    write_json(ws.analysis_dir / "application_strategy.json", strategy)
+    return strategy
 
 
 def build_outcome_dashboard(
@@ -524,10 +1399,14 @@ def build_outcome_dashboard(
     project: ApplicationProject,
     artifact_type: str = "writer",
 ) -> dict[str, Any]:
-    feedback_learning = build_feedback_learning_context(ws, artifact_type, project=project)
+    feedback_learning = build_feedback_learning_context(
+        ws, artifact_type, project=project
+    )
     strategy_summary = feedback_learning.get("strategy_outcome_summary", {})
     top_hotspots: list[dict[str, Any]] = []
-    for q_type, exp_map in (strategy_summary.get("experience_stats_by_question_type", {}) or {}).items():
+    for q_type, exp_map in (
+        strategy_summary.get("experience_stats_by_question_type", {}) or {}
+    ).items():
         for exp_id, stats in exp_map.items():
             top_hotspots.append(
                 {
@@ -537,7 +1416,9 @@ def build_outcome_dashboard(
                     "total_uses": int(stats.get("total_uses", 0)),
                 }
             )
-    top_hotspots.sort(key=lambda item: (item["weighted_net_score"], -item["total_uses"]))
+    top_hotspots.sort(
+        key=lambda item: (item["weighted_net_score"], -item["total_uses"])
+    )
     dashboard = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "artifact_type": artifact_type,
@@ -548,6 +1429,177 @@ def build_outcome_dashboard(
         "high_risk_hotspots": top_hotspots[:5],
     }
     write_json(ws.analysis_dir / "outcome_dashboard.json", dashboard)
+    return dashboard
+
+
+def build_kpi_dashboard(
+    ws: Workspace,
+    project: ApplicationProject,
+    artifact_type: str = "writer",
+) -> dict[str, Any]:
+    feedback_learning = build_feedback_learning_context(
+        ws, artifact_type, project=project
+    )
+    strategy_summary = feedback_learning.get("strategy_outcome_summary", {}) or {}
+    outcome_summary = feedback_learning.get("outcome_summary", {}) or {}
+    application_strategy = read_json_if_exists(ws.analysis_dir / "application_strategy.json")
+    self_intro_drills = read_json_if_exists(ws.state_dir / "self_intro_drills.json") or []
+    interview_sessions = read_json_if_exists(ws.state_dir / "interview_sessions.json") or []
+    writer_quality = read_json_if_exists(ws.artifacts_dir / "writer_quality.json") or []
+    writer_result_quality = (
+        read_json_if_exists(ws.artifacts_dir / "writer_result_quality.json") or []
+    )
+
+    experience_stats = strategy_summary.get("experience_stats_by_question_type", {}) or {}
+    pass_rates: list[float] = []
+    for type_bucket in experience_stats.values():
+        for exp_bucket in type_bucket.values():
+            try:
+                pass_rates.append(float(exp_bucket.get("pass_rate", 0.0)))
+            except (TypeError, ValueError):
+                continue
+
+    question_experience_match_accuracy = (
+        round(sum(pass_rates) / len(pass_rates), 3) if pass_rates else 0.0
+    )
+
+    outcome_breakdown = outcome_summary.get("outcome_breakdown", {}) or {}
+    total_outcomes = sum(int(value) for value in outcome_breakdown.values()) or 0
+    interview_pass_rate = round(
+        (
+            int(outcome_breakdown.get("interview_pass", 0))
+            + int(outcome_breakdown.get("pass", 0))
+            + int(outcome_breakdown.get("offer", 0))
+        )
+        / total_outcomes,
+        3,
+    ) if total_outcomes else 0.0
+    document_pass_rate = round(
+        (
+            int(outcome_breakdown.get("document_pass", 0))
+            + int(outcome_breakdown.get("pass", 0))
+            + int(outcome_breakdown.get("offer", 0))
+        )
+        / total_outcomes,
+        3,
+    ) if total_outcomes else 0.0
+    offer_rate = round(
+        int(outcome_breakdown.get("offer", 0)) / total_outcomes,
+        3,
+    ) if total_outcomes else 0.0
+
+    drill_scores = [
+        float(item.get("score", 0.0))
+        for item in self_intro_drills
+        if isinstance(item, dict) and item.get("score") is not None
+    ]
+    self_intro_follow_up_hit_rate = (
+        round(sum(drill_scores) / len(drill_scores), 3) if drill_scores else 0.0
+    )
+
+    session_risk_counts = [
+        sum(
+            len(turn.get("risk_areas", [])) + len(turn.get("follow_up_risk_areas", []))
+            for turn in session.get("turns", [])
+            if isinstance(turn, dict)
+        )
+        for session in interview_sessions
+        if isinstance(session, dict)
+    ]
+    interview_defense_success_rate = (
+        round(
+            sum(1 for count in session_risk_counts if count <= 2)
+            / len(session_risk_counts),
+            3,
+        )
+        if session_risk_counts
+        else 0.0
+    )
+
+    question_strategy = (
+        application_strategy.get("question_strategy", {})
+        if isinstance(application_strategy, dict)
+        else {}
+    )
+    company_signal_summary = (
+        application_strategy.get("company_signal_summary", {})
+        if isinstance(application_strategy, dict)
+        else {}
+    )
+    company_signal_reuse_rate = round(
+        (
+            len([value for value in question_strategy.values() if value])
+            / max(1, len(project.questions))
+        ),
+        3,
+    ) if project.questions else 0.0
+
+    writer_quality_metrics: dict[str, float] = {}
+    if isinstance(writer_quality, list):
+        metric_keys = [
+            "overall_score",
+            "defensibility_score",
+            "ncs_alignment_score",
+            "ssot_alignment_score",
+            "humanization_score",
+        ]
+        for metric_key in metric_keys:
+            values: list[float] = []
+            for item in writer_quality:
+                if not isinstance(item, dict):
+                    continue
+                try:
+                    value = float(item.get(metric_key, 0.0))
+                except (TypeError, ValueError):
+                    continue
+                values.append(value)
+            if values:
+                writer_quality_metrics[metric_key] = round(
+                    sum(values) / len(values), 3
+                )
+
+    result_quality_metrics: dict[str, float] = {}
+    if isinstance(writer_result_quality, list):
+        overall_values = []
+        dimension_values: dict[str, list[float]] = {}
+        for item in writer_result_quality:
+            if not isinstance(item, dict):
+                continue
+            try:
+                overall_values.append(float(item.get("overall", 0.0)))
+            except (TypeError, ValueError):
+                pass
+            details = item.get("details", {})
+            if isinstance(details, dict):
+                for key, raw_value in details.items():
+                    try:
+                        dimension_values.setdefault(key, []).append(float(raw_value))
+                    except (TypeError, ValueError):
+                        continue
+        if overall_values:
+            result_quality_metrics["overall"] = round(
+                sum(overall_values) / len(overall_values), 3
+            )
+        for key, values in dimension_values.items():
+            if values:
+                result_quality_metrics[key] = round(sum(values) / len(values), 3)
+
+    dashboard = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "artifact_type": artifact_type,
+        "question_experience_match_accuracy": question_experience_match_accuracy,
+        "self_intro_follow_up_hit_rate": self_intro_follow_up_hit_rate,
+        "interview_defense_success_rate": interview_defense_success_rate,
+        "company_signal_reuse_rate": company_signal_reuse_rate,
+        "document_pass_rate": document_pass_rate,
+        "interview_pass_rate": interview_pass_rate,
+        "offer_rate": offer_rate,
+        "company_signal_summary": company_signal_summary,
+        "writer_quality_metrics": writer_quality_metrics,
+        "result_quality_metrics": result_quality_metrics,
+        "tracked_outcomes": outcome_breakdown,
+    }
+    write_json(ws.analysis_dir / "kpi_dashboard.json", dashboard)
     return dashboard
 
 
@@ -644,8 +1696,14 @@ def evaluate_narrative_ssot_alignment(
             missing_claims.append(claim)
 
     offtrack_signals: list[str] = []
-    if experience and expected_experience_ids and experience.id not in expected_experience_ids:
-        offtrack_signals.append("공통 서사에서 우선 선정되지 않은 경험을 사용하고 있습니다.")
+    if (
+        experience
+        and expected_experience_ids
+        and experience.id not in expected_experience_ids
+    ):
+        offtrack_signals.append(
+            "공통 서사에서 우선 선정되지 않은 경험을 사용하고 있습니다."
+        )
     if anchor:
         anchor_tokens = {
             token for token in re.findall(r"[A-Za-z0-9가-힣]{2,}", anchor.lower())
@@ -667,9 +1725,13 @@ def evaluate_narrative_ssot_alignment(
     )
     suggestions: list[str] = []
     if missing_claims:
-        suggestions.append("공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요.")
+        suggestions.append(
+            "공통 서사의 핵심 주장 중 최소 1개를 문장 전면에 다시 드러내세요."
+        )
     if offtrack_signals:
-        suggestions.append("자소서·자기소개·면접의 공통 근거 경험과 답변 앵커를 더 일치시키세요.")
+        suggestions.append(
+            "자소서·자기소개·면접의 공통 근거 경험과 답변 앵커를 더 일치시키세요."
+        )
 
     return {
         "score": score,
@@ -687,14 +1749,25 @@ def _simulate_interviewer_reaction(
     experience: Experience | None = None,
 ) -> dict[str, Any]:
     answer = answer or ""
-    trust = "high" if any(char.isdigit() for char in answer) or (experience and experience.evidence_text.strip()) else "medium"
+    trust = (
+        "high"
+        if any(char.isdigit() for char in answer)
+        or (experience and experience.evidence_text.strip())
+        else "medium"
+    )
     if len(simulation.get("risk_areas", [])) >= 3:
         trust = "medium" if trust == "high" else "low"
-    specificity = "high" if len(answer) >= 80 and any(char.isdigit() for char in answer) else "medium"
+    specificity = (
+        "high"
+        if len(answer) >= 80 and any(char.isdigit() for char in answer)
+        else "medium"
+    )
     if len(answer) < 50:
         specificity = "low"
     next_probe = (
-        simulation.get("follow_up_questions", ["왜 그렇게 판단했는지 다시 설명해주세요."])[0]
+        simulation.get(
+            "follow_up_questions", ["왜 그렇게 판단했는지 다시 설명해주세요."]
+        )[0]
         if simulation.get("follow_up_questions")
         else "그 판단의 근거를 다시 설명해주세요."
     )
@@ -779,7 +1852,9 @@ def build_committee_feedback_context(ws: Workspace) -> dict[str, Any]:
         "recurring_risks": _dedupe_preserve_order(
             [item for item in recurring_risks if item]
         )[:6],
-        "persona_panel": _dedupe_preserve_order([item for item in personas if item])[:6],
+        "persona_panel": _dedupe_preserve_order([item for item in personas if item])[
+            :6
+        ],
     }
 
 
@@ -840,7 +1915,38 @@ def build_self_intro_pack(
         "committee_watchouts": recurring_risks,
         "ncs_priority_competencies": ncs_profile.get("priority_competencies", [])[:3],
     }
+
+    top001_pack: dict[str, Any] = {}
+    try:
+        from .top001.integrator import Top001CoachEngine
+
+        top001_pack = Top001CoachEngine().generate_self_intro_pack(
+            experiences,
+            project.company_name or "지원 기관",
+            project.job_title or "지원 직무",
+        )
+    except Exception as e:
+        logger.warning(f"Top001 self intro build failed: {e}")
+
+    if top001_pack and isinstance(top001_pack, dict):
+        intro_pack["top001_hooks"] = top001_pack.get("hooks", [])
+        intro_pack["top001_versions"] = top001_pack.get("versions", {})
+        intro_pack["top001_expected_follow_ups"] = top001_pack.get(
+            "expected_follow_ups", []
+        )
+        write_json(
+            ws.analysis_dir / "self_intro_top001.json",
+            _normalize_strategy_payload(top001_pack),
+        )
+
     write_json(ws.analysis_dir / "self_intro_pack.json", intro_pack)
+    update_application_strategy(
+        ws,
+        project=project,
+        stage="self_intro",
+        experiences=experiences,
+        self_intro_pack=intro_pack,
+    )
     return intro_pack
 
 
@@ -864,9 +1970,7 @@ def discover_company_public_urls(
         if not query.strip():
             continue
         try:
-            discovered.extend(
-                discover_public_urls(query, limit=max_results_per_query)
-            )
+            discovered.extend(discover_public_urls(query, limit=max_results_per_query))
         except Exception as e:
             logger.warning(f"웹 검색 실패 ({query}): {e}")
 
@@ -924,27 +2028,86 @@ def _dedupe_preserve_order(items: list[str]) -> list[str]:
 
 NCS_COMMON_COMPETENCY_SIGNALS: dict[str, dict[str, Any]] = {
     "의사소통능력": {
-        "keywords": ["소통", "설명", "문서", "보고", "회의", "민원", "고객", "경청", "표현", "안내"],
+        "keywords": [
+            "소통",
+            "설명",
+            "문서",
+            "보고",
+            "회의",
+            "민원",
+            "고객",
+            "경청",
+            "표현",
+            "안내",
+        ],
         "question_types": ["TYPE_A", "TYPE_C", "TYPE_H"],
     },
     "수리능력": {
-        "keywords": ["통계", "지표", "수치", "분석", "엑셀", "정산", "계산", "검증", "도표", "sql"],
+        "keywords": [
+            "통계",
+            "지표",
+            "수치",
+            "분석",
+            "엑셀",
+            "정산",
+            "계산",
+            "검증",
+            "도표",
+            "sql",
+        ],
         "question_types": ["TYPE_B", "TYPE_G"],
     },
     "문제해결능력": {
-        "keywords": ["문제", "해결", "개선", "위기", "대응", "수습", "자동화", "대안", "조치"],
+        "keywords": [
+            "문제",
+            "해결",
+            "개선",
+            "위기",
+            "대응",
+            "수습",
+            "자동화",
+            "대안",
+            "조치",
+        ],
         "question_types": ["TYPE_B", "TYPE_G", "TYPE_I"],
     },
     "자기관리능력": {
-        "keywords": ["학습", "성장", "개선", "적응", "피드백", "시간관리", "습관", "꾸준"],
+        "keywords": [
+            "학습",
+            "성장",
+            "개선",
+            "적응",
+            "피드백",
+            "시간관리",
+            "습관",
+            "꾸준",
+        ],
         "question_types": ["TYPE_D", "TYPE_F"],
     },
     "자원관리능력": {
-        "keywords": ["예산", "시간", "우선순위", "자원", "인력", "관리", "배분", "절감"],
+        "keywords": [
+            "예산",
+            "시간",
+            "우선순위",
+            "자원",
+            "인력",
+            "관리",
+            "배분",
+            "절감",
+        ],
         "question_types": ["TYPE_B", "TYPE_E"],
     },
     "대인관계능력": {
-        "keywords": ["협업", "팀", "갈등", "설득", "조율", "협상", "고객서비스", "중재"],
+        "keywords": [
+            "협업",
+            "팀",
+            "갈등",
+            "설득",
+            "조율",
+            "협상",
+            "고객서비스",
+            "중재",
+        ],
         "question_types": ["TYPE_C", "TYPE_H"],
     },
     "정보능력": {
@@ -952,11 +2115,28 @@ NCS_COMMON_COMPETENCY_SIGNALS: dict[str, dict[str, Any]] = {
         "question_types": ["TYPE_B", "TYPE_D"],
     },
     "기술능력": {
-        "keywords": ["시스템", "도구", "기술", "활용", "프로그램", "업무도구", "디지털"],
+        "keywords": [
+            "시스템",
+            "도구",
+            "기술",
+            "활용",
+            "프로그램",
+            "업무도구",
+            "디지털",
+        ],
         "question_types": ["TYPE_B", "TYPE_E"],
     },
     "조직이해능력": {
-        "keywords": ["조직", "행정", "공공", "기관", "업무이해", "규정", "절차", "정책"],
+        "keywords": [
+            "조직",
+            "행정",
+            "공공",
+            "기관",
+            "업무이해",
+            "규정",
+            "절차",
+            "정책",
+        ],
         "question_types": ["TYPE_A", "TYPE_E", "TYPE_F"],
     },
     "직업윤리": {
@@ -992,9 +2172,7 @@ def build_ncs_profile(
     experiences = experiences or load_experiences(ws)
     knowledge_sources = load_knowledge_sources(ws)
     question_map = (
-        question_map
-        or read_json_if_exists(ws.analysis_dir / "question_map.json")
-        or []
+        question_map or read_json_if_exists(ws.analysis_dir / "question_map.json") or []
     )
     jd_keywords = jd_keywords or _extract_jd_keywords_for_research(ws)
     try:
@@ -1025,7 +2203,13 @@ def build_ncs_profile(
             )
             if not any(
                 marker in source_blob
-                for marker in ["직무기술서", "능력단위", "능력단위요소", "직업기초능력", "직업공통능력"]
+                for marker in [
+                    "직무기술서",
+                    "능력단위",
+                    "능력단위요소",
+                    "직업기초능력",
+                    "직업공통능력",
+                ]
             ):
                 continue
             parsed = extract_ncs_job_spec(source.cleaned_text or source.raw_text)
@@ -1088,7 +2272,10 @@ def build_ncs_profile(
 
         for keyword in jd_keywords:
             lower_keyword = keyword.lower()
-            if any(signal in lower_keyword or lower_keyword in signal for signal in keywords):
+            if any(
+                signal in lower_keyword or lower_keyword in signal
+                for signal in keywords
+            ):
                 score += 2
                 matched_keywords.append(keyword)
 
@@ -1170,7 +2357,11 @@ def build_ncs_profile(
             )
 
     competency_rows.sort(
-        key=lambda item: (-item["score"], -len(item["matched_experience_ids"]), item["name"])
+        key=lambda item: (
+            -item["score"],
+            -len(item["matched_experience_ids"]),
+            item["name"],
+        )
     )
     priority_order = [item["name"] for item in competency_rows[:5]]
 
@@ -1267,7 +2458,9 @@ def _expected_ncs_competencies(
         if item.get("question_id") == question_id:
             return item.get("recommended_competencies", [])[:3]
 
-    q_type = question_type.value if hasattr(question_type, "value") else str(question_type)
+    q_type = (
+        question_type.value if hasattr(question_type, "value") else str(question_type)
+    )
     return [
         name
         for name, config in NCS_COMMON_COMPETENCY_SIGNALS.items()
@@ -1307,7 +2500,9 @@ def evaluate_ncs_alignment(
     answer_compact = re.sub(r"\s+", "", answer_blob)
     matched: list[str] = []
     for competency in expected:
-        keywords = [kw.lower() for kw in NCS_COMMON_COMPETENCY_SIGNALS[competency]["keywords"]]
+        keywords = [
+            kw.lower() for kw in NCS_COMMON_COMPETENCY_SIGNALS[competency]["keywords"]
+        ]
         if any(keyword in answer_blob for keyword in keywords):
             matched.append(competency)
 
@@ -1319,7 +2514,9 @@ def evaluate_ncs_alignment(
             if len(token) >= 2
         ]
         unit_compact = re.sub(r"\s+", "", unit.lower())
-        if unit_compact in answer_compact or any(token in answer_blob for token in unit_tokens):
+        if unit_compact in answer_compact or any(
+            token in answer_blob for token in unit_tokens
+        ):
             matched_units.append(unit)
 
     component_scores = [len(matched) / max(len(expected), 1)]
@@ -1411,7 +2608,9 @@ def build_research_brief(ws: Workspace) -> dict[str, Any]:
             f"JD 키워드({', '.join(jd_keywords[:4])})가 실제로 의미하는 역량과 증명 방식은 무엇인가?"
         )
     if question_map:
-        key_questions.append("현재 자소서 문항별로 어떤 경험과 근거를 우선 연결해야 하는가?")
+        key_questions.append(
+            "현재 자소서 문항별로 어떤 경험과 근거를 우선 연결해야 하는가?"
+        )
     key_questions.extend(
         [
             "왜 이 회사/직무인지에 대한 논리를 과장 없이 어떻게 방어할 것인가?",
@@ -1461,19 +2660,44 @@ def _grade_source_reliability(source: KnowledgeSource) -> tuple[str, str]:
         parsed = urlparse(source.url or "")
         host = parsed.netloc.lower()
         path = parsed.path.lower()
-        if any(host.endswith(suffix) for suffix in [".go.kr", ".gov", ".ac.kr", ".edu", ".or.kr"]):
+        if any(
+            host.endswith(suffix)
+            for suffix in [".go.kr", ".gov", ".ac.kr", ".edu", ".or.kr"]
+        ):
             return "B", "공공기관/교육기관/비영리 공식 도메인입니다."
-        if any(token in host for token in ["reddit", "blind", "tistory", "blog", "naver", "brunch"]):
+        if any(
+            token in host
+            for token in ["reddit", "blind", "tistory", "blog", "naver", "brunch"]
+        ):
             return "E", "포럼·블로그 계열 도메인이라 참고용으로만 쓰는 편이 안전합니다."
-        if any(token in path for token in ["/careers", "/jobs", "/recruit", "/about", "/company", "/news"]):
-            return "B", "회사 공식 채용/소개/보도 자료 성격의 페이지일 가능성이 높습니다."
-        return "C", "공개 웹 자료이지만 공식성 여부가 명확하지 않아 보조 근거로 보는 편이 안전합니다."
+        if any(
+            token in path
+            for token in [
+                "/careers",
+                "/jobs",
+                "/recruit",
+                "/about",
+                "/company",
+                "/news",
+            ]
+        ):
+            return (
+                "B",
+                "회사 공식 채용/소개/보도 자료 성격의 페이지일 가능성이 높습니다.",
+            )
+        return (
+            "C",
+            "공개 웹 자료이지만 공식성 여부가 명확하지 않아 보조 근거로 보는 편이 안전합니다.",
+        )
     if source.source_type in {
         SourceType.LOCAL_MARKDOWN,
         SourceType.LOCAL_TEXT,
         SourceType.LOCAL_CSV_ROW,
     }:
-        return "C", "사용자 제공 로컬 자료로 실무 활용도는 높지만 외부 교차검증이 추가되면 더 안전합니다."
+        return (
+            "C",
+            "사용자 제공 로컬 자료로 실무 활용도는 높지만 외부 교차검증이 추가되면 더 안전합니다.",
+        )
     if source.source_type == SourceType.MANUAL_NOTE:
         return "D", "수기 메모 성격이라 단독 확정 근거로 쓰기 어렵습니다."
     return "D", "출처 성격이 명확하지 않아 보조 참고 수준으로 보는 편이 안전합니다."
@@ -1594,7 +2818,9 @@ def build_source_grading(
     key_areas = [
         {
             "area": "company_fit",
-            "keywords": _dedupe_preserve_order(company_terms + ["조직", "사업", "가치", "문화"]),
+            "keywords": _dedupe_preserve_order(
+                company_terms + ["조직", "사업", "가치", "문화"]
+            ),
         },
         {
             "area": "role_requirements",
@@ -1602,11 +2828,15 @@ def build_source_grading(
         },
         {
             "area": "essay_alignment",
-            "keywords": _dedupe_preserve_order(question_terms + ["지원동기", "직무역량", "입사후포부"]),
+            "keywords": _dedupe_preserve_order(
+                question_terms + ["지원동기", "직무역량", "입사후포부"]
+            ),
         },
         {
             "area": "interview_risks",
-            "keywords": _dedupe_preserve_order(question_terms + ["꼬리질문", "방어", "경험", "근거"]),
+            "keywords": _dedupe_preserve_order(
+                question_terms + ["꼬리질문", "방어", "경험", "근거"]
+            ),
         },
     ]
 
@@ -1617,9 +2847,7 @@ def build_source_grading(
         source_tokens[source.id] = tokens
         grade, rationale = _grade_source_reliability(source)
         supporting_areas = [
-            area["area"]
-            for area in key_areas
-            if set(tokens) & set(area["keywords"])
+            area["area"] for area in key_areas if set(tokens) & set(area["keywords"])
         ]
         assessments.append(
             {
@@ -1769,6 +2997,13 @@ def classify_project_questions_with_llm_fallback(
     confidence_threshold: float = 0.34,
     enabled: bool = True,
 ) -> ApplicationProject:
+    if not enabled:
+        for question in project.questions:
+            question.detected_type = classify_question_regex_only(
+                question.question_text
+            )
+        return project
+
     uncertain_questions: list[QuestionType | Any] = []
     for question in project.questions:
         detected_type, confidence = classify_question_with_confidence(
@@ -1781,7 +3016,7 @@ def classify_project_questions_with_llm_fallback(
         ):
             uncertain_questions.append(question)
 
-    if not enabled or not uncertain_questions:
+    if not uncertain_questions:
         return project
 
     prompt_lines = [
@@ -1809,7 +3044,11 @@ def classify_project_questions_with_llm_fallback(
     prompt_path = ws.outputs_dir / "latest_question_type_fallback_prompt.md"
     prompt_path.write_text("\n".join(prompt_lines), encoding="utf-8")
     output_path = ws.analysis_dir / "question_type_fallback.json"
-    exit_code = run_codex(prompt_path, ws.root, output_path, tool=tool)
+    try:
+        exit_code = run_codex(prompt_path, ws.root, output_path, tool=tool)
+    except Exception as e:
+        logger.warning(f"Question type fallback failed, using regex-only result: {e}")
+        return project
     if exit_code != 0:
         return project
 
@@ -1855,13 +3094,17 @@ def run_coach(ws: Workspace) -> dict[str, Any]:
         progress.step("워크스페이스 초기화", status="success")
 
         project = load_project(ws)
-        project = classify_project_questions_with_llm_fallback(ws, project, enabled=True)
+        project = classify_project_questions_with_llm_fallback(
+            ws, project, enabled=True
+        )
         save_project(ws, project)
         experiences = load_experiences(ws)
         progress.step("프로젝트/경험 로드", status="success")
 
         gap_report = analyze_gaps(project, experiences)
-        feedback_learning = build_feedback_learning_context(ws, "coach", project=project)
+        feedback_learning = build_feedback_learning_context(
+            ws, "coach", project=project
+        )
         artifact = build_coach_artifact(
             project,
             experiences,
@@ -1869,6 +3112,7 @@ def run_coach(ws: Workspace) -> dict[str, Any]:
             outcome_summary=feedback_learning.get("outcome_summary"),
             strategy_outcome_summary=feedback_learning.get("strategy_outcome_summary"),
             current_pattern=feedback_learning.get("current_pattern"),
+            feedback_adaptation_plan=feedback_learning.get("adaptation_plan"),
         )
         progress.step("갭 분석 및 코칭 아티팩트 생성", status="success")
 
@@ -1883,6 +3127,74 @@ def run_coach(ws: Workspace) -> dict[str, Any]:
 
     write_json(ws.analysis_dir / "question_map.json", artifact["allocations"])
     write_json(ws.analysis_dir / "gap_report.json", gap_report)
+    top001_coach_analysis: dict[str, Any] = {}
+    try:
+        from .top001.integrator import Top001CoachEngine
+
+        top001_coach_analysis = Top001CoachEngine().analyze_experiences(
+            experiences,
+            project.questions,
+            artifact.get("allocations", []),
+        )
+    except Exception as e:
+        logger.warning(f"Top001 coach analysis failed: {e}")
+    if top001_coach_analysis:
+        write_json(
+            ws.analysis_dir / "top001_coach_analysis.json",
+            _normalize_strategy_payload(top001_coach_analysis),
+        )
+    experience_competition = build_experience_competition_report(
+        project,
+        experiences,
+        artifact.get("allocations", []),
+    )
+    write_json(ws.analysis_dir / "experience_competition.json", experience_competition)
+    if isinstance(gap_report, dict):
+        gap_report["experience_competition"] = experience_competition
+        write_json(ws.analysis_dir / "gap_report.json", gap_report)
+    committee_feedback = build_committee_feedback_context(ws)
+    self_intro_pack = build_self_intro_pack(ws, project)
+    writer_brief = build_writer_brief(
+        ws,
+        project=project,
+        experiences=experiences,
+        allocations=artifact.get("allocations", []),
+        feedback_learning=feedback_learning,
+        experience_competition=experience_competition,
+        top001_coach_analysis=top001_coach_analysis,
+        committee_feedback=committee_feedback,
+        self_intro_pack=self_intro_pack,
+    )
+    artifact = build_coach_artifact(
+        project,
+        experiences,
+        gap_report,
+        outcome_summary=feedback_learning.get("outcome_summary"),
+        strategy_outcome_summary=feedback_learning.get("strategy_outcome_summary"),
+        current_pattern=feedback_learning.get("current_pattern"),
+        feedback_adaptation_plan=feedback_learning.get("adaptation_plan"),
+        question_strategies=writer_brief.get("question_strategies"),
+        writer_contract=writer_brief.get("writer_contract"),
+    )
+    validation_dict = validate_coach_contract(artifact["rendered"])
+    validation = ValidationResult(
+        passed=validation_dict["passed"], missing=validation_dict["missing"]
+    )
+    strategy_path = ws.analysis_dir / "application_strategy.json"
+    adaptive_strategy = build_adaptive_strategy_layer(
+        project,
+        candidate_profile=build_candidate_profile(ws, project, experiences),
+    )
+    update_application_strategy(
+        ws,
+        project=project,
+        stage="coach",
+        experiences=experiences,
+        allocations=artifact.get("allocations", []),
+        coach_analysis=top001_coach_analysis,
+        experience_competition=experience_competition,
+        adaptive_strategy=adaptive_strategy,
+    )
     coach_prompt_path = build_coach_prompt(ws, artifact, gap_report)
     coach_path = ws.artifacts_dir / "coach.md"
     coach_path.write_text(artifact["rendered"], encoding="utf-8")
@@ -1921,6 +3233,10 @@ def run_coach(ws: Workspace) -> dict[str, Any]:
             ),
             "coach_path": str(coach_path.relative_to(ws.root)),
             "artifact_id": artifact_id,
+            "application_strategy_path": str(strategy_path.relative_to(ws.root)),
+            "writer_brief_path": str(
+                (ws.analysis_dir / "writer_brief.json").relative_to(ws.root)
+            ),
         },
         status="success" if validation.passed else "failed",
         error=", ".join(validation.missing[:5]) if validation.missing else None,
@@ -1931,23 +3247,48 @@ def run_coach(ws: Workspace) -> dict[str, Any]:
         "validation": validation.model_dump(),
         "path": str(coach_path),
         "prompt_path": str(coach_prompt_path),
+        "top001_analysis_path": str(ws.analysis_dir / "top001_coach_analysis.json"),
+        "application_strategy_path": str(strategy_path),
+        "writer_brief_path": str(ws.analysis_dir / "writer_brief.json"),
     }
 
 
-def run_writer(ws: Workspace) -> dict[str, Any]:
+def run_writer(ws: Workspace, target_path: Path | None = None) -> dict[str, Any]:
     ws.ensure()
     initialize_state(ws)
-    prompt_path = build_draft_prompt(ws, ws.targets_dir / "example_target.md")
-    return {"prompt_path": str(prompt_path)}
+    resolved_target_path = _resolve_writer_target_path(ws, target_path)
+    _validate_writer_preconditions(ws, target_path=resolved_target_path)
+    prompt_path = build_draft_prompt(ws, resolved_target_path)
+    return {
+        "prompt_path": str(prompt_path),
+        "target_path": str(resolved_target_path),
+    }
 
 
-def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
+def run_writer_with_codex(
+    ws: Workspace,
+    target_path: Path | None = None,
+    tool: str = "codex",
+    patina: bool = False,
+    patina_mode: str = "audit",
+    patina_profile: str = "resume",
+    patina_max: bool = False,
+    patina_max_models: str | None = None,
+    patina_max_dispatch: str | None = None,
+) -> dict[str, Any]:
     with StepProgress("Writer 파이프라인") as progress:
         ws.ensure()
         initialize_state(ws)
         progress.step("워크스페이스 초기화", status="success")
 
-        project = load_project(ws)
+        resolved_target_path = _resolve_writer_target_path(ws, target_path)
+        project, question_map = _validate_writer_preconditions(
+            ws,
+            target_path=resolved_target_path,
+            tool=tool,
+        )
+        progress.step("선행조건 검사", status="success")
+
         company_analysis = None
         if project.company_name:
             try:
@@ -1955,6 +3296,7 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
                     company_name=project.company_name,
                     job_title=project.job_title,
                     company_type=project.company_type,
+                    success_cases=_get_success_cases_for_analysis(ws),
                 )
                 logger.info(
                     f"Company analysis completed: {project.company_name} ({company_analysis.company_type})"
@@ -1963,15 +3305,19 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
                 logger.warning(f"Company analysis failed: {e}")
         progress.step("회사 분석", status="success")
 
-        prompt_path = build_draft_prompt(
-            ws, ws.targets_dir / "example_target.md", company_analysis=company_analysis
+        prompt_context = _build_writer_prompt_context(
+            ws,
+            target_path=resolved_target_path,
+            company_analysis=company_analysis,
         )
-        run_dir = ws.runs_dir / timestamp_slug()
-        run_dir.mkdir(parents=True, exist_ok=True)
-        raw_output_path = run_dir / "raw_writer.md"
+        prompt_path = prompt_context["prompt_path"]
+        run_dir = prompt_context["run_dir"]
+        raw_output_path = prompt_context["raw_output_path"]
+        llm_run_metas: list[dict[str, Any]] = []
         progress.step("프롬프트 빌드", status="success")
 
-        exit_code = run_codex(prompt_path, ws.root, raw_output_path, tool=tool)
+        exit_code = _run_writer_llm(prompt_path, ws, raw_output_path, tool=tool)
+        llm_run_metas.append(_read_llm_run_meta(raw_output_path))
         if exit_code != 0:
             progress.step("Codex 실행 실패", status="failed")
         else:
@@ -1991,11 +3337,36 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
         validation = ValidationResult(
             passed=validation_dict["passed"], missing=validation_missing
         )
+        char_limit_report = build_writer_char_limit_report(project, normalized_text)
+        validation = merge_writer_validation_with_char_report(
+            validation, char_limit_report
+        )
 
         accepted_path = ws.artifacts_dir / "writer.md"
+        draft_path = ws.artifacts_dir / "writer_draft.md"
+        error_output_path = ws.artifacts_dir / "writer_error.md"
         writer_quality_path = ws.artifacts_dir / "writer_quality.json"
+        writer_result_quality_path = ws.artifacts_dir / "writer_result_quality.json"
+        writer_differentiation_path = ws.artifacts_dir / "writer_differentiation.json"
+        writer_defensibility_path = ws.artifacts_dir / "writer_defensibility.json"
+        writer_message_discipline_path = (
+            ws.artifacts_dir / "writer_message_discipline.json"
+        )
+        writer_committee_reaction_path = (
+            ws.artifacts_dir / "writer_committee_reaction.json"
+        )
+        rewrite_report_md_path = ws.analysis_dir / "writer_rewrite_quality_report.md"
+        rewrite_report_json_path = (
+            ws.analysis_dir / "writer_rewrite_quality_report.json"
+        )
+        rewrite_quality_report: dict[str, Any] | None = None
+        rewrite_attempt_count = 0
+        char_loop_changed = False
+        patina_result: dict[str, Any] | None = None
+        patina_max_result: dict[str, Any] | None = None
 
         experiences = load_experiences(ws)
+        writer_brief = read_json_if_exists(ws.analysis_dir / "writer_brief.json")
         fact_warnings = audit_facts(normalized_text, experiences)
 
         if fact_warnings and exit_code == 0:
@@ -2021,14 +3392,23 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
             temp_prompt_path = run_dir / "correction_prompt.md"
             temp_prompt_path.write_text(correction_prompt, encoding="utf-8")
 
-            exit_code = run_codex(temp_prompt_path, ws.root, corrected_output_path)
+            rewrite_attempt_count += 1
+            exit_code = _run_writer_llm(
+                temp_prompt_path,
+                ws,
+                corrected_output_path,
+                tool=tool,
+            )
+            llm_run_metas.append(_read_llm_run_meta(corrected_output_path))
             if exit_code == 0:
                 normalized_text = safe_read_text(corrected_output_path)
                 fact_warnings = audit_facts(normalized_text, experiences)
                 logger.info("Self-correction completed.")
 
-        quality_evaluations = []
-        question_map = read_json_if_exists(ws.analysis_dir / "question_map.json")
+        quality_evaluations: list[dict[str, Any]] = []
+        result_quality_evaluations: list[dict[str, Any]] = []
+        quality_evaluation_error: str | None = None
+        result_quality_evaluation_error: str | None = None
         ncs_profile = read_json_if_exists(ws.analysis_dir / "ncs_profile.json")
         narrative_ssot = read_json_if_exists(ws.analysis_dir / "narrative_ssot.json")
         if not ncs_profile:
@@ -2039,7 +3419,7 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
                 question_map=question_map,
                 company_analysis=company_analysis,
             )
-        if company_analysis and normalized_text:
+        if normalized_text:
             try:
                 quality_evaluations = build_writer_quality_evaluations(
                     project=project,
@@ -2049,77 +3429,275 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
                     company_analysis=company_analysis,
                     ncs_profile=ncs_profile,
                     narrative_ssot=narrative_ssot,
+                    writer_brief=writer_brief,
                 )
                 for quality in quality_evaluations:
                     logger.info(
                         f"Answer quality for Q{quality['question_order']}: {quality['overall_score']:.2f}"
                     )
             except Exception as e:
+                quality_evaluation_error = str(e)
                 logger.warning(f"Answer quality evaluation failed: {e}")
+        if normalized_text:
+            try:
+                result_quality_evaluations = build_writer_result_quality_evaluations(
+                    project=project,
+                    writer_text=normalized_text,
+                    experiences=experiences,
+                    question_map=question_map,
+                )
+            except Exception as e:
+                result_quality_evaluation_error = str(e)
+                logger.warning(f"Result-focused quality evaluation failed: {e}")
 
-        if exit_code == 0 and needs_writer_rewrite(validation, quality_evaluations):
-            logger.warning("Writer quality below threshold. Attempting targeted rewrite.")
+        def _rewrite_with_constraints(
+            previous_output: str,
+            current_validation: ValidationResult,
+            current_quality: list[dict[str, Any]],
+            current_result_quality: list[dict[str, Any]],
+            current_char_report: dict[str, Any],
+            suffix: str,
+            focus_mode: str = "full",
+        ) -> tuple[
+            int,
+            str,
+            ValidationResult,
+            list[dict[str, Any]],
+            list[dict[str, Any]],
+            dict[str, Any],
+        ]:
+            nonlocal rewrite_attempt_count
+            rewrite_dir = ws.runs_dir / f"{suffix}_{timestamp_slug()}"
+            rewrite_dir.mkdir(parents=True, exist_ok=True)
             rewrite_prompt = build_writer_rewrite_prompt(
-                previous_output=normalized_text,
-                validation=validation,
-                quality_evaluations=quality_evaluations,
+                previous_output=previous_output,
+                validation=current_validation,
+                quality_evaluations=current_quality,
+                result_quality_evaluations=current_result_quality,
+                char_limit_report=current_char_report,
                 feedback_learning=build_feedback_learning_context(
                     ws, "writer", project=project
                 ),
                 candidate_profile=build_candidate_profile(ws, project, experiences),
+                writer_brief=writer_brief,
+                focus_mode=focus_mode,
             )
-            rewrite_dir = ws.runs_dir / f"rewrite_{timestamp_slug()}"
-            rewrite_dir.mkdir(parents=True, exist_ok=True)
             rewrite_prompt_path = rewrite_dir / "rewrite_prompt.md"
             rewrite_prompt_path.write_text(rewrite_prompt, encoding="utf-8")
             rewritten_output_path = rewrite_dir / "rewritten_writer.md"
-            rewrite_exit_code = run_codex(rewrite_prompt_path, ws.root, rewritten_output_path)
+            rewrite_attempt_count += 1
+            rewrite_exit_code = _run_writer_llm(
+                rewrite_prompt_path,
+                ws,
+                rewritten_output_path,
+                tool=tool,
+            )
+            llm_run_metas.append(_read_llm_run_meta(rewritten_output_path))
+            if rewrite_exit_code != 0:
+                return (
+                    rewrite_exit_code,
+                    previous_output,
+                    current_validation,
+                    current_quality,
+                    current_result_quality,
+                    current_char_report,
+                )
+
+            candidate_text = normalize_contract_output(
+                safe_read_text(rewritten_output_path),
+                headings,
+            )
+            candidate_validation_dict = validate_writer_contract(candidate_text)
+            candidate_missing = list(candidate_validation_dict["missing"])
+            candidate_missing.extend(
+                candidate_validation_dict.get("semantic_missing", [])
+            )
+            candidate_validation = ValidationResult(
+                passed=candidate_validation_dict["passed"],
+                missing=candidate_missing,
+            )
+            candidate_char_report = build_writer_char_limit_report(
+                project, candidate_text
+            )
+            candidate_validation = merge_writer_validation_with_char_report(
+                candidate_validation, candidate_char_report
+            )
+            candidate_quality = build_writer_quality_evaluations(
+                project=project,
+                writer_text=candidate_text,
+                experiences=experiences,
+                question_map=question_map,
+                company_analysis=company_analysis,
+                ncs_profile=ncs_profile,
+                narrative_ssot=narrative_ssot,
+                writer_brief=writer_brief,
+            )
+            candidate_result_quality = build_writer_result_quality_evaluations(
+                project=project,
+                writer_text=candidate_text,
+                experiences=experiences,
+                question_map=question_map,
+            )
+            return (
+                rewrite_exit_code,
+                candidate_text,
+                candidate_validation,
+                candidate_quality,
+                candidate_result_quality,
+                candidate_char_report,
+            )
+
+        if exit_code == 0 and needs_writer_rewrite(
+            validation,
+            quality_evaluations,
+            result_quality_evaluations,
+        ):
+            logger.warning(
+                "Writer quality below threshold. Attempting targeted rewrite."
+            )
+            (
+                rewrite_exit_code,
+                candidate_text,
+                candidate_validation,
+                candidate_quality,
+                candidate_result_quality,
+                candidate_char_report,
+            ) = _rewrite_with_constraints(
+                normalized_text,
+                validation,
+                quality_evaluations,
+                result_quality_evaluations,
+                char_limit_report,
+                "rewrite",
+                "full",
+            )
             if rewrite_exit_code == 0:
-                candidate_text = normalize_contract_output(
-                    safe_read_text(rewritten_output_path),
-                    headings,
+                rewrite_quality_report = build_writer_rewrite_quality_report(
+                    quality_evaluations,
+                    candidate_quality,
+                    before_result_quality_evaluations=result_quality_evaluations,
+                    after_result_quality_evaluations=candidate_result_quality,
                 )
-                candidate_validation_dict = validate_writer_contract(candidate_text)
-                candidate_missing = list(candidate_validation_dict["missing"])
-                candidate_missing.extend(
-                    candidate_validation_dict.get("semantic_missing", [])
+                rewrite_report_md_path.write_text(
+                    rewrite_quality_report["markdown"], encoding="utf-8"
                 )
-                candidate_validation = ValidationResult(
-                    passed=candidate_validation_dict["passed"],
-                    missing=candidate_missing,
-                )
-                candidate_quality = build_writer_quality_evaluations(
-                    project=project,
-                    writer_text=candidate_text,
-                    experiences=experiences,
-                    question_map=question_map,
-                    company_analysis=company_analysis,
-                    ncs_profile=ncs_profile,
-                    narrative_ssot=narrative_ssot,
-                )
+                write_json(rewrite_report_json_path, rewrite_quality_report)
                 old_avg = (
-                    sum(float(item.get("overall_score", 0.0)) for item in quality_evaluations)
+                    sum(
+                        float(item.get("overall_score", 0.0))
+                        for item in quality_evaluations
+                    )
                     / len(quality_evaluations)
                     if quality_evaluations
                     else 0.0
                 )
                 new_avg = (
-                    sum(float(item.get("overall_score", 0.0)) for item in candidate_quality)
+                    sum(
+                        float(item.get("overall_score", 0.0))
+                        for item in candidate_quality
+                    )
                     / len(candidate_quality)
                     if candidate_quality
                     else 0.0
                 )
-                if candidate_validation.passed and new_avg >= old_avg:
+                old_result_avg = _average_result_quality_score(
+                    result_quality_evaluations
+                )
+                new_result_avg = _average_result_quality_score(
+                    candidate_result_quality
+                )
+                if should_accept_writer_rewrite(
+                    candidate_validation,
+                    quality_evaluations,
+                    candidate_quality,
+                    result_quality_evaluations,
+                    candidate_result_quality,
+                ):
                     normalized_text = candidate_text
                     validation = candidate_validation
                     quality_evaluations = candidate_quality
+                    result_quality_evaluations = candidate_result_quality
+                    char_limit_report = candidate_char_report
                     logger.info(
-                        f"Writer rewrite accepted: quality {old_avg:.2f} -> {new_avg:.2f}"
+                        "Writer rewrite accepted: "
+                        f"quality {old_avg:.2f} -> {new_avg:.2f}, "
+                        f"result_quality {old_result_avg:.2f} -> {new_result_avg:.2f}"
                     )
+
+        if exit_code == 0:
+            normalized_text, char_limit_report, char_loop_changed = (
+                enforce_writer_char_limits(
+                    project,
+                    normalized_text,
+                    rewrite_func=lambda previous_output, report, attempt: (
+                        _rewrite_with_constraints(
+                            previous_output,
+                            merge_writer_validation_with_char_report(
+                                validation, report
+                            ),
+                            quality_evaluations,
+                            result_quality_evaluations,
+                            report,
+                            f"length_fix_{attempt}",
+                            "char_limit",
+                        )[1]
+                    ),
+                    max_attempts=3,
+                )
+            )
+            if char_loop_changed:
+                validation_dict = validate_writer_contract(normalized_text)
+                validation = ValidationResult(
+                    passed=validation_dict["passed"],
+                    missing=list(validation_dict["missing"])
+                    + list(validation_dict.get("semantic_missing", [])),
+                )
+                validation = merge_writer_validation_with_char_report(
+                    validation, char_limit_report
+                )
+                if normalized_text:
+                    try:
+                        quality_evaluations = build_writer_quality_evaluations(
+                            project=project,
+                            writer_text=normalized_text,
+                            experiences=experiences,
+                            question_map=question_map,
+                            company_analysis=company_analysis,
+                            ncs_profile=ncs_profile,
+                            narrative_ssot=narrative_ssot,
+                            writer_brief=writer_brief,
+                        )
+                        quality_evaluation_error = None
+                    except Exception as e:
+                        quality_evaluations = []
+                        quality_evaluation_error = str(e)
+                        logger.warning(
+                            f"Answer quality evaluation failed after char rewrite: {e}"
+                        )
+                if normalized_text:
+                    try:
+                        result_quality_evaluations = (
+                            build_writer_result_quality_evaluations(
+                                project=project,
+                                writer_text=normalized_text,
+                                experiences=experiences,
+                                question_map=question_map,
+                            )
+                        )
+                        result_quality_evaluation_error = None
+                    except Exception as e:
+                        result_quality_evaluations = []
+                        result_quality_evaluation_error = str(e)
+                        logger.warning(
+                            f"Result-focused quality evaluation failed after char rewrite: {e}"
+                        )
+
+        llm_execution = _summarize_llm_run_metas(llm_run_metas)
+        approval_passed = validation.passed and not fact_warnings
 
         readability = calculate_readability_score(normalized_text)
         progress.step(
-            "검증/품질 평가", status="success" if validation.passed else "failed"
+            "검증/품질 평가", status="success" if approval_passed else "failed"
         )
 
         if fact_warnings:
@@ -2131,29 +3709,191 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
             if readability["score"] < 100:
                 logger.warning(f"Readability feedback: {fb}")
 
-        if validation.passed:
+        quality_status = (
+            "error"
+            if quality_evaluation_error
+            else "skipped"
+            if not normalized_text.strip()
+            else "ok"
+        )
+        result_quality_status = (
+            "error"
+            if result_quality_evaluation_error
+            else "skipped"
+            if not normalized_text.strip()
+            else "ok"
+        )
+
+        has_contract_output = all(heading in normalized_text for heading in headings)
+        if approval_passed:
             accepted_path.write_text(normalized_text, encoding="utf-8")
-        write_json(writer_quality_path, quality_evaluations)
+        elif accepted_path.exists():
+            accepted_path.unlink()
+        if has_contract_output:
+            draft_path.write_text(normalized_text, encoding="utf-8")
+            if error_output_path.exists():
+                error_output_path.unlink()
+        else:
+            error_output_path.write_text(normalized_text, encoding="utf-8")
+        write_json(
+            writer_quality_path,
+            _build_writer_quality_status(
+                quality_evaluations,
+                status=quality_status,
+                error_reason=quality_evaluation_error,
+            ),
+        )
+        write_json(
+            writer_result_quality_path,
+            _build_writer_quality_status(
+                result_quality_evaluations,
+                status=result_quality_status,
+                error_reason=result_quality_evaluation_error,
+            ),
+        )
+        write_json(
+            writer_defensibility_path,
+            _build_writer_quality_status(
+                [
+                    {
+                        "question_id": item.get("question_id"),
+                        "question_order": item.get("question_order"),
+                        "committee_reaction_score": item.get("committee_reaction_score"),
+                        "committee_attack_points": item.get("committee_attack_points", []),
+                        "committee_mitigation_priority": item.get("committee_mitigation_priority"),
+                        "committee_reaction_summary": item.get("committee_reaction_summary"),
+                    }
+                    for item in quality_evaluations
+                ],
+                status=quality_status,
+                error_reason=quality_evaluation_error,
+            ),
+        )
+        write_json(
+            writer_message_discipline_path,
+            _build_writer_quality_status(
+                [
+                    {
+                        "question_id": item.get("question_id"),
+                        "question_order": item.get("question_order"),
+                        "message_discipline_score": item.get("message_discipline_score"),
+                        "message_primary": item.get("message_primary"),
+                        "message_competing_points": item.get("message_competing_points", []),
+                        "cliche_score": item.get("cliche_score"),
+                        "cliche_flags": item.get("cliche_flags", []),
+                    }
+                    for item in quality_evaluations
+                ],
+                status=quality_status,
+                error_reason=quality_evaluation_error,
+            ),
+        )
+        write_json(
+            writer_committee_reaction_path,
+            _build_writer_quality_status(
+                [
+                    {
+                        "question_id": item.get("question_id"),
+                        "question_order": item.get("question_order"),
+                        "committee_reaction_score": item.get("committee_reaction_score"),
+                        "committee_attack_points": item.get("committee_attack_points", []),
+                        "committee_reaction_summary": item.get("committee_reaction_summary"),
+                    }
+                    for item in quality_evaluations
+                ],
+                status=quality_status,
+                error_reason=quality_evaluation_error,
+            ),
+        )
+        writer_feedback_learning = build_feedback_learning_context(
+            ws, "writer", project=project
+        )
+        application_strategy = read_json_if_exists(
+            ws.analysis_dir / "application_strategy.json"
+        )
+        writer_differentiation = build_writer_differentiation_report(
+            project,
+            quality_evaluations,
+            research_strategy_translation=read_json_if_exists(
+                ws.analysis_dir / "research_strategy_translation.json"
+            ),
+            application_strategy=application_strategy
+            if isinstance(application_strategy, dict)
+            else None,
+        )
+        write_json(writer_differentiation_path, writer_differentiation)
+        update_application_strategy(
+            ws,
+            project=project,
+            stage="writer",
+            experiences=experiences,
+            writer_differentiation=writer_differentiation,
+            adaptive_strategy=build_adaptive_strategy_layer(
+                project,
+                candidate_profile=build_candidate_profile(ws, project, experiences),
+            ),
+            feedback_adaptation_plan=writer_feedback_learning.get("adaptation_plan"),
+        )
 
     snapshot = GeneratedArtifact(
         id=f"writer-{timestamp_slug()}",
         artifact_type=ArtifactType.WRITER,
-        accepted=validation.passed,
+        accepted=approval_passed,
         input_snapshot={
             "project": load_project(ws).model_dump(),
-            "question_map_path": str(
-                (ws.analysis_dir / "question_map.json").relative_to(ws.root)
-            ),
+            "target_path": relative(ws.root, resolved_target_path),
+            "tool": tool,
+            "selected_tool": llm_execution["selected_tool"] or tool,
+            "attempted_tools": llm_execution["attempted_tools"] or [tool],
+            "fallback_reason": llm_execution["fallback_reason"],
+            "question_map_path": relative(ws.root, ws.analysis_dir / "question_map.json"),
             "fact_warnings": fact_warnings,
             "readability": readability,
             "company_analysis": company_analysis.model_dump()
             if company_analysis
             else None,
             "quality_evaluations": quality_evaluations,
-            "writer_quality_path": str(writer_quality_path.relative_to(ws.root)),
+            "result_quality_evaluations": result_quality_evaluations,
+            "writer_run_meta": {
+                "target_path": relative(ws.root, resolved_target_path),
+                "tool": tool,
+                "selected_tool": llm_execution["selected_tool"] or tool,
+                "attempted_tools": llm_execution["attempted_tools"] or [tool],
+                "fallback_reason": llm_execution["fallback_reason"],
+                "rewrite_count": rewrite_attempt_count,
+                "char_limit_adjusted": bool(char_loop_changed),
+                "quality_evaluation_status": quality_status,
+                "quality_evaluation_error": quality_evaluation_error,
+                "result_quality_evaluation_status": result_quality_status,
+                "result_quality_evaluation_error": result_quality_evaluation_error,
+                "approved": approval_passed,
+                "writer_brief_path": relative(
+                    ws.root, ws.analysis_dir / "writer_brief.json"
+                ),
+            },
+            "rewrite_quality_report_path": relative(ws.root, rewrite_report_json_path)
+            if rewrite_quality_report
+            else None,
+            "writer_quality_path": relative(ws.root, writer_quality_path),
+            "writer_result_quality_path": relative(ws.root, writer_result_quality_path),
+            "writer_differentiation_path": relative(
+                ws.root, writer_differentiation_path
+            ),
+            "writer_defensibility_path": relative(ws.root, writer_defensibility_path),
+            "writer_message_discipline_path": relative(
+                ws.root, writer_message_discipline_path
+            ),
+            "writer_committee_reaction_path": relative(
+                ws.root, writer_committee_reaction_path
+            ),
+            "patina_max_result_path": relative(
+                ws.root, ws.analysis_dir / "patina_max_report.json"
+            )
+            if patina_max_result
+            else None,
         },
-        output_path=str(accepted_path.relative_to(ws.root)),
-        raw_output_path=str(raw_output_path.relative_to(ws.root)),
+        output_path=relative(ws.root, accepted_path),
+        raw_output_path=relative(ws.root, raw_output_path),
         validation=validation,
         created_at=datetime.now(timezone.utc),
     )
@@ -2162,8 +3902,46 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
         run_dir / "writer.json",
         {
             "validation": validation.model_dump(),
+            "approved": approval_passed,
             "exit_code": exit_code,
+            "target_path": relative(ws.root, resolved_target_path),
+            "tool": tool,
+            "selected_tool": llm_execution["selected_tool"] or tool,
+            "attempted_tools": llm_execution["attempted_tools"] or [tool],
+            "fallback_reason": llm_execution["fallback_reason"],
+            "rewrite_count": rewrite_attempt_count,
+            "char_limit_adjusted": bool(char_loop_changed),
+            "quality_evaluation_status": quality_status,
+            "quality_evaluation_error": quality_evaluation_error,
+            "result_quality_evaluation_status": result_quality_status,
+            "result_quality_evaluation_error": result_quality_evaluation_error,
             "quality_evaluations": quality_evaluations,
+            "artifact_path": relative(ws.root, accepted_path)
+            if approval_passed and accepted_path.exists()
+            else None,
+            "draft_path": relative(ws.root, draft_path) if draft_path.exists() else None,
+            "error_output_path": relative(ws.root, error_output_path)
+            if error_output_path.exists()
+            else None,
+            "writer_brief_path": relative(ws.root, ws.analysis_dir / "writer_brief.json"),
+            "rewrite_quality_report_path": relative(ws.root, rewrite_report_json_path)
+            if rewrite_quality_report
+            else None,
+            "writer_differentiation_path": relative(
+                ws.root, writer_differentiation_path
+            ),
+            "writer_defensibility_path": relative(ws.root, writer_defensibility_path),
+            "writer_message_discipline_path": relative(
+                ws.root, writer_message_discipline_path
+            ),
+            "writer_committee_reaction_path": relative(
+                ws.root, writer_committee_reaction_path
+            ),
+            "patina_max_result_path": relative(
+                ws.root, ws.analysis_dir / "patina_max_report.json"
+            )
+            if patina_max_result
+            else None,
         },
     )
 
@@ -2171,15 +3949,59 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
     cp_mgr.save_checkpoint(
         "writer",
         {
-            "artifact_path": str(accepted_path.relative_to(ws.root)),
+            "artifact_path": relative(ws.root, accepted_path),
+            "draft_path": relative(ws.root, draft_path) if draft_path.exists() else None,
+            "error_output_path": relative(ws.root, error_output_path)
+            if error_output_path.exists()
+            else None,
             "validation": validation.model_dump(),
+            "approved": approval_passed,
+            "target_path": relative(ws.root, resolved_target_path),
+            "tool": tool,
+            "selected_tool": llm_execution["selected_tool"] or tool,
+            "attempted_tools": llm_execution["attempted_tools"] or [tool],
+            "fallback_reason": llm_execution["fallback_reason"],
+            "rewrite_count": rewrite_attempt_count,
+            "char_limit_adjusted": bool(char_loop_changed),
             "fact_warnings": fact_warnings,
             "readability": readability,
             "quality_evaluations": quality_evaluations,
-            "writer_quality_path": str(writer_quality_path.relative_to(ws.root)),
+            "result_quality_evaluations": result_quality_evaluations,
+            "quality_evaluation_status": quality_status,
+            "quality_evaluation_error": quality_evaluation_error,
+            "result_quality_evaluation_status": result_quality_status,
+            "result_quality_evaluation_error": result_quality_evaluation_error,
+            "writer_quality_path": relative(ws.root, writer_quality_path),
+            "writer_result_quality_path": relative(ws.root, writer_result_quality_path),
+            "writer_differentiation_path": relative(
+                ws.root, writer_differentiation_path
+            ),
+            "writer_defensibility_path": relative(ws.root, writer_defensibility_path),
+            "writer_message_discipline_path": relative(
+                ws.root, writer_message_discipline_path
+            ),
+            "writer_committee_reaction_path": relative(
+                ws.root, writer_committee_reaction_path
+            ),
+            "writer_brief_path": relative(
+                ws.root, ws.analysis_dir / "writer_brief.json"
+            ),
+            "rewrite_report_md_path": relative(ws.root, rewrite_report_md_path)
+            if rewrite_quality_report
+            else None,
+            "rewrite_report_json_path": relative(ws.root, rewrite_report_json_path)
+            if rewrite_quality_report
+            else None,
+            "patina_max_result_path": relative(
+                ws.root, ws.analysis_dir / "patina_max_report.json"
+            )
+            if patina_max_result
+            else None,
         },
-        status="success" if validation.passed else "failed",
-        error=", ".join(validation.missing[:5]) if validation.missing else None,
+        status="success" if approval_passed else "failed",
+        error=", ".join((fact_warnings or validation.missing)[:5])
+        if fact_warnings or validation.missing
+        else None,
     )
 
     # 피드백 학습 루프: 검증 결과를 자동 피드백으로 기록
@@ -2189,9 +4011,14 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
         learner = create_feedback_learner(str(ws.root / "kb" / "feedback"))
         pattern = _build_feedback_pattern_id("writer", project)
         comment = None
-        selection_payload = _build_feedback_selection_payload(question_map)
+        selection_payload = _build_feedback_selection_payload(
+            question_map,
+            writer_brief=writer_brief,
+        )
         low_quality = [
-            item for item in quality_evaluations if float(item.get("overall_score", 0.0)) < 0.72
+            item
+            for item in quality_evaluations
+            if float(item.get("overall_score", 0.0)) < 0.72
         ]
         if low_quality:
             weakest = low_quality[0]
@@ -2200,7 +4027,7 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
         learner.record_feedback(
             draft_id=f"writer-{timestamp_slug()}",
             pattern_used=pattern,
-            accepted=validation.passed,
+            accepted=approval_passed,
             comment=comment,
             artifact_type="writer",
             company_name=project.company_name,
@@ -2214,20 +4041,237 @@ def run_writer_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
             stage="writer",
             selected_experience_ids=selection_payload["selected_experience_ids"],
             question_experience_map=selection_payload["question_experience_map"],
+            question_strategy_map=selection_payload["question_strategy_map"],
         )
         logger.info(f"Writer 피드백 자동 기록: {pattern}")
     except Exception as e:
         logger.debug(f"피드백 기록 건너뜀: {e}")
 
+    # ── patina AI 패턴 제거 파이프라인 ──────────────────────────────
+    if patina_max and approval_passed:
+        try:
+            from .patina_max_bridge import run_patina_max
+
+            logger.info(
+                "patina-max 실행: "
+                f"models={patina_max_models or 'config/default'}, "
+                f"dispatch={patina_max_dispatch or 'config/default'}"
+            )
+            progress.step("patina-max 실행", status="running")
+
+            patina_max_result = run_patina_max(
+                writer_text=normalized_text,
+                workspace_root=ws.root,
+                project=project,
+                models=patina_max_models,
+                dispatch=patina_max_dispatch,
+                profile_name=patina_profile,
+            )
+
+            if patina_max_result.get("reassembled_text"):
+                patina_max_result = enforce_patina_char_limits(
+                    project,
+                    patina_max_result,
+                    rewrite_func=lambda previous_output, report, attempt: (
+                        _rewrite_with_constraints(
+                            previous_output,
+                            merge_writer_validation_with_char_report(
+                                ValidationResult(passed=True, missing=[]), report
+                            ),
+                            build_writer_quality_evaluations(
+                                project=project,
+                                writer_text=previous_output,
+                                experiences=experiences,
+                                question_map=question_map,
+                                company_analysis=company_analysis,
+                                ncs_profile=ncs_profile,
+                                narrative_ssot=narrative_ssot,
+                                writer_brief=writer_brief,
+                            )
+                            if previous_output
+                            else [],
+                            build_writer_result_quality_evaluations(
+                                project=project,
+                                writer_text=previous_output,
+                                experiences=experiences,
+                                question_map=question_map,
+                            )
+                            if previous_output
+                            else [],
+                            report,
+                            f"patina_max_length_fix_{attempt}",
+                        )[1]
+                    ),
+                    max_attempts=2,
+                )
+
+            if patina_max_result.get("reassembled_text"):
+                patina_max_path = ws.artifacts_dir / "writer_draft_patina_max.md"
+                patina_max_path.write_text(
+                    patina_max_result["reassembled_text"], encoding="utf-8"
+                )
+                patina_max_result["result_path"] = str(patina_max_path)
+                logger.info(f"patina-max 교정 결과 저장: {patina_max_path}")
+
+            patina_max_report_path = ws.analysis_dir / "patina_max_report.json"
+            write_json(patina_max_report_path, patina_max_result)
+            progress.step("patina-max 완료", status="success")
+        except Exception as e:
+            logger.warning(f"patina-max 실행 실패: {e}")
+            patina_max_result = {
+                "mode": "max",
+                "models": [],
+                "dispatch": "direct",
+                "selected_model": None,
+                "selected_text": "",
+                "outputs_by_model": {},
+                "warnings": [f"patina-max 실행 실패: {e}"],
+                "reassembled_text": normalized_text,
+                "selection_report": {"reason": "exception"},
+                "run_meta": {
+                    "requested_dispatch": patina_max_dispatch,
+                    "effective_dispatch": "direct",
+                    "selected_model": None,
+                },
+            }
+            progress.step("patina-max 실패", status="failed")
+    elif patina_max and not approval_passed:
+        logger.warning(
+            "patina-max 건너뜀: writer 검증 통과하지 못함 (--patina-max는 검증 통과 후에만 실행)"
+        )
+    elif patina and approval_passed:
+        try:
+            from .patina_bridge import run_patina
+
+            logger.info(
+                f"patina 실행: mode={patina_mode}, profile={patina_profile}, tool={tool}"
+            )
+            progress.step(f"patina {patina_mode} 실행", status="running")
+
+            patina_result = run_patina(
+                writer_text=normalized_text,
+                tool=tool,
+                mode=patina_mode,
+                profile_name=patina_profile,
+            )
+
+            if patina_mode in ("rewrite", "ouroboros") and patina_result.get(
+                "reassembled_text"
+            ):
+                patina_result = enforce_patina_char_limits(
+                    project,
+                    patina_result,
+                    rewrite_func=lambda previous_output, report, attempt: (
+                        _rewrite_with_constraints(
+                            previous_output,
+                            merge_writer_validation_with_char_report(
+                                ValidationResult(passed=True, missing=[]), report
+                            ),
+                            build_writer_quality_evaluations(
+                                project=project,
+                                writer_text=previous_output,
+                                experiences=experiences,
+                                question_map=question_map,
+                                company_analysis=company_analysis,
+                                ncs_profile=ncs_profile,
+                                narrative_ssot=narrative_ssot,
+                                writer_brief=writer_brief,
+                            )
+                            if previous_output
+                            else [],
+                            build_writer_result_quality_evaluations(
+                                project=project,
+                                writer_text=previous_output,
+                                experiences=experiences,
+                                question_map=question_map,
+                            )
+                            if previous_output
+                            else [],
+                            report,
+                            f"patina_length_fix_{attempt}",
+                        )[1]
+                    ),
+                    max_attempts=2,
+                )
+
+            # rewrite/ouroboros 모드: 교정 결과를 writer_draft.md에 반영
+            if patina_mode in ("rewrite", "ouroboros") and patina_result.get(
+                "reassembled_text"
+            ):
+                patina_draft_path = ws.artifacts_dir / "writer_draft_patina.md"
+                patina_draft_path.write_text(
+                    patina_result["reassembled_text"], encoding="utf-8"
+                )
+                logger.info(f"patina 교정 결과 저장: {patina_draft_path}")
+
+            # 글자수 변동 경고 로깅
+            for w in patina_result.get("warnings", []):
+                logger.warning(f"patina: {w}")
+
+            progress.step(f"patina {patina_mode} 완료", status="success")
+        except Exception as e:
+            logger.warning(f"patina 실행 실패: {e}")
+            patina_result = {
+                "mode": patina_mode,
+                "tool": tool,
+                "raw_output": "",
+                "answers": {},
+                "processed": {},
+                "char_deltas": {},
+                "warnings": [f"patina 실행 실패: {e}"],
+                "reassembled_text": normalized_text,
+            }
+            progress.step(f"patina {patina_mode} 실패", status="failed")
+    elif patina and not approval_passed:
+        logger.warning(
+            "patina 건너뜀: writer 검증 통과하지 못함 (--patina는 검증 통과 후에만 실행)"
+        )
+
+    if patina_max_result:
+        patina_max_report_rel = relative(ws.root, ws.analysis_dir / "patina_max_report.json")
+        snapshot.input_snapshot["patina_max_result_path"] = patina_max_report_rel
+        upsert_artifact(ws, snapshot)
+        writer_run_payload = read_json_if_exists(run_dir / "writer.json") or {}
+        if isinstance(writer_run_payload, dict):
+            writer_run_payload["patina_max_result_path"] = patina_max_report_rel
+            writer_run_payload["patina_max_selected_model"] = patina_max_result.get(
+                "selected_model"
+            )
+            write_json(run_dir / "writer.json", writer_run_payload)
+
     return {
         "prompt_path": str(prompt_path),
+        "target_path": str(resolved_target_path),
         "raw_output_path": str(raw_output_path),
         "artifact_path": str(accepted_path),
+        "draft_path": str(draft_path),
+        "error_output_path": str(error_output_path),
         "validation": validation.model_dump(),
+        "approved": approval_passed,
         "exit_code": exit_code,
+        "tool": tool,
+        "selected_tool": llm_execution["selected_tool"] or tool,
+        "attempted_tools": llm_execution["attempted_tools"] or [tool],
+        "fallback_reason": llm_execution["fallback_reason"],
+        "writer_brief_path": str(ws.analysis_dir / "writer_brief.json"),
         "company_analysis": company_analysis.model_dump() if company_analysis else None,
         "quality_evaluations": quality_evaluations,
+        "result_quality_evaluations": result_quality_evaluations,
         "writer_quality_path": str(writer_quality_path),
+        "writer_result_quality_path": str(writer_result_quality_path),
+        "writer_differentiation_path": str(writer_differentiation_path),
+        "writer_defensibility_path": str(writer_defensibility_path),
+        "writer_message_discipline_path": str(writer_message_discipline_path),
+        "writer_committee_reaction_path": str(writer_committee_reaction_path),
+        "rewrite_quality_report_path": str(rewrite_report_json_path)
+        if rewrite_quality_report
+        else None,
+        "patina_result": patina_result,
+        "patina_max_result": patina_max_result,
+        "patina_max_result_path": str(ws.analysis_dir / "patina_max_report.json")
+        if patina_max_result
+        else None,
+        "application_strategy_path": str(ws.analysis_dir / "application_strategy.json"),
     }
 
 
@@ -2245,14 +4289,17 @@ def run_deep_interview(ws: Workspace) -> dict[str, Any]:
     if writer_text:
         answer_map = extract_question_answer_map(writer_text, project.questions)
         prepared_answers = [
-            answer_map.get(question.id, "")
-            for question in project.questions
+            answer_map.get(question.id, "") for question in project.questions
         ]
 
     from .interview_engine import run_recursive_interview_chain
 
     deep_pack = run_recursive_interview_chain(
-        ws.root, project, experiences, primary_questions, prepared_answers=prepared_answers
+        ws.root,
+        project,
+        experiences,
+        primary_questions,
+        prepared_answers=prepared_answers,
     )
 
     # 아티팩트 저장
@@ -2297,6 +4344,7 @@ def run_self_intro(ws: Workspace) -> dict[str, Any]:
                 company_name=project.company_name,
                 job_title=project.job_title,
                 company_type=project.company_type,
+                success_cases=_get_success_cases_for_analysis(ws),
             )
         except Exception as e:
             logger.warning(f"Company analysis failed during self intro build: {e}")
@@ -2327,6 +4375,19 @@ def run_self_intro(ws: Workspace) -> dict[str, Any]:
         "committee_watchouts", []
     ):
         content += f"- {item}\n"
+    if intro_pack.get("top001_hooks"):
+        content += "\n## Top001 훅 후보\n"
+        for item in intro_pack.get("top001_hooks", []):
+            if isinstance(item, dict):
+                content += f"- {item.get('content', '')}\n"
+    if intro_pack.get("top001_versions"):
+        content += "\n## Top001 버전 초안\n"
+        for version_name, version_text in intro_pack.get("top001_versions", {}).items():
+            content += f"- {version_name}: {version_text}\n"
+    if intro_pack.get("top001_expected_follow_ups"):
+        content += "\n## 예상 꼬리 질문\n"
+        for item in intro_pack.get("top001_expected_follow_ups", []):
+            content += f"- {item}\n"
 
     out_path.write_text(content, encoding="utf-8")
 
@@ -2340,7 +4401,9 @@ def run_self_intro(ws: Workspace) -> dict[str, Any]:
             "self_intro_pack": intro_pack,
         },
         output_path=str(out_path.relative_to(ws.root)),
-        raw_output_path=str((ws.analysis_dir / "self_intro_pack.json").relative_to(ws.root)),
+        raw_output_path=str(
+            (ws.analysis_dir / "self_intro_pack.json").relative_to(ws.root)
+        ),
         validation=ValidationResult(passed=True),
         created_at=datetime.now(timezone.utc),
     )
@@ -2349,6 +4412,7 @@ def run_self_intro(ws: Workspace) -> dict[str, Any]:
     return {
         "path": str(out_path),
         "analysis_path": str(ws.analysis_dir / "self_intro_pack.json"),
+        "application_strategy_path": str(ws.analysis_dir / "application_strategy.json"),
     }
 
 
@@ -2373,6 +4437,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
                     company_name=project.company_name,
                     job_title=project.job_title,
                     company_type=project.company_type,
+                    success_cases=_get_success_cases_for_analysis(ws),
                 )
                 logger.info(
                     f"Company analysis for interview: {project.company_name} (style: {company_analysis.interview_style})"
@@ -2410,12 +4475,16 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
 
         accepted_path = ws.artifacts_dir / "interview.md"
         defense_path = ws.artifacts_dir / "interview_defense.json"
+        top001_defense_path = ws.artifacts_dir / "interview_top001.json"
 
         defense_simulations = []
+        top001_interview_simulations: list[dict[str, Any]] = []
         if normalized_text and project.questions:
             try:
                 experiences = load_experiences(ws)
-                question_map = read_json_if_exists(ws.analysis_dir / "question_map.json")
+                question_map = read_json_if_exists(
+                    ws.analysis_dir / "question_map.json"
+                )
                 interview_feedback = build_feedback_learning_context(
                     ws, "interview", project=project
                 )
@@ -2436,7 +4505,9 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
                     question_map=question_map,
                     company_analysis=company_analysis,
                     ncs_profile=ncs_profile,
-                    narrative_ssot=read_json_if_exists(ws.analysis_dir / "narrative_ssot.json"),
+                    narrative_ssot=read_json_if_exists(
+                        ws.analysis_dir / "narrative_ssot.json"
+                    ),
                     strategy_outcome_summary=interview_feedback.get(
                         "strategy_outcome_summary"
                     ),
@@ -2448,11 +4519,76 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
                     )
             except Exception as e:
                 logger.warning(f"Defense simulation failed: {e}")
+            try:
+                from .top001.integrator import Top001InterviewEngine
+
+                question_map = question_map or read_json_if_exists(
+                    ws.analysis_dir / "question_map.json"
+                )
+                answer_map = extract_question_answer_map(
+                    safe_read_text(ws.artifacts_dir / "writer.md"),
+                    project.questions,
+                )
+                exp_by_id = {exp.id: exp for exp in experiences}
+                default_exp = experiences[0] if experiences else None
+                engine = Top001InterviewEngine()
+                for question in project.questions:
+                    answer = answer_map.get(question.id, "").strip()
+                    if not answer:
+                        continue
+                    mapped_exp = default_exp
+                    for item in question_map or []:
+                        if (
+                            isinstance(item, dict)
+                            and str(item.get("question_id", "")).strip() == question.id
+                        ):
+                            candidate = exp_by_id.get(
+                                str(item.get("experience_id", "")).strip()
+                            )
+                            if candidate:
+                                mapped_exp = candidate
+                                break
+                    simulation = engine.simulate_interview(
+                        question.question_text,
+                        answer,
+                        mapped_exp,
+                        company_analysis,
+                    )
+                    top001_interview_simulations.append(
+                        {
+                            "question_id": question.id,
+                            "question_text": question.question_text,
+                            "experience_id": getattr(mapped_exp, "id", ""),
+                            **_normalize_strategy_payload(simulation),
+                        }
+                    )
+            except Exception as e:
+                logger.warning(f"Top001 interview simulation failed: {e}")
         progress.step("방어 시뮬레이션", status="success")
 
         if validation.passed:
             accepted_path.write_text(normalized_text, encoding="utf-8")
         write_json(defense_path, defense_simulations)
+        write_json(top001_defense_path, top001_interview_simulations)
+        interview_feedback_learning = build_feedback_learning_context(
+            ws, "interview", project=project
+        )
+        update_application_strategy(
+            ws,
+            project=project,
+            experiences=experiences if "experiences" in locals() else None,
+            stage="interview",
+            interview_top001=top001_interview_simulations,
+            adaptive_strategy=build_adaptive_strategy_layer(
+                project,
+                candidate_profile=build_candidate_profile(
+                    ws,
+                    project,
+                    experiences if "experiences" in locals() else [],
+                ),
+            ),
+            feedback_adaptation_plan=interview_feedback_learning.get("adaptation_plan"),
+        )
         progress.step(
             f"검증 {'통과' if validation.passed else '실패'}",
             status="success" if validation.passed else "failed",
@@ -2469,6 +4605,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             if company_analysis
             else None,
             "defense_simulations": defense_simulations,
+            "top001_interview_simulations": top001_interview_simulations,
         },
         output_path=str(accepted_path.relative_to(ws.root)),
         raw_output_path=str(raw_output_path.relative_to(ws.root)),
@@ -2482,6 +4619,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             "validation": validation.model_dump(),
             "exit_code": exit_code,
             "defense_simulations": defense_simulations,
+            "top001_interview_simulations": top001_interview_simulations,
         },
     )
 
@@ -2493,6 +4631,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             "validation": validation.model_dump(),
             "defense_simulations": defense_simulations,
             "defense_path": str(defense_path.relative_to(ws.root)),
+            "top001_defense_path": str(top001_defense_path.relative_to(ws.root)),
         },
         status="success" if validation.passed else "failed",
         error=", ".join(validation.missing[:5]) if validation.missing else None,
@@ -2525,7 +4664,9 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             ],
             stage="interview",
             final_outcome=committee_feedback.get("latest_committee_verdict"),
-            rejection_reason=", ".join(committee_feedback.get("recurring_risks", [])[:2])
+            rejection_reason=", ".join(
+                committee_feedback.get("recurring_risks", [])[:2]
+            )
             if not validation.passed
             else None,
             selected_experience_ids=selection_payload["selected_experience_ids"],
@@ -2544,6 +4685,8 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
         "company_analysis": company_analysis.model_dump() if company_analysis else None,
         "defense_simulations": defense_simulations,
         "defense_path": str(defense_path),
+        "top001_defense_path": str(top001_defense_path),
+        "application_strategy_path": str(ws.analysis_dir / "application_strategy.json"),
     }
 
 
@@ -2614,13 +4757,17 @@ def run_export(ws: Workspace) -> dict[str, Any]:
         coach_text = safe_read_text(ws.artifacts_dir / "coach.md")
         self_intro_text = safe_read_text(ws.artifacts_dir / "self_intro.md")
         narrative_ssot = read_json_if_exists(ws.analysis_dir / "narrative_ssot.json")
-        outcome_dashboard = read_json_if_exists(ws.analysis_dir / "outcome_dashboard.json")
+        outcome_dashboard = read_json_if_exists(
+            ws.analysis_dir / "outcome_dashboard.json"
+        )
 
         export_md = "\n\n".join(
             [
                 f"# Export Package\n\n- Company: {project.company_name}\n- Role: {project.job_title}",
-                "## Narrative SSOT\n" + json.dumps(narrative_ssot or {}, ensure_ascii=False, indent=2),
-                "## Outcome Dashboard\n" + json.dumps(outcome_dashboard or {}, ensure_ascii=False, indent=2),
+                "## Narrative SSOT\n"
+                + json.dumps(narrative_ssot or {}, ensure_ascii=False, indent=2),
+                "## Outcome Dashboard\n"
+                + json.dumps(outcome_dashboard or {}, ensure_ascii=False, indent=2),
                 "## Coach Artifact\n" + (coach_text or "_missing_"),
                 "## Self Intro Artifact\n" + (self_intro_text or "_missing_"),
                 "## Writer Artifact\n" + (writer_text or "_missing_"),
@@ -2748,11 +4895,14 @@ def build_coach_prompt(
                 company_name=project.company_name,
                 job_title=project.job_title,
                 company_type=project.company_type,
+                success_cases=_get_success_cases_for_analysis(ws),
             )
         except Exception as e:
             logger.warning(f"Company analysis failed during coach prompt build: {e}")
     committee_feedback = build_committee_feedback_context(ws)
-    self_intro_pack = build_self_intro_pack(ws, project, company_analysis=company_analysis)
+    self_intro_pack = build_self_intro_pack(
+        ws, project, company_analysis=company_analysis
+    )
     ncs_profile = build_ncs_profile(
         ws,
         project=project,
@@ -2773,8 +4923,12 @@ def build_coach_prompt(
         company_analysis=company_analysis,
     )
     outcome_dashboard = build_outcome_dashboard(ws, project, "coach")
+    kpi_dashboard = build_kpi_dashboard(ws, project, "coach")
 
     hints = build_knowledge_hints(knowledge_sources, project)
+    question_specific_hints = build_question_specific_knowledge_hints(
+        knowledge_sources, project
+    )
 
     # [토큰 압축 로직] 한도 초과 시 힌트 개수를 줄여가며 재시도
     while len(hints) >= 0:
@@ -2793,6 +4947,8 @@ def build_coach_prompt(
                 "narrative_ssot": narrative_ssot,
                 "research_strategy_translation": research_strategy_translation,
                 "outcome_dashboard": outcome_dashboard,
+                "kpi_dashboard": kpi_dashboard,
+                "question_specific_hints": question_specific_hints,
                 "company_analysis": company_analysis.model_dump()
                 if company_analysis
                 else None,
@@ -2812,14 +4968,20 @@ def build_coach_prompt(
 def ingest_examples(ws: Workspace) -> list[Path]:
     ws.ensure()
     ingested: list[Path] = []
-    for src in sorted(ws.sources_raw_dir.iterdir()):
+    for src in sorted(
+        path
+        for path in ws.sources_raw_dir.rglob("*")
+        if path.is_file() and not path.name.endswith((".meta.json", ".zone.identifier"))
+    ):
         if not src.is_file():
             continue
         text = src.read_text(encoding="utf-8", errors="ignore").strip()
         if not text:
             continue
-        dst = ws.sources_normalized_dir / f"{src.stem}.md"
-        normalized = normalize_example(src.name, text)
+        rel_name = src.relative_to(ws.sources_raw_dir).with_suffix("")
+        dst_name = "__".join(rel_name.parts) + ".md"
+        dst = ws.sources_normalized_dir / dst_name
+        normalized = normalize_example(str(rel_name), text)
         dst.write_text(normalized, encoding="utf-8")
         ingested.append(dst)
     return ingested
@@ -2847,6 +5009,9 @@ def build_draft_prompt(ws: Workspace, target_path: Path, company_analysis=None) 
     question_map = read_json_if_exists(ws.analysis_dir / "question_map.json")
 
     hints = build_knowledge_hints(knowledge_sources, project)
+    question_specific_hints = build_question_specific_knowledge_hints(
+        knowledge_sources, project
+    )
     selected_exps = select_primary_experiences(experiences, question_map)
 
     # JD 키워드 추출
@@ -2879,9 +5044,11 @@ def build_draft_prompt(ws: Workspace, target_path: Path, company_analysis=None) 
         company_analysis=company_analysis,
     )
     outcome_dashboard = build_outcome_dashboard(ws, project, "writer")
+    kpi_dashboard = build_kpi_dashboard(ws, project, "writer")
 
     extra = {
         "question_map": question_map,
+        "writer_brief": read_json_if_exists(ws.analysis_dir / "writer_brief.json"),
         "legacy_target_path": relative(ws.root, target_path),
         "structure_rules_path": relative(
             ws.root, ws.analysis_dir / "structure_rules.md"
@@ -2896,6 +5063,11 @@ def build_draft_prompt(ws: Workspace, target_path: Path, company_analysis=None) 
         "narrative_ssot": narrative_ssot,
         "research_strategy_translation": research_strategy_translation,
         "outcome_dashboard": outcome_dashboard,
+        "kpi_dashboard": kpi_dashboard,
+        "question_specific_hints": question_specific_hints,
+        "application_strategy": read_json_if_exists(
+            ws.analysis_dir / "application_strategy.json"
+        ),
     }
     if company_analysis:
         source_grading = read_json_if_exists(ws.analysis_dir / "source_grading.json")
@@ -2969,6 +5141,7 @@ def build_interview_prompt(ws: Workspace, company_analysis=None) -> Path:
         company_analysis=company_analysis,
     )
     outcome_dashboard = build_outcome_dashboard(ws, project, "interview")
+    kpi_dashboard = build_kpi_dashboard(ws, project, "interview")
 
     extra = {
         "question_map": question_map,
@@ -2984,6 +5157,13 @@ def build_interview_prompt(ws: Workspace, company_analysis=None) -> Path:
         "narrative_ssot": narrative_ssot,
         "research_strategy_translation": research_strategy_translation,
         "outcome_dashboard": outcome_dashboard,
+        "kpi_dashboard": kpi_dashboard,
+        "question_specific_hints": build_question_specific_knowledge_hints(
+            knowledge_sources, project
+        ),
+        "application_strategy": read_json_if_exists(
+            ws.analysis_dir / "application_strategy.json"
+        ),
     }
     if company_analysis:
         source_grading = read_json_if_exists(ws.analysis_dir / "source_grading.json")
@@ -3048,6 +5228,7 @@ def build_company_research_prompt(
                 company_name=project.company_name,
                 job_title=project.job_title,
                 company_type=project.company_type,
+                success_cases=_get_success_cases_for_analysis(ws),
             )
         except Exception as e:
             logger.warning(f"Company analysis failed during research prompt build: {e}")
@@ -3078,6 +5259,7 @@ def build_company_research_prompt(
         source_grading=grading,
     )
     outcome_dashboard = build_outcome_dashboard(ws, project, "company_research")
+    kpi_dashboard = build_kpi_dashboard(ws, project, "company_research")
 
     data_block = build_data_block(
         project=project,
@@ -3089,6 +5271,9 @@ def build_company_research_prompt(
             "company_analysis": company_analysis.model_dump()
             if company_analysis
             else None,
+            "question_specific_hints": build_question_specific_knowledge_hints(
+                knowledge_sources, project
+            ),
             "research_notes": project.research_notes,
             "research_brief": brief,
             "source_grading": grading,
@@ -3097,6 +5282,10 @@ def build_company_research_prompt(
             "narrative_ssot": narrative_ssot,
             "research_strategy_translation": research_strategy_translation,
             "outcome_dashboard": outcome_dashboard,
+            "kpi_dashboard": kpi_dashboard,
+            "application_strategy": read_json_if_exists(
+                ws.analysis_dir / "application_strategy.json"
+            ),
         },
     )
     content = PROMPT_COMPANY_RESEARCH.format(data_block=data_block)
@@ -3105,7 +5294,9 @@ def build_company_research_prompt(
     return out
 
 
-def run_company_research_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, Any]:
+def run_company_research_with_codex(
+    ws: Workspace, tool: str = "codex"
+) -> dict[str, Any]:
     with StepProgress("Company Research 파이프라인") as progress:
         ws.ensure()
         initialize_state(ws)
@@ -3173,8 +5364,12 @@ def run_company_research_with_codex(ws: Workspace, tool: str = "codex") -> dict[
             "research_notes_present": bool(project.research_notes.strip()),
             "research_brief_path": str(research_brief_path.relative_to(ws.root)),
             "source_grading_path": str(source_grading_path.relative_to(ws.root)),
-            "corroborated_area_count": source_grading["cross_check"]["corroborated_area_count"],
-            "single_source_area_count": source_grading["cross_check"]["single_source_area_count"],
+            "corroborated_area_count": source_grading["cross_check"][
+                "corroborated_area_count"
+            ],
+            "single_source_area_count": source_grading["cross_check"][
+                "single_source_area_count"
+            ],
             "source_conflict_count": len(source_grading["cross_check"]["conflicts"]),
         }
 
@@ -3231,6 +5426,10 @@ def run_company_research_with_codex(ws: Workspace, tool: str = "codex") -> dict[
         "source_trace_path": str(source_trace_path),
         "research_brief_path": str(research_brief_path),
         "source_grading_path": str(source_grading_path),
+        "top001_strategy_path": str(
+            ws.analysis_dir / "research_strategy_translation_top001.json"
+        ),
+        "application_strategy_path": str(ws.analysis_dir / "application_strategy.json"),
     }
 
 
@@ -3242,9 +5441,75 @@ def run_company_research_with_codex(ws: Workspace, tool: str = "codex") -> dict[
 
 def collect_source_paths(ws: Workspace, source_path: Path | None) -> list[Path]:
     target = source_path or ws.sources_raw_dir
+    paths: list[Path] = []
     if target.is_file():
-        return [target]
-    return sorted(path for path in target.iterdir() if path.is_file())
+        paths.append(target)
+    else:
+        paths.extend(
+            sorted(
+                path
+                for path in target.rglob("*")
+                if path.is_file() and not _is_metadata_sidecar(path)
+            )
+        )
+
+    # config에서 linkareer CSV 경로 읽어 추가
+    linkareer_rel = get_config_value("linkareer.source_path", "")
+    if linkareer_rel:
+        # resume-agent 프로젝트 루트 기준으로 상대 경로 해석
+        project_root = Path(__file__).parent.parent.parent
+        linkareer_path = (project_root / linkareer_rel).resolve()
+        if linkareer_path.is_file() and linkareer_path not in paths:
+            paths.append(linkareer_path)
+
+    return paths
+
+
+def _is_metadata_sidecar(path: Path) -> bool:
+    name = path.name.lower()
+    return name.endswith(":zone.identifier") or name.endswith(".zone.identifier")
+
+
+def materialize_source_file(
+    ws: Workspace,
+    path: Path,
+    *,
+    source_root: Path | None = None,
+) -> Path | None:
+    """외부 원본 파일을 sources/raw 아래의 텍스트 자산으로 변환합니다."""
+    if not path.exists() or not path.is_file():
+        return None
+
+    source_root = source_root.resolve() if source_root else None
+    path = path.resolve()
+
+    if source_root and source_root.is_dir() and path.is_relative_to(source_root):
+        relative_path = path.relative_to(source_root)
+    else:
+        relative_path = Path(path.name)
+
+    raw_target = ws.sources_raw_dir / relative_path
+    suffix = path.suffix.lower()
+
+    if suffix in {".pdf", ".docx"}:
+        from .pdf_utils import extract_text_from_docx, extract_text_from_pdf
+
+        extractor = (
+            extract_text_from_pdf if suffix == ".pdf" else extract_text_from_docx
+        )
+        text = extractor(path)
+        if not text.strip():
+            logger.warning(f"No text extracted from {path}")
+            return None
+        raw_target = raw_target.with_suffix(".txt")
+        raw_target.parent.mkdir(parents=True, exist_ok=True)
+        raw_target.write_text(text, encoding="utf-8")
+        return raw_target
+
+    raw_target.parent.mkdir(parents=True, exist_ok=True)
+    if path != raw_target:
+        shutil.copy2(path, raw_target)
+    return raw_target
 
 
 def write_source_artifacts(ws: Workspace, source: KnowledgeSource) -> None:
@@ -3265,6 +5530,20 @@ def merge_sources(
     for source in new_sources:
         by_id[source.id] = source
     return list(by_id.values())
+
+
+def _merge_success_cases(
+    existing: List[SuccessCase], new_cases: List[SuccessCase]
+) -> List[SuccessCase]:
+    """기존 success_cases와 새로 파싱된 cases를 병합. (title+company_name 기준 중복 제거)"""
+    seen: dict[str, SuccessCase] = {}
+    for case in existing:
+        key = f"{case.title}|{case.company_name}"
+        seen[key] = case
+    for case in new_cases:
+        key = f"{case.title}|{case.company_name}"
+        seen[key] = case  # 새로 파싱된 데이터로 갱신
+    return list(seen.values())
 
 
 # slugify는 utils.py로 이동 (상단 import 참조)
@@ -3369,9 +5648,7 @@ def extract_question_answer_map(
 
     split_pattern = re.compile(r"(?:^|\n)(?:Q\s*\d+[:.)]?|문항\s*\d+[:.)]?|\d+\)\s+)")
     chunks = [
-        chunk.strip()
-        for chunk in split_pattern.split(draft_body)
-        if chunk.strip()
+        chunk.strip() for chunk in split_pattern.split(draft_body) if chunk.strip()
     ]
     if len(chunks) < len(questions):
         chunks = [
@@ -3388,6 +5665,176 @@ def extract_question_answer_map(
     return result
 
 
+def extract_question_answer_details(
+    writer_text: str,
+    questions: List[Any],
+) -> dict[str, dict[str, Any]]:
+    answer_map = extract_question_answer_map(writer_text, questions)
+    details: dict[str, dict[str, Any]] = {}
+    for question in questions:
+        answer = answer_map.get(question.id, "")
+        details[question.id] = {
+            "answer": answer,
+            "char_count": len(answer),
+            "has_answer": bool(answer.strip()),
+            "char_limit": getattr(question, "char_limit", None),
+            "question_order": getattr(question, "order_no", None),
+        }
+    return details
+
+
+def build_writer_char_limit_report(
+    project: ApplicationProject,
+    writer_text: str,
+    ratio_min: float | None = None,
+    ratio_max: float | None = None,
+) -> dict[str, Any]:
+    ratio_min = (
+        float(ratio_min)
+        if ratio_min is not None
+        else float(get_config_value("export.char_limit_ratio_min", 0.90))
+    )
+    ratio_max = (
+        float(ratio_max)
+        if ratio_max is not None
+        else float(get_config_value("export.char_limit_ratio_max", 0.97))
+    )
+
+    details = extract_question_answer_details(writer_text, project.questions)
+    question_reports: list[dict[str, Any]] = []
+    issues: list[str] = []
+
+    for question in project.questions:
+        detail = details.get(question.id, {})
+        answer = str(detail.get("answer") or "")
+        char_count = int(detail.get("char_count") or 0)
+        char_limit = getattr(question, "char_limit", None)
+        ratio = round(char_count / char_limit, 3) if char_limit else None
+
+        status = "within_target"
+        if not answer.strip():
+            status = "missing_answer"
+        elif not char_limit:
+            status = "no_limit"
+        elif char_count > char_limit:
+            status = "over_limit"
+        elif ratio is not None and ratio < ratio_min:
+            status = "under_target"
+        elif ratio is not None and ratio > ratio_max:
+            status = "over_target"
+
+        report_item = {
+            "question_id": question.id,
+            "question_order": question.order_no,
+            "question_text": question.question_text,
+            "char_count": char_count,
+            "char_limit": char_limit,
+            "ratio": ratio,
+            "target_min": ratio_min,
+            "target_max": ratio_max,
+            "status": status,
+        }
+        question_reports.append(report_item)
+
+        if status == "missing_answer":
+            issues.append(f"Q{question.order_no} 답변 본문이 비어 있습니다")
+        elif status == "over_limit":
+            issues.append(
+                f"Q{question.order_no} 글자수 초과: {char_count}자 / 제한 {char_limit}자 (공백 포함)"
+            )
+        elif status == "under_target":
+            issues.append(
+                f"Q{question.order_no} 분량 부족: {char_count}자 / 제한 {char_limit}자 / 목표 {int(ratio_min * 100)}% 이상"
+            )
+        elif status == "over_target":
+            issues.append(
+                f"Q{question.order_no} 목표 범위 초과: {char_count}자 / 제한 {char_limit}자 / 목표 {int(ratio_max * 100)}% 이하"
+            )
+
+    return {
+        "passed": not issues,
+        "issues": issues,
+        "question_reports": question_reports,
+        "ratio_min": ratio_min,
+        "ratio_max": ratio_max,
+    }
+
+
+def enforce_writer_char_limits(
+    project: ApplicationProject,
+    writer_text: str,
+    rewrite_func,
+    max_attempts: int = 2,
+) -> tuple[str, dict[str, Any], bool]:
+    current_text = writer_text
+    report = build_writer_char_limit_report(project, current_text)
+    changed = False
+
+    if report["passed"]:
+        return current_text, report, changed
+
+    for attempt in range(1, max_attempts + 1):
+        rewritten = rewrite_func(current_text, report, attempt)
+        if not rewritten or not str(rewritten).strip():
+            break
+        current_text = str(rewritten)
+        changed = True
+        report = build_writer_char_limit_report(project, current_text)
+        if report["passed"]:
+            break
+
+    return current_text, report, changed
+
+
+def enforce_patina_char_limits(
+    project: ApplicationProject,
+    patina_result: dict[str, Any] | None,
+    rewrite_func,
+    max_attempts: int = 2,
+) -> dict[str, Any] | None:
+    if not patina_result:
+        return patina_result
+    reassembled_text = str(patina_result.get("reassembled_text") or "")
+    if not reassembled_text.strip():
+        patina_result["char_limit_report"] = {
+            "passed": True,
+            "issues": [],
+            "question_reports": [],
+        }
+        patina_result["char_limit_adjusted"] = False
+        return patina_result
+
+    final_text, report, changed = enforce_writer_char_limits(
+        project,
+        reassembled_text,
+        rewrite_func=rewrite_func,
+        max_attempts=max_attempts,
+    )
+    patina_result["reassembled_text"] = final_text
+    patina_result["char_limit_report"] = report
+    patina_result["char_limit_adjusted"] = changed
+    if not report.get("passed", True):
+        warnings = list(patina_result.get("warnings", []))
+        warnings.extend(report.get("issues", []))
+        patina_result["warnings"] = list(dict.fromkeys(warnings))
+    return patina_result
+
+
+def merge_writer_validation_with_char_report(
+    validation: ValidationResult,
+    char_limit_report: dict[str, Any],
+) -> ValidationResult:
+    if char_limit_report.get("passed", True):
+        return validation
+
+    merged_missing = list(validation.missing)
+    merged_missing.extend(char_limit_report.get("issues", []))
+    return ValidationResult(
+        passed=False,
+        missing=list(dict.fromkeys(merged_missing)),
+    )
+
+
 def build_writer_quality_evaluations(
     project: ApplicationProject,
     writer_text: str,
@@ -3396,6 +5843,7 @@ def build_writer_quality_evaluations(
     company_analysis: CompanyAnalysis | None,
     ncs_profile: dict[str, Any] | None = None,
     narrative_ssot: dict[str, Any] | None = None,
+    writer_brief: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     if not writer_text.strip() or not project.questions:
         return []
@@ -3403,38 +5851,69 @@ def build_writer_quality_evaluations(
     evaluator = AnswerQualityEvaluator(company_analysis)
     simulator = DefenseSimulator(company_analysis)
     answer_map = extract_question_answer_map(writer_text, project.questions)
+    answer_details = extract_question_answer_details(writer_text, project.questions)
     experience_by_id = {item.id: item for item in experiences}
     map_by_question = {
         str(item.get("question_id")): item
         for item in question_map
         if item.get("question_id")
     }
+    writer_brief_by_question = {
+        str(item.get("question_id") or ""): item
+        for item in (writer_brief or {}).get("question_strategies", [])
+        if isinstance(item, dict) and item.get("question_id")
+    }
 
     evaluations: list[dict[str, Any]] = []
     for question in project.questions:
+        resolved_question_type = _resolve_question_type(question)
         answer = answer_map.get(question.id, "")
         if not answer:
             continue
         mapped = map_by_question.get(question.id, {})
         experience = experience_by_id.get(str(mapped.get("experience_id", "")))
+        strategy_brief = writer_brief_by_question.get(question.id, {})
         quality = evaluator.evaluate(
             answer=answer,
             question=question.question_text,
-            question_type=question.detected_type,
+            question_type=resolved_question_type,
             experience=experience,
         )
         humanization = analyze_humanization(answer)
         payload = quality.model_dump()
+        payload["resolved_question_type"] = resolved_question_type.value
         payload["question_order"] = question.order_no
         payload["question_text"] = question.question_text
+        payload["char_count"] = answer_details.get(question.id, {}).get("char_count", 0)
+        payload["char_limit"] = question.char_limit
+        payload["char_ratio"] = (
+            round(payload["char_count"] / question.char_limit, 3)
+            if question.char_limit
+            else None
+        )
         payload["experience_title"] = experience.title if experience else None
         payload["humanization_score"] = humanization["score"]
         payload["humanization_flags"] = humanization["flags"]
         payload["humanization_suggestions"] = humanization["suggestions"]
+        message_discipline = evaluate_writer_message_discipline(
+            answer,
+            strategy_brief=strategy_brief,
+        )
+        cliche_block = evaluate_writer_cliche_blocking(
+            answer,
+            discouraged_phrases=(
+                company_analysis.discouraged_phrases if company_analysis else None
+            ),
+        )
+        differentiation = evaluate_writer_answer_differentiation(
+            answer,
+            experience=experience,
+            strategy_brief=strategy_brief,
+        )
         ncs_alignment = evaluate_ncs_alignment(
             answer=answer,
             question_id=question.id,
-            question_type=question.detected_type,
+            question_type=resolved_question_type,
             ncs_profile=ncs_profile,
         )
         payload["ncs_alignment_score"] = ncs_alignment["score"]
@@ -3459,18 +5938,253 @@ def build_writer_quality_evaluations(
         simulation = simulator.simulate(
             primary_question=question.question_text,
             answer=answer,
-            question_type=question.detected_type,
+            question_type=resolved_question_type,
             experiences=[experience] if experience else None,
         )
         payload["expected_followups"] = simulation.follow_up_questions[:3]
         payload["defense_gaps"] = simulation.risk_areas[:4]
+        committee_reaction = evaluate_writer_committee_reaction(
+            answer,
+            simulation=simulation.model_dump(),
+            strategy_brief=strategy_brief,
+        )
+        payload["message_discipline_score"] = message_discipline["score"]
+        payload["message_primary"] = message_discipline["primary_message"]
+        payload["message_competing_points"] = message_discipline["competing_messages"]
+        payload["message_discipline_suggestions"] = message_discipline["suggestions"]
+        payload["cliche_score"] = cliche_block["score"]
+        payload["cliche_flags"] = cliche_block["flags"]
+        payload["cliche_suggestions"] = cliche_block["suggestions"]
+        payload["differentiation_score"] = differentiation["score"]
+        payload["differentiation_line"] = differentiation["line"]
+        payload["differentiation_gaps"] = differentiation["gaps"]
+        payload["differentiation_suggestions"] = differentiation["suggestions"]
+        payload["committee_reaction_score"] = committee_reaction["score"]
+        payload["committee_attack_points"] = committee_reaction["attack_points"]
+        payload["committee_reaction_summary"] = committee_reaction["summary"]
+        payload["committee_mitigation_priority"] = committee_reaction[
+            "mitigation_priority"
+        ]
+        payload["writer_checklist_status"] = {
+            "core_message": strategy_brief.get("core_message", ""),
+            "required_evidence": strategy_brief.get("required_evidence", [])[:3],
+            "target_impression": strategy_brief.get("target_impression", ""),
+        }
         payload["interviewer_checklist"] = [
             "면접관이 수치와 비교 기준을 바로 물어도 30초 안에 답할 수 있는가",
             "팀 경험이라면 개인 기여와 판단 기준을 분리해 설명할 수 있는가",
             "왜 이 선택을 했는지와 그 선택이 보여주는 가치관까지 이어서 답할 수 있는가",
         ]
+        payload["evaluation_rubric"] = {
+            "strong_points": payload.get("strengths", [])[:3],
+            "risk_points": list(
+                dict.fromkeys(
+                    [
+                        *payload.get("weaknesses", []),
+                        *payload.get("defense_gaps", []),
+                    ]
+                )
+            )[:4],
+            "improvement_points": list(
+                dict.fromkeys(
+                    [
+                        *payload.get("suggestions", []),
+                        *payload.get("humanization_suggestions", []),
+                        *payload.get("message_discipline_suggestions", []),
+                        *payload.get("cliche_suggestions", []),
+                        *payload.get("differentiation_suggestions", []),
+                        *payload.get("ncs_suggestions", []),
+                        *payload.get("ssot_suggestions", []),
+                    ]
+                )
+            )[:4],
+        }
         evaluations.append(payload)
     return evaluations
+
+
+def build_writer_result_quality_evaluations(
+    project: ApplicationProject,
+    writer_text: str,
+    experiences: List[Experience],
+    question_map: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not writer_text.strip() or not project.questions:
+        return []
+
+    answer_map = extract_question_answer_map(writer_text, project.questions)
+    experience_by_id = {item.id: item for item in experiences}
+    map_by_question = {
+        str(item.get("question_id")): item
+        for item in question_map
+        if isinstance(item, dict) and item.get("question_id")
+    }
+
+    evaluations: list[dict[str, Any]] = []
+    for question in project.questions:
+        answer = answer_map.get(question.id, "")
+        if not answer:
+            continue
+        mapped = map_by_question.get(question.id, {})
+        experience = experience_by_id.get(str(mapped.get("experience_id", "")))
+        context_parts = []
+        if experience:
+            context_parts = [
+                experience.situation,
+                experience.task,
+                experience.action,
+                experience.result,
+            ]
+        quality = evaluate_draft_quality(
+            answer,
+            question.question_text,
+            "\n".join(part for part in context_parts if part),
+        )
+        evaluations.append(
+            {
+                "question_id": question.id,
+                "question_order": question.order_no,
+                "question_text": question.question_text,
+                "overall": round(float(quality.overall) / 100.0, 3),
+                "details": {
+                    key: round(float(value) / 100.0, 3)
+                    for key, value in quality.details.items()
+                },
+                "feedback": quality.feedback[:4],
+                "suggestions": quality.suggestions[:4],
+            }
+        )
+    return evaluations
+
+
+def evaluate_writer_message_discipline(
+    answer: str,
+    *,
+    strategy_brief: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    compact_answer = re.sub(r"\s+", " ", answer).strip()
+    clauses = [
+        item.strip()
+        for item in re.split(r"[.!?\n]|하지만|또한|그리고|반면", compact_answer)
+        if item.strip()
+    ]
+    primary_message = str((strategy_brief or {}).get("core_message") or "").strip()
+    competing_messages = [
+        clause[:80]
+        for clause in clauses[1:]
+        if len(clause) >= 18
+    ][:3]
+    score = 1.0
+    if len(competing_messages) >= 2:
+        score -= 0.25
+    if not primary_message:
+        primary_message = clauses[0][:80] if clauses else ""
+    elif primary_message and primary_message not in compact_answer:
+        score -= 0.1
+    suggestions = []
+    if len(competing_messages) >= 2:
+        suggestions.append("문항당 주장 축을 하나로 줄이고 보조 메시지는 삭제하거나 축소하세요.")
+    if primary_message and primary_message not in compact_answer:
+        suggestions.append("writer_brief의 핵심 메시지를 첫 2문장 안에 더 직접적으로 드러내세요.")
+    return {
+        "score": round(max(0.0, score), 3),
+        "primary_message": primary_message,
+        "competing_messages": competing_messages,
+        "suggestions": suggestions,
+    }
+
+
+def evaluate_writer_cliche_blocking(
+    answer: str,
+    *,
+    discouraged_phrases: list[str] | None = None,
+) -> dict[str, Any]:
+    cliche_patterns = [
+        "성장",
+        "노력",
+        "배움",
+        "열정",
+        "역량을 키웠",
+        "깨달았",
+        "최선을 다",
+    ]
+    flags = [pattern for pattern in cliche_patterns if pattern in answer]
+    discouraged_hits = [
+        phrase for phrase in (discouraged_phrases or []) if phrase and phrase in answer
+    ]
+    score = max(0.0, 1.0 - (0.08 * len(flags)) - (0.06 * len(discouraged_hits)))
+    suggestions = []
+    if flags:
+        suggestions.append("추상어 대신 당시 판단 기준, 수치, 증빙 문장으로 바꾸세요.")
+    if len(flags) >= 2:
+        suggestions.append("성장/노력/배움 서술을 줄이고 결과와 조직 적합 신호를 앞에 배치하세요.")
+    if discouraged_hits:
+        suggestions.append(
+            "유사 합격사례에서 반복된 표현 대신 본인 경험의 상황·판단·근거 문장으로 다시 쓰세요."
+        )
+    return {
+        "score": round(score, 3),
+        "flags": [*flags[:4], *discouraged_hits[:2]],
+        "suggestions": suggestions,
+    }
+
+
+def evaluate_writer_answer_differentiation(
+    answer: str,
+    *,
+    experience: Experience | None = None,
+    strategy_brief: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    differentiation_line = str(
+        (strategy_brief or {}).get("differentiation_line") or ""
+    ).strip()
+    score = 0.6
+    gaps: list[str] = []
+    if re.search(r"\d", answer):
+        score += 0.15
+    else:
+        gaps.append("수치·비교 기준이 부족합니다.")
+    if experience and experience.title and experience.title in answer:
+        score += 0.1
+    else:
+        gaps.append("주력 경험명이 답변에 직접 드러나지 않습니다.")
+    if differentiation_line and differentiation_line.split(" ")[0] not in answer:
+        gaps.append("writer_brief의 차별화 문장이 직접적으로 반영되지 않았습니다.")
+    suggestions = []
+    if gaps:
+        suggestions.append("평균 지원자가 쓸 수 없는 판단 기준·증빙·운영 맥락을 한 문장으로 명시하세요.")
+    return {
+        "score": round(min(1.0, score), 3),
+        "line": differentiation_line,
+        "gaps": gaps[:3],
+        "suggestions": suggestions,
+    }
+
+
+def evaluate_writer_committee_reaction(
+    answer: str,
+    *,
+    simulation: dict[str, Any],
+    strategy_brief: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    attack_points = _dedupe_preserve_order(
+        list((simulation or {}).get("risk_areas", []))
+        + list((simulation or {}).get("follow_up_questions", []))
+        + list((strategy_brief or {}).get("expected_attack_points", []))
+    )[:4]
+    score = max(0.0, 1.0 - (0.1 * len(attack_points)))
+    mitigation_priority = attack_points[0] if attack_points else ""
+    summary = (
+        "면접관이 바로 파고들 만한 지점이 남아 있습니다."
+        if attack_points
+        else "현재 답변은 비교적 안정적으로 방어 가능합니다."
+    )
+    return {
+        "score": round(score, 3),
+        "attack_points": attack_points,
+        "summary": summary,
+        "mitigation_priority": mitigation_priority,
+    }
 
 
 def build_interview_defense_simulations(
@@ -3488,6 +6202,13 @@ def build_interview_defense_simulations(
         return []
 
     simulator = DefenseSimulator(company_analysis)
+    top001_engine = None
+    try:
+        from .top001.integrator import Top001InterviewEngine
+
+        top001_engine = Top001InterviewEngine()
+    except Exception as e:
+        logger.debug(f"Top001 interview engine unavailable in defense simulation: {e}")
     answer_map = extract_question_answer_map(writer_text, project.questions)
     experience_by_id = {item.id: item for item in experiences}
     map_by_question = {
@@ -3498,6 +6219,7 @@ def build_interview_defense_simulations(
 
     simulations: list[dict[str, Any]] = []
     for question in project.questions[:3]:
+        resolved_question_type = _resolve_question_type(question)
         mapped = map_by_question.get(question.id, {})
         experience = experience_by_id.get(str(mapped.get("experience_id", "")))
         answer = answer_map.get(question.id)
@@ -3518,16 +6240,17 @@ def build_interview_defense_simulations(
         simulation = simulator.simulate(
             primary_question=question.question_text,
             answer=answer,
-            question_type=question.detected_type,
+            question_type=resolved_question_type,
             experiences=[experience] if experience else None,
         )
         ncs_alignment = evaluate_ncs_alignment(
             answer=answer,
             question_id=question.id,
-            question_type=question.detected_type,
+            question_type=resolved_question_type,
             ncs_profile=ncs_profile,
         )
         payload = simulation.model_dump()
+        payload["resolved_question_type"] = resolved_question_type.value
         payload["question_order"] = question.order_no
         payload["experience_title"] = experience.title if experience else None
         payload["ncs_alignment_score"] = ncs_alignment["score"]
@@ -3553,10 +6276,10 @@ def build_interview_defense_simulations(
         payload["ssot_alignment_score"] = ssot_alignment["score"]
         payload["ssot_missing_claims"] = ssot_alignment["missing_claims"]
         payload["ssot_offtrack_signals"] = ssot_alignment["offtrack_signals"]
-        if question.detected_type and experience:
+        if resolved_question_type != QuestionType.TYPE_UNKNOWN and experience:
             historical_risk = _build_strategy_outcome_issue(
                 question_order=question.order_no,
-                question_type=question.detected_type.value,
+                question_type=resolved_question_type.value,
                 experience_id=experience.id,
                 strategy_outcome_summary=strategy_outcome_summary,
                 current_pattern=current_pattern,
@@ -3577,20 +6300,76 @@ def build_interview_defense_simulations(
                 ]
             )
         )
+        if top001_engine:
+            try:
+                top001_result = top001_engine.simulate_interview(
+                    question.question_text,
+                    answer,
+                    experience,
+                    company_analysis,
+                )
+                payload["logical_vulnerabilities"] = top001_result.get(
+                    "vulnerabilities", []
+                )
+                payload["logical_follow_up_chain"] = [
+                    {
+                        "primary_question": chain.get("primary_question", ""),
+                        "depth_1_questions": chain.get("depth_1_questions", [])[:2],
+                    }
+                    for chain in top001_result.get("question_chains", [])[:2]
+                    if isinstance(chain, dict)
+                ]
+                payload["logical_pressure_level"] = top001_result.get(
+                    "pressure_level", ""
+                )
+                payload["improvement_suggestions"] = list(
+                    dict.fromkeys(
+                        payload["improvement_suggestions"]
+                        + top001_result.get("recommendations", [])
+                    )
+                )
+                for vulnerability in payload["logical_vulnerabilities"][:2]:
+                    if vulnerability and vulnerability not in payload["risk_areas"]:
+                        payload["risk_areas"].append(vulnerability)
+            except Exception as e:
+                logger.debug(f"Top001 simulation merge skipped: {e}")
+        payload["interview_rubric"] = {
+            "strong_points": payload.get("defense_points", [])[:3],
+            "risk_points": payload.get("risk_areas", [])[:4],
+            "improvement_points": payload.get("improvement_suggestions", [])[:4],
+        }
         simulations.append(payload)
     return simulations
+
+
+def _resolve_question_type(question: Any) -> QuestionType:
+    detected = getattr(question, "detected_type", None)
+    if isinstance(detected, str):
+        try:
+            detected = QuestionType(detected)
+        except ValueError:
+            detected = QuestionType.TYPE_UNKNOWN
+    if isinstance(detected, QuestionType) and detected != QuestionType.TYPE_UNKNOWN:
+        return detected
+    inferred = classify_question(getattr(question, "question_text", "") or "")
+    return (
+        inferred if inferred != QuestionType.TYPE_UNKNOWN else QuestionType.TYPE_UNKNOWN
+    )
 
 
 def needs_writer_rewrite(
     validation: ValidationResult,
     quality_evaluations: list[dict[str, Any]],
+    result_quality_evaluations: list[dict[str, Any]] | None = None,
 ) -> bool:
     if not validation.passed:
         return True
     if not quality_evaluations:
         return False
     low_scores = [
-        item for item in quality_evaluations if float(item.get("overall_score", 0.0)) < 0.72
+        item
+        for item in quality_evaluations
+        if float(item.get("overall_score", 0.0)) < 0.72
     ]
     low_humanization = [
         item
@@ -3610,112 +6389,449 @@ def needs_writer_rewrite(
         if item.get("ssot_expected_claims")
         and float(item.get("ssot_alignment_score", 1.0)) < 0.55
     ]
-    return bool(low_scores or low_humanization or low_ncs_alignment or low_ssot_alignment)
+    low_differentiation = [
+        item
+        for item in quality_evaluations
+        if float(item.get("differentiation_score", 1.0)) < 0.62
+    ]
+    low_committee_defense = [
+        item
+        for item in quality_evaluations
+        if float(item.get("committee_reaction_score", 1.0)) < 0.62
+        or len(item.get("committee_attack_points", [])) >= 3
+    ]
+    low_message_discipline = [
+        item
+        for item in quality_evaluations
+        if float(item.get("message_discipline_score", 1.0)) < 0.72
+    ]
+    low_cliche_blocking = [
+        item
+        for item in quality_evaluations
+        if float(item.get("cliche_score", 1.0)) < 0.76
+        or len(item.get("cliche_flags", [])) >= 3
+    ]
+    low_result_quality = [
+        item
+        for item in (result_quality_evaluations or [])
+        if float(item.get("overall", 1.0)) < 0.72
+    ]
+    return bool(
+        low_scores
+        or low_humanization
+        or low_ncs_alignment
+        or low_ssot_alignment
+        or low_differentiation
+        or low_committee_defense
+        or low_message_discipline
+        or low_cliche_blocking
+        or low_result_quality
+    )
+
+
+def build_writer_rewrite_quality_report(
+    before_evaluations: list[dict[str, Any]],
+    after_evaluations: list[dict[str, Any]],
+    minimum_samples: int = 3,
+    before_result_quality_evaluations: list[dict[str, Any]] | None = None,
+    after_result_quality_evaluations: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    def _to_float(value: Any) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _fmt(values: list[str]) -> str:
+        cleaned = [
+            item.strip() for item in values if isinstance(item, str) and item.strip()
+        ]
+        return ", ".join(cleaned) if cleaned else "없음"
+
+    before_by_order = {
+        int(item.get("question_order")): item
+        for item in before_evaluations
+        if item.get("question_order") is not None
+    }
+    after_by_order = {
+        int(item.get("question_order")): item
+        for item in after_evaluations
+        if item.get("question_order") is not None
+    }
+    before_result_by_order = {
+        int(item.get("question_order")): item
+        for item in before_result_quality_evaluations or []
+        if item.get("question_order") is not None
+    }
+    after_result_by_order = {
+        int(item.get("question_order")): item
+        for item in after_result_quality_evaluations or []
+        if item.get("question_order") is not None
+    }
+
+    orders = sorted(set(before_by_order.keys()) & set(after_by_order.keys()))
+    rows: list[dict[str, Any]] = []
+    for order in orders:
+        before = before_by_order[order]
+        after = after_by_order[order]
+        row = {
+            "question_order": order,
+            "overall_before": _to_float(before.get("overall_score", 0.0)),
+            "overall_after": _to_float(after.get("overall_score", 0.0)),
+            "humanization_before": _to_float(before.get("humanization_score", 0.0)),
+            "humanization_after": _to_float(after.get("humanization_score", 0.0)),
+            "ncs_before": _to_float(before.get("ncs_alignment_score", 0.0)),
+            "ncs_after": _to_float(after.get("ncs_alignment_score", 0.0)),
+            "ssot_before": _to_float(before.get("ssot_alignment_score", 0.0)),
+            "ssot_after": _to_float(after.get("ssot_alignment_score", 0.0)),
+            "ncs_expected_competencies": after.get("ncs_expected_competencies", [])
+            or before.get("ncs_expected_competencies", []),
+            "ncs_matched_competencies": after.get("ncs_matched_competencies", []),
+            "ncs_missing_competencies": after.get("ncs_missing_competencies", []),
+        }
+        row["overall_delta"] = round(row["overall_after"] - row["overall_before"], 3)
+        row["humanization_delta"] = round(
+            row["humanization_after"] - row["humanization_before"], 3
+        )
+        row["ncs_delta"] = round(row["ncs_after"] - row["ncs_before"], 3)
+        row["ssot_delta"] = round(row["ssot_after"] - row["ssot_before"], 3)
+        before_result = before_result_by_order.get(order, {})
+        after_result = after_result_by_order.get(order, {})
+        row["result_quality_before"] = _to_float(before_result.get("overall", 0.0))
+        row["result_quality_after"] = _to_float(after_result.get("overall", 0.0))
+        row["result_quality_delta"] = round(
+            row["result_quality_after"] - row["result_quality_before"], 3
+        )
+        rows.append(row)
+
+    sample_count = len(rows)
+    minimum_sample_met = sample_count >= minimum_samples
+
+    if rows:
+        avg_overall_delta = round(
+            sum(item["overall_delta"] for item in rows) / sample_count, 3
+        )
+        avg_humanization_delta = round(
+            sum(item["humanization_delta"] for item in rows) / sample_count, 3
+        )
+        avg_ncs_delta = round(sum(item["ncs_delta"] for item in rows) / sample_count, 3)
+        avg_ssot_delta = round(
+            sum(item["ssot_delta"] for item in rows) / sample_count, 3
+        )
+        avg_result_quality_delta = round(
+            sum(item["result_quality_delta"] for item in rows) / sample_count, 3
+        )
+    else:
+        avg_overall_delta = 0.0
+        avg_humanization_delta = 0.0
+        avg_ncs_delta = 0.0
+        avg_ssot_delta = 0.0
+        avg_result_quality_delta = 0.0
+
+    lines = [
+        "# Writer Rewrite Quality Comparison",
+        "",
+        f"- 샘플 수: {sample_count}",
+        f"- 최소 샘플 기준(>= {minimum_samples}): {'충족' if minimum_sample_met else '미충족'}",
+        f"- 평균 overall 변화: {avg_overall_delta:+.3f}",
+        f"- 평균 humanization 변화: {avg_humanization_delta:+.3f}",
+        f"- 평균 JD/NCS 변화: {avg_ncs_delta:+.3f}",
+        f"- 평균 SSOT 변화: {avg_ssot_delta:+.3f}",
+        f"- 평균 result quality 변화: {avg_result_quality_delta:+.3f}",
+        "",
+        "| 문항 | Overall (전→후) | Human (전→후) | JD/NCS (전→후) | SSOT (전→후) | JD/NCS 근거 |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        evidence = (
+            f"기대={_fmt(row['ncs_expected_competencies'])}; "
+            f"매칭={_fmt(row['ncs_matched_competencies'])}; "
+            f"미충족={_fmt(row['ncs_missing_competencies'])}"
+        )
+        lines.append(
+            "| Q{order} | {ob:.2f}→{oa:.2f} ({od:+.2f}) | {hb:.2f}→{ha:.2f} ({hd:+.2f}) | "
+            "{nb:.2f}→{na:.2f} ({nd:+.2f}) | {sb:.2f}→{sa:.2f} ({sd:+.2f}) | {evidence} |".format(
+                order=row["question_order"],
+                ob=row["overall_before"],
+                oa=row["overall_after"],
+                od=row["overall_delta"],
+                hb=row["humanization_before"],
+                ha=row["humanization_after"],
+                hd=row["humanization_delta"],
+                nb=row["ncs_before"],
+                na=row["ncs_after"],
+                nd=row["ncs_delta"],
+                sb=row["ssot_before"],
+                sa=row["ssot_after"],
+                sd=row["ssot_delta"],
+                evidence=evidence,
+            )
+        )
+
+    return {
+        "minimum_samples": minimum_samples,
+        "sample_count": sample_count,
+        "minimum_sample_met": minimum_sample_met,
+        "average_overall_delta": avg_overall_delta,
+        "average_humanization_delta": avg_humanization_delta,
+        "average_ncs_delta": avg_ncs_delta,
+        "average_ssot_delta": avg_ssot_delta,
+        "average_result_quality_delta": avg_result_quality_delta,
+        "rows": rows,
+        "markdown": "\n".join(lines),
+    }
+
+
+def _average_result_quality_score(
+    result_quality_evaluations: list[dict[str, Any]] | None,
+) -> float:
+    if not result_quality_evaluations:
+        return 0.0
+    values: list[float] = []
+    for item in result_quality_evaluations:
+        try:
+            values.append(float(item.get("overall", 0.0)))
+        except (TypeError, ValueError, AttributeError):
+            continue
+    return sum(values) / len(values) if values else 0.0
+
+
+def should_accept_writer_rewrite(
+    candidate_validation: ValidationResult,
+    current_quality_evaluations: list[dict[str, Any]],
+    candidate_quality_evaluations: list[dict[str, Any]],
+    current_result_quality_evaluations: list[dict[str, Any]] | None = None,
+    candidate_result_quality_evaluations: list[dict[str, Any]] | None = None,
+) -> bool:
+    if not candidate_validation.passed:
+        return False
+
+    old_avg = (
+        sum(
+            float(item.get("overall_score", 0.0))
+            for item in current_quality_evaluations
+        )
+        / len(current_quality_evaluations)
+        if current_quality_evaluations
+        else 0.0
+    )
+    new_avg = (
+        sum(
+            float(item.get("overall_score", 0.0))
+            for item in candidate_quality_evaluations
+        )
+        / len(candidate_quality_evaluations)
+        if candidate_quality_evaluations
+        else 0.0
+    )
+    old_result_avg = _average_result_quality_score(current_result_quality_evaluations)
+    new_result_avg = _average_result_quality_score(candidate_result_quality_evaluations)
+
+    if new_avg > old_avg:
+        return True
+    if new_avg == old_avg and new_result_avg >= old_result_avg:
+        return True
+    if new_avg >= old_avg and new_result_avg > old_result_avg:
+        return True
+    return False
 
 
 def build_writer_rewrite_prompt(
     previous_output: str,
     validation: ValidationResult,
     quality_evaluations: list[dict[str, Any]],
+    result_quality_evaluations: list[dict[str, Any]] | None = None,
+    char_limit_report: dict[str, Any] | None = None,
     feedback_learning: dict[str, Any] | None = None,
     candidate_profile: dict[str, Any] | None = None,
+    writer_brief: dict[str, Any] | None = None,
+    focus_mode: str = "full",
 ) -> str:
     issues: list[str] = []
+    char_only_mode = focus_mode == "char_limit"
+    length_first_section = ""
+    if char_only_mode:
+        length_first_section = (
+            "# LENGTH-FIRST MODE\n"
+            "- 이번 재작성의 1순위는 각 문항 본문을 제한 대비 90~97% 범위로 맞추는 것이다.\n"
+            "- 분량이 부족한 문항은 새 사실을 만들지 말고 기존 행동, 판단 기준, 개인 기여, 결과 연결을 더 구체적으로 풀어 써라.\n"
+            "- 다른 품질 축보다 글자수 강제조건을 우선 충족하라.\n"
+        )
     if validation.missing:
         issues.append("형식/계약 누락: " + ", ".join(validation.missing))
-    for item in quality_evaluations:
-        overall = float(item.get("overall_score", 0.0))
-        humanization_flags = item.get("humanization_flags", [])[:3]
-        humanization_suggestions = item.get("humanization_suggestions", [])[:3]
+    if not char_only_mode:
+        for item in quality_evaluations:
+            overall = float(item.get("overall_score", 0.0))
+            humanization_flags = item.get("humanization_flags", [])[:3]
+            humanization_suggestions = item.get("humanization_suggestions", [])[:3]
 
-        if overall < 0.72 or humanization_flags:
-            weaknesses = item.get("weaknesses", [])[:3]
+            if overall < 0.72 or humanization_flags:
+                weaknesses = item.get("weaknesses", [])[:3]
+                suggestions = item.get("suggestions", [])[:3]
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 품질점수 {overall:.2f} / 약점: "
+                    + ", ".join(weaknesses or ["불명확"])
+                )
+                if suggestions:
+                    issues.append(
+                        f"Q{item.get('question_order', '?')} 개선지시: "
+                        + ", ".join(suggestions)
+                    )
+            if humanization_flags:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 인간화 이슈: "
+                    + ", ".join(humanization_flags)
+                )
+            if humanization_suggestions:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 자연화 지시: "
+                    + ", ".join(humanization_suggestions)
+                )
+            interviewer_checklist = item.get("interviewer_checklist", [])[:3]
+            if interviewer_checklist:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 면접관 체크: "
+                    + " / ".join(interviewer_checklist)
+                )
+            expected_followups = item.get("expected_followups", [])[:3]
+            if expected_followups:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 예상 꼬리질문: "
+                    + " / ".join(expected_followups)
+                )
+            defense_gaps = item.get("defense_gaps", [])[:3]
+            if defense_gaps:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 방어 취약점: "
+                    + " / ".join(defense_gaps)
+                )
+            committee_attack_points = item.get("committee_attack_points", [])[:3]
+            if committee_attack_points:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 위원회 예상 공격: "
+                    + " / ".join(committee_attack_points)
+                )
+            message_discipline_score = float(item.get("message_discipline_score", 1.0))
+            if message_discipline_score < 0.72:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 메시지 축 흔들림({message_discipline_score:.2f}): "
+                    + " / ".join(item.get("message_competing_points", [])[:3])
+                )
+            cliche_flags = item.get("cliche_flags", [])[:3]
+            if cliche_flags:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 클리셰 차단 필요: "
+                    + ", ".join(cliche_flags)
+                )
+            differentiation_score = float(item.get("differentiation_score", 1.0))
+            if differentiation_score < 0.62:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 차별화 부족({differentiation_score:.2f}): "
+                    + ", ".join(item.get("differentiation_gaps", [])[:3] or ["차별화 문장이 약합니다."])
+                )
+            ncs_missing = item.get("ncs_missing_competencies", [])[:3]
+            ncs_expected = item.get("ncs_expected_competencies", [])[:3]
+            ncs_matched = item.get("ncs_matched_competencies", [])[:3]
+            ncs_suggestions = item.get("ncs_suggestions", [])[:3]
+            ncs_score = float(item.get("ncs_alignment_score", 1.0))
+            if ncs_expected:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} JD/NCS 매칭 근거: "
+                    f"기대역량={', '.join(ncs_expected)} / "
+                    f"현재매칭={', '.join(ncs_matched) if ncs_matched else '없음'} / "
+                    f"미충족={', '.join(ncs_missing) if ncs_missing else '없음'}"
+                )
+            if ncs_missing and ncs_score < 0.6:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} NCS 정합성 부족({ncs_score:.2f}): "
+                    + ", ".join(ncs_missing)
+                )
+            if ncs_suggestions:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} NCS 보강지시: "
+                    + ", ".join(ncs_suggestions)
+                )
+            ncs_missing_units = item.get("ncs_missing_ability_units", [])[:3]
+            if ncs_missing_units:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 능력단위 보강: "
+                    + ", ".join(ncs_missing_units)
+                )
+    if not char_only_mode:
+        for item in result_quality_evaluations or []:
+            overall = float(item.get("overall", 1.0))
+            details = item.get("details", {})
+            low_dimensions = [
+                f"{key}={float(value):.2f}"
+                for key, value in details.items()
+                if float(value) < 0.7
+            ]
+            if overall < 0.72 or low_dimensions:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 결과중심 품질 {overall:.2f}"
+                )
+            if low_dimensions:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 결과중심 보강축: "
+                    + ", ".join(low_dimensions[:4])
+                )
             suggestions = item.get("suggestions", [])[:3]
-            issues.append(
-                f"Q{item.get('question_order', '?')} 품질점수 {overall:.2f} / 약점: "
-                + ", ".join(weaknesses or ["불명확"])
-            )
             if suggestions:
                 issues.append(
-                    f"Q{item.get('question_order', '?')} 개선지시: "
+                    f"Q{item.get('question_order', '?')} 결과중심 개선지시: "
                     + ", ".join(suggestions)
                 )
-        if humanization_flags:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 인간화 이슈: "
-                + ", ".join(humanization_flags)
-            )
-        if humanization_suggestions:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 자연화 지시: "
-                + ", ".join(humanization_suggestions)
-            )
-        interviewer_checklist = item.get("interviewer_checklist", [])[:3]
-        if interviewer_checklist:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 면접관 체크: "
-                + " / ".join(interviewer_checklist)
-            )
-        expected_followups = item.get("expected_followups", [])[:3]
-        if expected_followups:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 예상 꼬리질문: "
-                + " / ".join(expected_followups)
-            )
-        defense_gaps = item.get("defense_gaps", [])[:3]
-        if defense_gaps:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 방어 취약점: "
-                + " / ".join(defense_gaps)
-            )
-        ncs_missing = item.get("ncs_missing_competencies", [])[:3]
-        ncs_suggestions = item.get("ncs_suggestions", [])[:3]
-        ncs_score = float(item.get("ncs_alignment_score", 1.0))
-        if ncs_missing and ncs_score < 0.6:
-            issues.append(
-                f"Q{item.get('question_order', '?')} NCS 정합성 부족({ncs_score:.2f}): "
-                + ", ".join(ncs_missing)
-            )
-        if ncs_suggestions:
-            issues.append(
-                f"Q{item.get('question_order', '?')} NCS 보강지시: "
-                + ", ".join(ncs_suggestions)
-            )
-        ncs_missing_units = item.get("ncs_missing_ability_units", [])[:3]
-        if ncs_missing_units:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 능력단위 보강: "
-                + ", ".join(ncs_missing_units)
-            )
-        ssot_missing = item.get("ssot_missing_claims", [])[:3]
-        ssot_offtrack = item.get("ssot_offtrack_signals", [])[:3]
-        ssot_suggestions = item.get("ssot_suggestions", [])[:3]
-        ssot_score = float(item.get("ssot_alignment_score", 1.0))
-        if ssot_missing and ssot_score < 0.55:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 공통 서사 정합성 부족({ssot_score:.2f}): "
-                + ", ".join(ssot_missing)
-            )
-        if ssot_offtrack:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 서사 이탈 신호: "
-                + " / ".join(ssot_offtrack)
-            )
-        if ssot_suggestions:
-            issues.append(
-                f"Q{item.get('question_order', '?')} 서사 보강지시: "
-                + " / ".join(ssot_suggestions)
-            )
+            ssot_missing = item.get("ssot_missing_claims", [])[:3]
+            ssot_offtrack = item.get("ssot_offtrack_signals", [])[:3]
+            ssot_suggestions = item.get("ssot_suggestions", [])[:3]
+            ssot_score = float(item.get("ssot_alignment_score", 1.0))
+            if ssot_missing and ssot_score < 0.55:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 공통 서사 정합성 부족({ssot_score:.2f}): "
+                    + ", ".join(ssot_missing)
+                )
+            if ssot_offtrack:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 서사 이탈 신호: "
+                    + " / ".join(ssot_offtrack)
+                )
+            if ssot_suggestions:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 서사 보강지시: "
+                    + " / ".join(ssot_suggestions)
+                )
 
-    if feedback_learning:
+    if char_limit_report:
+        for item in char_limit_report.get("question_reports", []):
+            status = item.get("status")
+            if status in {
+                "over_limit",
+                "under_target",
+                "over_target",
+                "missing_answer",
+            }:
+                issues.append(
+                    f"Q{item.get('question_order', '?')} 글자수 강제조건: "
+                    f"현재 {item.get('char_count', 0)}자 / 제한 {item.get('char_limit', 'N/A')}자 / "
+                    f"목표 {int(float(item.get('target_min', 0.9)) * 100)}~{int(float(item.get('target_max', 0.97)) * 100)}% / 상태 {status}"
+                )
+
+    if feedback_learning and not char_only_mode:
         rejection_comments = feedback_learning.get("recent_rejection_comments", [])[:3]
         improvement_areas = feedback_learning.get("insights", {}).get(
             "improvement_areas", []
         )[:3]
+        adaptation_actions = (
+            feedback_learning.get("adaptation_plan", {}).get("focus_actions", [])[:3]
+        )
         if rejection_comments:
-            issues.append("최근 거절 코멘트 재발 방지: " + " / ".join(rejection_comments))
+            issues.append(
+                "최근 거절 코멘트 재발 방지: " + " / ".join(rejection_comments)
+            )
         if improvement_areas:
             issues.append("피드백 기반 개선영역: " + " / ".join(improvement_areas))
+        if adaptation_actions:
+            issues.append("학습 루프 우선 과제: " + " / ".join(adaptation_actions))
         strategy_outcome_summary = feedback_learning.get("strategy_outcome_summary")
         question_experience_map = feedback_learning.get("question_experience_map", [])
         current_pattern = feedback_learning.get("current_pattern")
@@ -3739,10 +6855,20 @@ def build_writer_rewrite_prompt(
             issues.append("지원자 프로필 요약: " + summary)
         if focus:
             issues.append("지원자 맞춤 코칭 포인트: " + " / ".join(focus))
+    if writer_brief:
+        for item in writer_brief.get("question_strategies", [])[:4]:
+            issues.append(
+                f"Q{item.get('question_order', '?')} writer contract: "
+                f"핵심메시지={item.get('core_message', '')} / "
+                f"winning={item.get('winning_angle', '')} / "
+                f"금지={', '.join(item.get('forbidden_points', [])[:2])}"
+            )
 
     return f"""
 # QUALITY REWRITE TASK
 이전 writer 결과를 같은 4블록 형식을 유지한 채 더 강하게 다시 작성하라.
+
+{length_first_section}
 
 # MUST FIX
 {chr(10).join(f"- {item}" for item in issues) or "- 계약 형식과 품질 기준을 다시 점검하라."}
@@ -3750,6 +6876,8 @@ def build_writer_rewrite_prompt(
 # HARD RULES
 - 기존 DATA 범위를 벗어난 사실을 추가하지 않는다.
 - 문항별 글자수 표기를 반드시 유지한다.
+- 각 문항 답변 본문은 공백 포함 실제 글자수 기준으로 제한을 절대 초과하지 않는다.
+- 각 문항 답변 본문은 가능하면 제한 대비 90~97% 범위에 맞춘다.
 - SELF-CHECK는 PASS/FAIL로 명시한다.
 - 각 문항은 질문 의도에 직접 답해야 한다.
 - 추상어 대신 행동, 수치, 개인 기여를 우선한다.
@@ -3780,8 +6908,13 @@ def _build_strategy_outcome_issue(
 
     bucket = exp_bucket
     if current_pattern:
-        pattern_bucket = (exp_bucket.get("pattern_breakdown", {}) or {}).get(current_pattern)
-        if isinstance(pattern_bucket, dict) and int(pattern_bucket.get("total_uses", 0)) > 0:
+        pattern_bucket = (exp_bucket.get("pattern_breakdown", {}) or {}).get(
+            current_pattern
+        )
+        if (
+            isinstance(pattern_bucket, dict)
+            and int(pattern_bucket.get("total_uses", 0)) > 0
+        ):
             bucket = {**exp_bucket, **pattern_bucket}
 
     total_uses = int(bucket.get("total_uses", 0))
@@ -3792,7 +6925,11 @@ def _build_strategy_outcome_issue(
     if weighted_margin >= 0:
         return None
 
-    reasons = bucket.get("top_rejection_reasons") or exp_bucket.get("top_rejection_reasons") or []
+    reasons = (
+        bucket.get("top_rejection_reasons")
+        or exp_bucket.get("top_rejection_reasons")
+        or []
+    )
     reason_hint = ""
     if reasons and isinstance(reasons[0], dict):
         reason_hint = reasons[0].get("reason", "")

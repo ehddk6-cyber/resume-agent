@@ -1,0 +1,65 @@
+{
+  "coaching_state": 2,
+  "temporal_inconsistencies": [],
+  "role_inconsistencies": [],
+  "allocation_issues": [],
+  "suggestions": [
+    "9개 경험이 배분되지 않았습니다. 문항별 특성애 맞는 경험 선택을 검토하세요."
+  ],
+  "coverage_report": {
+    "total_experiences": 13,
+    "experiences_in_use": 4,
+    "l3_experiences": 5,
+    "verified_experiences": 13,
+    "total_questions": 4,
+    "allocated_questions": 4,
+    "uncovered_question_count": 0,
+    "coverage_rate": 1.0
+  },
+  "progressive_plan": [
+    {
+      "session": 1,
+      "state": 2,
+      "focus": "핵심 경험 3개 발굴 + STAR 구조화",
+      "activities": [
+        "가장 설득력 있는 경험 선택",
+        "각 경험의 상황-행동-결과 정리",
+        "면접에서 다시 꺼낼 증빙 문장 만들기"
+      ],
+      "output": "경험 카드 3개 완성"
+    },
+    {
+      "session": 2,
+      "state": 3,
+      "focus": "문항별 경험 매핑 + 차별화 포인트",
+      "activities": [
+        "문항 유형별 핵심 메시지 설정",
+        "경험-문항 최적 배분",
+        "회사와 직무 접점 찾기"
+      ],
+      "output": "경험 배분표 + 차별화 전략"
+    },
+    {
+      "session": 3,
+      "state": 4,
+      "focus": "근거 검증 및 보강",
+      "activities": [
+        "L3 증거 수준 확인",
+        "수치와 측정 기준 검증",
+        "증빙 자료 준비"
+      ],
+      "output": "검증 완료 경험列表"
+    },
+    {
+      "session": 4,
+      "state": 5,
+      "focus": "면접 예상 질문 + 방어 연습",
+      "activities": [
+        "3-depth 꼬리질문 시뮬레이션",
+        "30초 스피치 연습",
+        "취약점 방어 연습"
+      ],
+      "output": "완성된 답변 프레임워크"
+    }
+  ]
+}
