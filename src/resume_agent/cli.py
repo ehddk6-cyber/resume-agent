@@ -410,6 +410,45 @@ def build_parser() -> argparse.ArgumentParser:
     p_history.add_argument("workspace")
     p_history.set_defaults(func=cmd_history)
 
+    # outcome command
+    p_outcome = sub.add_parser("outcome", help="Record/list/summary application outcomes.")
+    p_outcome.add_argument("workspace")
+    outcome_sub = p_outcome.add_subparsers(dest="outcome_action", required=True)
+    
+    p_outcome_record = outcome_sub.add_parser("record", help="Record an application outcome.")
+    p_outcome_record.add_argument("--artifact-id", required=True, help="Artifact ID to record outcome for.")
+    p_outcome_record.add_argument("--company", required=True, help="Company name.")
+    p_outcome_record.add_argument("--job-title", default="", help="Job title.")
+    p_outcome_record.add_argument("--application-id", default="", help="Application ID.")
+    p_outcome_record.add_argument("--outcome", required=True, choices=["pending", "screening_pass", "screening_fail", "interview_invited", "interview_pass", "interview_fail", "final_pass", "final_fail", "offer_received", "offer_declined"], help="Outcome result.")
+    p_outcome_record.set_defaults(func=cmd_outcome_record)
+    
+    p_outcome_list = outcome_sub.add_parser("list", help="List all recorded outcomes.")
+    p_outcome_list.add_argument("workspace")
+    p_outcome_list.add_argument("--company", help="Filter by company name.")
+    p_outcome_list.set_defaults(func=cmd_outcome_list)
+    
+    p_outcome_summary = outcome_sub.add_parser("summary", help="Show outcome summary statistics.")
+    p_outcome_summary.add_argument("workspace")
+    p_outcome_summary.set_defaults(func=cmd_outcome_summary)
+
+    # ab command
+    p_ab = sub.add_parser("ab", help="Record/status/end A/B tests.")
+    p_ab.add_argument("workspace")
+    ab_sub = p_ab.add_subparsers(dest="ab_action", required=True)
+    
+    p_ab_record = ab_sub.add_parser("record", help="Record a test result.")
+    p_ab_record.add_argument("--variant", required=True, choices=["A", "B"], help="Test variant.")
+    p_ab_record.add_argument("--success", action="store_true", help="Mark as success.")
+    p_ab_record.add_argument("--fail", action="store_true", help="Mark as failure.")
+    p_ab_record.set_defaults(func=cmd_ab_record)
+    
+    p_ab_status = ab_sub.add_parser("status", help="Show current A/B test status.")
+    p_ab_status.set_defaults(func=cmd_ab_status)
+    
+    p_ab_end = ab_sub.add_parser("end", help="End the current A/B test.")
+    p_ab_end.set_defaults(func=cmd_ab_end)
+
     return parser
 
 
@@ -436,7 +475,7 @@ def cmd_wizard(args: argparse.Namespace) -> None:
     print(f"Knowledge base now has {sync_result['stored_count']} item(s).")
     print(f"Analysis written to {sync_result['analysis_path']}")
     if result:
-        print(f"\n🚀 coach를 실행하시겠습니까? (resume-agent coach {args.workspace})")
+        print(f"\ncoach를 실행하시겠습니까? (resume-agent coach {args.workspace})")
 
 
 def cmd_edit(args: argparse.Namespace) -> None:
@@ -492,13 +531,13 @@ def cmd_sync_vault(args: argparse.Namespace) -> None:
         return
 
     vault = VaultManager(Path("취업"))
-    print("🔍 Global Vault (취업/자격증, 취업/경력증명서) 스캔 중...")
+    print("Global Vault 스캔 중...")
     verified_count = vault.verify_experiences(experiences)
 
     if verified_count > 0:
         save_experiences(ws, experiences)
         print(
-            f"✅ {verified_count}개의 경험이 증빙 파일과 매칭되어 L3(VERIFIED)로 자동 승격되었습니다."
+            f"{verified_count}개의 경험이 증빙 파일과 매칭되어 자동 승격되었습니다."
         )
     else:
         print("ℹ️ 일치하는 증빙 파일을 찾지 못했습니다.")
@@ -517,7 +556,7 @@ def cmd_mine_past(args: argparse.Namespace) -> None:
         print(f"파일을 찾을 수 없습니다: {resume_path}")
         return
 
-    print(f"🔍 {resume_path.name} 파일에서 경험을 마이닝합니다 (Codex 실행 중...)")
+    print(f"{resume_path.name} 파일에서 경험을 마이닝합니다...")
     new_experiences = mine_past_resume(resume_path, ws.root)
 
     if new_experiences:
@@ -525,12 +564,12 @@ def cmd_mine_past(args: argparse.Namespace) -> None:
         current_experiences.extend(new_experiences)
         save_experiences(ws, current_experiences)
         print(
-            f"✅ {len(new_experiences)}개의 경험이 성공적으로 추출되어 워크스페이스에 저장되었습니다."
+            f"{len(new_experiences)}개의 경험이 성공적으로 추출되어 저장되었습니다."
         )
         for exp in new_experiences:
             print(f"  - [{exp.evidence_level.value}] {exp.title}")
     else:
-        print("⚠️ 경험을 추출하지 못했거나 파일 형식이 지원되지 않습니다.")
+        print("경험을 추출하지 못했거나 파일 형식이 지원되지 않습니다.")
 
 
 def cmd_crawl_base(args: argparse.Namespace) -> None:
@@ -587,7 +626,7 @@ def cmd_my_gaps(args: argparse.Namespace) -> None:
     console.print(
         Panel(
             summary_text,
-            title="📊 갭 분석 요약",
+            title="갭 분석 요약",
             border_style="cyan",
         )
     )
@@ -642,7 +681,7 @@ def cmd_my_gaps(args: argparse.Namespace) -> None:
         console.print(
             Panel(
                 "\n".join(f"  {r}" for r in recommendations),
-                title="💡 권고사항",
+                title="권고사항",
                 border_style="green",
             )
         )
@@ -739,7 +778,7 @@ def cmd_writer(args: argparse.Namespace) -> None:
         if approved:
             console.print(
                 Panel.fit(
-                    "[bold green]✅ Writer 검증 통과[/bold green]",
+                    "[bold green]Writer 검증 통과[/bold green]",
                     title="검증 결과",
                     border_style="green",
                 )
@@ -786,15 +825,15 @@ def cmd_writer(args: argparse.Namespace) -> None:
             console.print(
                 Panel(
                     fact_text,
-                    title="⚠️ 팩트 오딧 경고",
+                    title="팩트 오딧 경고",
                     border_style="yellow",
                 )
             )
             console.print(
-                "[dim]💡 수정 방법: experiences.json에 실제 수치를 추가하거나, 정성 표현으로 변경하세요.[/dim]"
+                "[dim]수정 방법: experiences.json에 실제 수치를 추가하거나, 정성 표현으로 변경하세요.[/dim]"
             )
         else:
-            console.print("[green]✅ 팩트 오딧: 경고 없음[/green]")
+            console.print("[green]팩트 오딧: 경고 없음[/green]")
 
         # 3. 가독성 점수
         readability = input_snapshot.get("readability", {})
@@ -803,7 +842,7 @@ def cmd_writer(args: argparse.Namespace) -> None:
             feedback_list = readability.get("feedback", [])
             score_style = "green" if score >= 80 else "yellow" if score >= 60 else "red"
             console.print(
-                f"\n[{score_style}]📖 가독성 점수: {score}/100[/{score_style}]"
+                f"\n[{score_style}]가독성 점수: {score}/100[/{score_style}]"
             )
             if feedback_list and score < 100:
                 for fb in feedback_list:
@@ -812,7 +851,7 @@ def cmd_writer(args: argparse.Namespace) -> None:
         # 4. 답변 품질 평가
         quality_evals = input_snapshot.get("quality_evaluations", [])
         if quality_evals:
-            console.print("\n[bold]📊 답변 품질 평가[/bold]")
+            console.print("\n[bold]답변 품질 평가[/bold]")
             q_table = Table(show_header=True, header_style="bold cyan")
             q_table.add_column("문항", width=4)
             q_table.add_column("관련성", width=8)
@@ -841,7 +880,7 @@ def cmd_writer(args: argparse.Namespace) -> None:
                 suggestions = qe.get("suggestions", [])
                 if suggestions:
                     console.print(
-                        f"\n  [cyan]💡 {qe.get('question_id', '?')} 개선 제안:[/cyan]"
+                        f"\n  [cyan]{qe.get('question_id', '?')} 개선 제안:[/cyan]"
                     )
                     for s in suggestions[:2]:
                         console.print(f"    - {s}")
@@ -894,7 +933,7 @@ def cmd_writer(args: argparse.Namespace) -> None:
                     console.print(
                         Panel(
                             raw[:3000],
-                            title="🔍 patina 감지 결과",
+                            title="patina 감지 결과",
                             border_style="magenta",
                         )
                     )
@@ -908,7 +947,7 @@ def cmd_writer(args: argparse.Namespace) -> None:
                     console.print(
                         Panel(
                             raw[:3000],
-                            title="📊 patina AI 유사도 점수",
+                            title="patina AI 유사도 점수",
                             border_style="magenta",
                         )
                     )
@@ -1020,17 +1059,17 @@ def cmd_interview(args: argparse.Namespace) -> None:
 def cmd_deep_interview(args: argparse.Namespace) -> None:
     ws = Workspace(Path(args.workspace))
     print(
-        f"🔍 {args.workspace}에 대해 심층 압박 면접 시뮬레이션을 시작합니다 (여러 번의 Codex 호출 발생)..."
+        f"{args.workspace}에 대해 심층 압박 면접 시뮬레이션을 시작합니다..."
     )
     result = run_deep_interview(ws)
-    print(f"✅ 심층 면접 팩 생성 완료: {result['path']}")
-    print(f"📊 {result['count']}개의 질문에 대해 꼬리 질문이 생성되었습니다.")
+    print(f"심층 면접 팩 생성 완료: {result['path']}")
+    print(f"{result['count']}개의 질문에 대해 꼬리 질문이 생성되었습니다.")
 
 
 def cmd_self_intro(args: argparse.Namespace) -> None:
     ws = Workspace(Path(args.workspace))
     result = run_self_intro(ws)
-    print(f"✅ 자기소개 팩 생성 완료: {result['path']}")
+    print(f"자기소개 팩 생성 완료: {result['path']}")
     print(f"📦 분석 데이터: {result['analysis_path']}")
 
 
@@ -1153,16 +1192,16 @@ def cmd_resume(args: argparse.Namespace) -> None:
     # 다음 단계 실행
     if next_step_name == "coach":
         result = run_coach(ws)
-        console.print(f"[green]✅ coach 완료[/green]")
+        console.print(f"[green]coach 완료[/green]")
     elif next_step_name == "writer":
         result = run_writer_with_codex(ws)
-        console.print(f"[green]✅ writer 완료[/green]")
+        console.print(f"[green]writer 완료[/green]")
     elif next_step_name == "interview":
         result = run_interview_with_codex(ws)
-        console.print(f"[green]✅ interview 완료[/green]")
+        console.print(f"[green]interview 완료[/green]")
     elif next_step_name == "export":
         result = run_export(ws)
-        console.print(f"[green]✅ export 완료[/green]")
+        console.print(f"[green]export 완료[/green]")
     else:
         console.print(f"[red]알 수 없는 단계: {next_step_name}[/red]")
         return
@@ -1177,7 +1216,7 @@ def cmd_mock_interview(args: argparse.Namespace) -> None:
     ws = Workspace(Path(args.workspace))
     ws.ensure()
 
-    print(f"🎤 모의면접 모드: {args.mode}")
+    print(f"모의면접 모드: {args.mode}")
     run_mock_interview(ws, args.mode)
 
 
@@ -1232,7 +1271,7 @@ def cmd_feedback(args: argparse.Namespace) -> None:
     outcome_str = f", 결과: {args.final_outcome}" if args.final_outcome else ""
     reason_str = f", 사유: {args.rejection_reason}" if args.rejection_reason else ""
     print(
-        f"✅ 피드백 기록 완료: {args.artifact} - {status}{rating_str}{comment_str}{outcome_str}{reason_str}"
+        f"피드백 기록 완료: {args.artifact} - {status}{rating_str}{comment_str}{outcome_str}{reason_str}"
     )
     if not args.final_outcome:
         print("다음 단계 결과 기록 예시:")
@@ -1248,7 +1287,7 @@ def cmd_feedback(args: argparse.Namespace) -> None:
     # 인사이트 출력
     insights = learner.get_insights()
     if insights["total_feedback"] > 0:
-        print(f"\n📊 전체 통계:")
+        print(f"\n전체 통계:")
         print(f"  - 총 피드백: {insights['total_feedback']}건")
         print(f"  - 전체 성공률: {insights['overall_success_rate']:.0%}")
         print(f"  - 평균 평점: {insights['average_rating']:.1f}/5")
@@ -1261,7 +1300,7 @@ def cmd_benchmark_blind(args: argparse.Namespace) -> None:
     project = load_project(ws)
     frame = build_blind_benchmark_frame(ws, project=project)
     path = ws.analysis_dir / "blind_benchmark_frame.json"
-    print(f"✅ 블라인드 벤치마크 프레임 생성 완료: {path}")
+    print(f"블라인드 벤치마크 프레임 생성 완료: {path}")
     print(f"  - 비교 후보 수: {frame['candidate_count']}")
     print(f"  - 평가 문항 수: {len(frame['questions'])}")
 
@@ -1400,3 +1439,250 @@ def cmd_history(args: argparse.Namespace) -> None:
         table.add_row(artifact.id, artifact.artifact_type.value.upper(), status, ts)
 
     console.print(table)
+
+
+def cmd_outcome_record(args: argparse.Namespace) -> None:
+    """지원 결과 기록"""
+    from .outcome_tracker import OutcomeTracker
+    from .models import OutcomeResult
+    
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    
+    tracker = OutcomeTracker(ws)
+    outcome = OutcomeResult(
+        artifact_id=args.artifact_id,
+        application_id=args.application_id,
+        company_name=args.company,
+        job_title=args.job_title,
+        outcome=args.outcome
+    )
+    result = tracker.record_outcome(outcome)
+    print(f"결과 기록 완료: {result.artifact_id} -> {result.outcome}")
+    print(f"   회사: {result.company_name}, 직무: {result.job_title}")
+
+
+def cmd_outcome_list(args: argparse.Namespace) -> None:
+    """지원 결과 목록 조회"""
+    from rich.console import Console
+    from rich.table import Table
+    from .outcome_tracker import OutcomeTracker
+    
+    console = Console()
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    
+    tracker = OutcomeTracker(ws)
+    outcomes = tracker.get_all_outcomes()
+    
+    if args.company:
+        outcomes = [o for o in outcomes if args.company.lower() in o.company_name.lower()]
+    
+    if not outcomes:
+        console.print("[yellow]기록된 결과가 없습니다.[/yellow]")
+        return
+    
+    table = Table(show_header=True, header_style="bold cyan", title="지원 결과 목록")
+    table.add_column("아티팩트 ID", width=30)
+    table.add_column("회사", width=20)
+    table.add_column("직무", width=15)
+    table.add_column("결과", width=15)
+    
+    outcome_labels = {
+        "pending": "대기",
+        "screening_pass": "서류 통과",
+        "screening_fail": "서류 탈락",
+        "interview_invited": "면접 초대",
+        "interview_pass": "면접 통과",
+        "interview_fail": "면접 탈락",
+        "final_pass": "최종 합격",
+        "final_fail": "최종 탈락",
+        "offer_received": "합격",
+        "offer_declined": "사직",
+    }
+    
+    for o in sorted(outcomes, key=lambda x: x.artifact_id, reverse=True):
+        outcome_text = outcome_labels.get(o.outcome, o.outcome)
+        outcome_style = "green" if o.outcome in ["offer_received", "final_pass", "interview_pass", "screening_pass"] else "red" if o.outcome in ["screening_fail", "interview_fail", "final_fail"] else "yellow"
+        table.add_row(
+            o.artifact_id,
+            o.company_name,
+            o.job_title,
+            f"[{outcome_style}]{outcome_text}[/{outcome_style}]"
+        )
+    
+    console.print(table)
+
+
+def cmd_outcome_summary(args: argparse.Namespace) -> None:
+    """지원 결과 요약 통계"""
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from .outcome_tracker import OutcomeTracker
+    
+    console = Console()
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    
+    tracker = OutcomeTracker(ws)
+    summary = tracker.get_outcome_summary()
+    total = sum(summary.values())
+    success_rate = tracker.get_success_rate()
+    
+    outcome_labels = {
+        "pending": "대기",
+        "screening_pass": "서류 통과",
+        "screening_fail": "서류 탈락",
+        "interview_invited": "면접 초대",
+        "interview_pass": "면접 통과",
+        "interview_fail": "면접 탈락",
+        "final_pass": "최종 합격",
+        "final_fail": "최종 탈락",
+        "offer_received": "합격",
+    }
+    
+    table = Table(show_header=True, header_style="bold cyan", title="결과 요약")
+    table.add_column("구분", width=15)
+    table.add_column("건수", width=8)
+    table.add_column("비율", width=10)
+    
+    for key, label in outcome_labels.items():
+        count = summary.get(key, 0)
+        pct = (count / total * 100) if total > 0 else 0
+        table.add_row(label, str(count), f"{pct:.1f}%")
+    
+    console.print(table)
+    console.print(f"\n[bold]전체 성공률:[/bold] {success_rate:.1%}")
+    console.print(f"[bold]총 지원 수:[/bold] {total}건")
+
+
+def cmd_ab_record(args: argparse.Namespace) -> None:
+    """A/B 테스트 결과 기록"""
+    from .ab_testing import ABTest
+    
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    
+    ab_test = ABTest(ws)
+    success = args.success and not args.fail
+    ab_test.record_result(args.variant, success)
+    
+    print(f"기록 완료: Variant {args.variant} -> {'성공' if success else '실패'}")
+    
+    test = ab_test.get_current_test()
+    if test:
+        print(f"\n현재 테스트 상태:")
+        print(f"  Variant A: {test.sample_size_a}개 ({test.success_rate_a:.1%})")
+        print(f"  Variant B: {test.sample_size_b}개 ({test.success_rate_b:.1%})")
+        if test.is_significant:
+            print(f"  → 통계적으로 유의미한 결과! Winner: {test.winner}")
+
+
+def cmd_ab_status(args: argparse.Namespace) -> None:
+    """A/B 테스트 상태 조회"""
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from .ab_testing import ABTest
+    
+    console = Console()
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    
+    ab_test = ABTest(ws)
+    test = ab_test.get_current_test()
+    
+    if not test:
+        console.print("[yellow]진행 중인 테스트가 없습니다.[/yellow]")
+        return
+    
+    status_text = "[green]진행 중[/green]" if test.end_date is None else "[red]종료됨[/red]"
+    recommend = ab_test.recommend_variant()
+    
+    console.print(
+        Panel(
+            f"테스트 ID: {test.test_id}\n"
+            f"테스트 이름: {test.test_name}\n"
+            f"상태: {status_text}\n"
+            f"권장 Variant: {recommend}",
+            title=f"A/B 테스트: {test.test_name}",
+            border_style="cyan",
+        )
+    )
+    
+    table = Table(show_header=True, header_style="bold magenta", title="Variant 통계")
+    table.add_column("Variant", width=10)
+    table.add_column("전략", width=15)
+    table.add_column("샘플 수", width=10)
+    table.add_column("성공률", width=10)
+    table.add_column("p-value", width=10)
+    table.add_column("유의미", width=10)
+    
+    winner_style_a = "bold green" if test.winner == "A" else None
+    winner_style_b = "bold green" if test.winner == "B" else None
+    
+    sig_a = "✓" if test.is_significant and test.winner == "A" else ""
+    sig_b = "✓" if test.is_significant and test.winner == "B" else ""
+    
+    cell_a = f"[bold green]A[/]" if winner_style_a else "A"
+    cell_b = f"[bold green]B[/]" if winner_style_b else "B"
+    
+    table.add_row(
+        cell_a,
+        test.strategy_a,
+        str(test.sample_size_a),
+        f"{test.success_rate_a:.1%}",
+        f"{test.p_value:.3f}" if test.p_value else "-",
+        sig_a
+    )
+    table.add_row(
+        cell_b,
+        test.strategy_b,
+        str(test.sample_size_b),
+        f"{test.success_rate_b:.1%}",
+        f"{test.p_value:.3f}" if test.p_value else "-",
+        sig_b
+    )
+    
+    console.print(table)
+
+
+def cmd_ab_end(args: argparse.Namespace) -> None:
+    """A/B 테스트 종료"""
+    from rich.console import Console
+    from rich.panel import Panel
+    from .ab_testing import ABTest
+    
+    console = Console()
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    
+    ab_test = ABTest(ws)
+    test = ab_test.end_test()
+    
+    if not test:
+        console.print("[yellow]종료할 테스트가 없습니다.[/yellow]")
+        return
+    
+    winner = test.winner or "결정되지 않음"
+    winner_strategy = test.strategy_a if winner == "A" else test.strategy_b if winner == "B" else "-"
+    
+    console.print(
+        Panel(
+            f"테스트 ID: {test.test_id}\n"
+            f"최종 Winner: {winner}\n"
+            f"Winner 전략: {winner_strategy}\n"
+            f"Variant A 성공률: {test.success_rate_a:.1%} ({test.sample_size_a}개)\n"
+            f"Variant B 성공률: {test.success_rate_b:.1%} ({test.sample_size_b}개)",
+            title="A/B 테스트 종료",
+            border_style="green",
+        )
+    )
+    
+    if test.is_significant:
+        console.print(f"\n[green]통계적으로 유의미한 결과입니다![/green]")
+        console.print(f"   {winner_strategy} 전략을 기본으로 채택하세요.")
+    else:
+        console.print(f"\n[yellow]통계적으로 유의미한 차이가 없습니다.[/yellow]")
+        console.print(f"   더 많은 샘플이 필요합니다.")
