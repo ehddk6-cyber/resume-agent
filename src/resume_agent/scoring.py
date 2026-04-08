@@ -627,22 +627,6 @@ def calculate_readability_score(text: str) -> dict[str, Any]:
     return {"score": max(0, score), "feedback": feedback or ["가독성이 좋습니다."]}
 
 
-def compute_morphological_similarity(text1: str, text2: str) -> float:
-    """형태소 분석 기반 Jaccard 유사도"""
-    from .parsing import extract_keywords_morphological
-    
-    kw1 = set(extract_keywords_morphological(text1, top_n=30))
-    kw2 = set(extract_keywords_morphological(text2, top_n=30))
-    
-    if not kw1 or not kw2:
-        return 0.0
-    
-    intersection = len(kw1 & kw2)
-    union = len(kw1 | kw2)
-    
-    return intersection / union if union > 0 else 0.0
-
-
 def audit_facts(generated_text: str, source_experiences: List[Experience]) -> List[str]:
     """생성된 텍스트에 포함된 수치가 원본 경험 데이터에 존재하는지 엄격하게 검증합니다."""
     import re

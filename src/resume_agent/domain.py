@@ -6,7 +6,7 @@ import re
 import threading
 import tempfile
 from collections import Counter
-from typing import Any, List
+from typing import Any, List, Optional
 from .models import (
     ApplicationProject,
     Experience,
@@ -17,6 +17,7 @@ from .models import (
     Question,
 )
 from .config import get_config_value
+from .experience_analyzer import ExperienceDeepAnalyzer
 
 # 파사드(Facade) 패턴: 분리된 모듈들을 기존처럼 도메인에서 가져다 쓸 수 있도록 함
 from .classifier import (
@@ -477,6 +478,98 @@ def build_question_specific_knowledge_hints(
             }
         )
     return question_hints
+
+
+def build_experience_knowledge_hints(
+    experiences: List[Experience],
+    questions: List[Question],
+    kb_path: str = "./kb",
+    config: Optional[dict] = None,
+) -> dict[str, Any]:
+    """경험-질문 의미적 매칭 기반 힌트 생성
+    
+    ExperienceDeepAnalyzer를 활용하여 질문과 경험의 의미적 연결을 개선합니다.
+    
+    Returns:
+        {
+            "experience_hints": [...],  # 각 경험의 역량 분석
+            "question_hints": [...],    # 각 질문의 의도 분석
+            "matching_pairs": [...]     # 경험-질문 매칭 쌍
+        }
+    """
+    analyzer = ExperienceDeepAnalyzer()
+    
+    # 1. 경험 힌트 생성
+    experience_hints = []
+    exp_competencies_map = {}  # exp_id -> [competency names]
+    
+    for exp in experiences:
+        core_comps = analyzer.analyze_core_competency(exp)
+        top_comp = core_comps[0].competency if core_comps else None
+        comps_list = [c.competency for c in core_comps]
+        exp_competencies_map[exp.id] = comps_list
+        
+        experience_hints.append({
+            "experience_id": exp.id,
+            "experience_title": exp.title,
+            "top_competency": top_comp,
+            "competencies": comps_list,
+            "confidence": core_comps[0].confidence if core_comps else 0.0,
+            "evidence_keywords": core_comps[0].evidence_keywords if core_comps else [],
+            "interview_relevance": core_comps[0].interview_relevance if core_comps else "",
+        })
+    
+    # 2. 질문 힌트 생성
+    question_hints = []
+    question_intents_map = {}  # question_id -> QuestionIntentAnalysis
+    
+    for q in questions:
+        intent = analyzer.analyze_question_intent(q)
+        question_intents_map[q.id] = intent
+        
+        question_hints.append({
+            "question_id": q.id,
+            "question_text": q.question_text[:50],
+            "hidden_intent": intent.hidden_intent,
+            "wanted_competencies": intent.core_competencies_sought,
+            "risk_topics": intent.risk_topics,
+            "surface_topic": intent.surface_topic,
+            "recommended_approach": intent.recommended_approach,
+        })
+    
+    # 3. 경험-질문 매칭
+    matching_pairs = []
+    
+    for exp_id, exp_comps in exp_competencies_map.items():
+        for q_id, intent in question_intents_map.items():
+            wanted = set(intent.core_competencies_sought)
+            matched = set(exp_comps) & wanted
+            
+            if matched:
+                # 매칭 점수 계산
+                match_score = len(matched) / max(len(wanted), 1)
+                
+                matching_pairs.append({
+                    "experience_id": exp_id,
+                    "question_id": q_id,
+                    "matched_competencies": list(matched),
+                    "match_score": round(match_score, 2),
+                    "reason": f"역량 '{', '.join(matched)}' 매칭",
+                })
+    
+    # 점수순 정렬
+    matching_pairs.sort(key=lambda x: x["match_score"], reverse=True)
+    
+    return {
+        "experience_hints": experience_hints,
+        "question_hints": question_hints,
+        "matching_pairs": matching_pairs,
+    }
+
+
+# ============================================================================
+# 기존 함수들 (하위 호환성 유지)
+# ============================================================================
 
 
 def build_knowledge_hints(

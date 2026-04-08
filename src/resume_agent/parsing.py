@@ -321,20 +321,6 @@ def ingest_source_file(path: Path) -> tuple[List[KnowledgeSource], List[SuccessC
         return sources, []
     text = path.read_text(encoding="utf-8-sig", errors="ignore")
     return [build_generic_source(path, text)], []
-    if suffix == ".url":
-        urls = [
-            line.strip()
-            for line in path.read_text(
-                encoding="utf-8-sig", errors="ignore"
-            ).splitlines()
-            if line.strip()
-        ]
-        sources: List[KnowledgeSource] = []
-        for url in urls:
-            sources.extend(ingest_public_url(url))
-        return sources
-    text = path.read_text(encoding="utf-8-sig", errors="ignore")
-    return [build_generic_source(path, text)]
 
 
 def ingest_public_url(url: str, timeout: int = 15) -> List[KnowledgeSource]:

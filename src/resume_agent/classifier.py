@@ -1,7 +1,8 @@
 import importlib
 import re
 from typing import Dict, List, Optional, Tuple
-from .models import QuestionType
+from .models import QuestionType, Question, Experience
+from .experience_analyzer import ExperienceDeepAnalyzer
 from .config import get_config_value
 
 QUESTION_TYPE_PATTERNS = {
@@ -271,3 +272,91 @@ def classify_question_by_embedding(text: str) -> Tuple[QuestionType, float]:
         return best_type, confidence
     except Exception:
         return QuestionType.TYPE_UNKNOWN, 0.0
+
+
+def classify_question_type(text: str, config: dict) -> QuestionType:
+    """질문 텍스트를 기반으로 유형을 분류합니다.
+    
+    기존 classify_question 함수를 래핑하여 config 기반 동작을 제공합니다.
+    """
+    return classify_question(text)
+
+
+def classify_with_experience_hints(
+    questions: List["Question"],
+    experiences: List["Experience"],
+    config: dict,
+    use_deep_analysis: bool = True,
+) -> dict:
+    """경험 힌트를 활용한 질문 분류
+    
+    ExperienceDeepAnalyzer를 사용하여 질문의 숨겨진 의도를 분석하고,
+    관련 경험과 매칭합니다.
+    
+    Args:
+        questions: 분류할 질문 목록
+        experiences: 사용자 경험 목록
+        config: 설정 딕셔너리
+        use_deep_analysis: ExperienceDeepAnalyzer 사용 여부
+        
+    Returns:
+        {
+            question_id: {
+                "type": QuestionType,
+                "intent_analysis": {...},
+                "recommended_experiences": [...],
+                "confidence_boost": bool
+            }
+        }
+    """
+    results = {}
+    analyzer = ExperienceDeepAnalyzer()
+    
+    # 경험 핵심 역량 매핑
+    exp_competencies = {}
+    for exp in experiences:
+        analysis = analyzer.analyze_core_competency(exp)
+        exp_competencies[exp.id] = [c.competency for c in analysis]
+    
+    for question in questions:
+        # 기존 분류
+        base_type = classify_question_type(question.question_text, config)
+        
+        # 경험 기반 보완
+        if use_deep_analysis:
+            intent = analyzer.analyze_question_intent(question)
+            
+            # 경험 역량과 질문 의도 매칭
+            matching_exp = []
+            for exp_id, comps in exp_competencies.items():
+                common = set(comps) & set(intent.core_competencies_sought)
+                if common:
+                    matching_exp.append({
+                        "exp_id": exp_id,
+                        "matched": list(common)
+                    })
+            
+            # 가장 관련 깊은 경험 3개
+            top_matching = sorted(
+                matching_exp,
+                key=lambda x: len(x["matched"]),
+                reverse=True
+            )[:3]
+            
+            results[question.id] = {
+                "type": base_type,
+                "intent_analysis": {
+                    "hidden_intent": intent.hidden_intent,
+                    "wanted_competencies": intent.core_competencies_sought,
+                    "risk_topics": intent.risk_topics
+                },
+                "recommended_experiences": top_matching,
+                "confidence_boost": len(top_matching) > 0
+            }
+        else:
+            results[question.id] = {
+                "type": base_type,
+                "confidence_boost": False
+            }
+    
+    return results
