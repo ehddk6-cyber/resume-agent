@@ -54,3 +54,32 @@ export:
   # 자소서 목표 글자수 비율 (제한 대비)
   char_limit_ratio_min: 0.90
   char_limit_ratio_max: 0.97
+
+# 토크나이저 설정
+tokenizer:
+  # kiwipiepy 사용 여부 (미설치 시 자동 폴백)
+  use_kiwi: true
+  # 최소 형태소 길이
+  min_morpheme_length: 2
+
+# 임베딩 설정
+embedding:
+  # 변경 전: paraphrase-multilingual-MiniLM-L12-v2 (384차원)
+  # 변경 후: multilingual-e5-small (384차원, 더 나은 의미적 이해)
+  model_name: "intfloat/multilingual-e5-small"
+  dimension: 384  # e5-small은 384차원 유지
+  # 의미적 유사도 가점 임계값 (코사인 유사도)
+  similarity_threshold: 0.35
+  # 의미적 유사도 최대 가점
+  max_semantic_bonus: 5  # 기존 3에서 5로 증가
+  # 지연 로딩 (첫 사용 시 모델 로드)
+  lazy_load: true
+
+# Linkareer 합격 자소서 데이터 설정
+linkareer:
+  # 원본 CSV 경로 (resume-agent 루트 기준 상대 경로)
+  source_path: "../linkareer/linkareer.csv"
+  # 패턴 분석에 필요한 최소 사례 수
+  min_cases_for_analysis: 5
+  # 유사 회사 판정 시 사용할 이름 포함 임계값 (부분 문자열 매칭)
+  similar_company_threshold: 0
