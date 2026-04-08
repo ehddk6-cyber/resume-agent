@@ -19,7 +19,6 @@ from .models import (
 from .config import get_config_value
 from .experience_analyzer import ExperienceDeepAnalyzer
 
-# 파사드(Facade) 패턴: 분리된 모듈들을 기존처럼 도메인에서 가져다 쓸 수 있도록 함
 from .classifier import (
     classify_question,
     extract_question_keywords,
@@ -43,7 +42,6 @@ from .parsing import (
 )
 from .vector_store import SimpleVectorStore
 
-# [전역 캐시 변수]
 _KNOWLEDGE_CACHE = {
     "hash": "",
     "vectorizer": None,

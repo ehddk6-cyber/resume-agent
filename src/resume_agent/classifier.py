@@ -85,11 +85,6 @@ MARKETING_PATTERNS = [
 
 
 def classify_question(text: str) -> QuestionType:
-    """
-    질문 텍스트를 분류하여 QuestionType을 반환합니다.
-    매칭 실패 시 임베딩 기반 폴백을 시도합니다.
-    둘 다 실패하면 TYPE_UNKNOWN을 반환합니다.
-    """
     normalized = text.strip()
     for question_type, patterns in QUESTION_TYPE_PATTERNS.items():
         if any(re.search(pattern, normalized) for pattern in patterns):
@@ -238,13 +233,7 @@ def _cosine_similarity_classifier(vec1: List[float], vec2: List[float]) -> float
 
 
 def classify_question_by_embedding(text: str) -> Tuple[QuestionType, float]:
-    """
-    임베딩 기반 질문 분류 (폴백).
-    regex가 TYPE_UNKNOWN을 반환할 때 사용.
-
-    Returns:
-        (QuestionType, confidence) 튜플
-    """
+    """Embedding-based question classification fallback."""
     centroids = _compute_type_centroids()
     if centroids is None:
         return QuestionType.TYPE_UNKNOWN, 0.0
