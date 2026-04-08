@@ -53,14 +53,11 @@ CORE_COMPETENCY_PATTERNS = {
 
 
 class ExperienceDeepAnalyzer:
-    """경험의 본질적 성격을 분석하는 심층 분석기"""
     
     def __init__(self, semantic_engine: Optional[SemanticSearchEngine] = None):
         self.semantic_engine = semantic_engine or SemanticSearchEngine()
-        self.logger = logger
     
     def analyze_core_competency(self, experience: Experience) -> List[ExperienceCoreCompetency]:
-        """경험이 증명하는 핵심 역량 추출"""
         competencies = []
         combined_text = f"{experience.title} {experience.action} {experience.result} {experience.evidence_text}"
         combined_lower = combined_text.lower()
@@ -94,7 +91,6 @@ class ExperienceDeepAnalyzer:
         return competencies
     
     def estimate_interviewer_impression(self, experience: Experience) -> Dict[str, str]:
-        """면접관 인상 예측"""
         impressions = {"신뢰도": "중간", "차별화": "중간", "위험도": "낮음", "전체 평가": "보통"}
         
         if experience.evidence_level == EvidenceLevel.L3:
@@ -128,7 +124,6 @@ class ExperienceDeepAnalyzer:
         return impressions
     
     def find_hidden_strengths(self, experiences: List[Experience]) -> List[str]:
-        """경험 간 숨겨진 강점 패턴"""
         strengths = []
         all_actions = " ".join([exp.action for exp in experiences])
         
@@ -142,7 +137,6 @@ class ExperienceDeepAnalyzer:
         return strengths
     
     def analyze_question_intent(self, question: Question) -> QuestionIntentAnalysis:
-        """질문 숨겨진 의도 분석"""
         q_lower = question.question_text.lower()
         
         intents, wanted, risks = [], [], []
@@ -176,7 +170,6 @@ class ExperienceDeepAnalyzer:
         )
     
     def full_analysis(self, experience: Experience) -> ExperienceDeepAnalysis:
-        """전체 심층 분석"""
         core = self.analyze_core_competency(experience)
         imps = self.estimate_interviewer_impression(experience)
         concerns = []

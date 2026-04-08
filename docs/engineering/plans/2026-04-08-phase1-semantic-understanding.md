@@ -768,12 +768,12 @@ git commit -m "feat(phase1): add ExperienceDeepAnalyzer for core competency extr
 
 **Dependencies:** Task 1 완료 (semantic_engine.py 임베딩 필요)
 **Files:**
-- Modify: `src/resume_agent/parser.py` (키워드 추출 로직)
+- Modify: `src/resume_agent/parsing.py` (키워드 추출 로직)
 - Modify: `src/resume_agent/scoring.py` (형태소 기반 유사도 보완)
 
-- [ ] **Step 1: parser.py에 형태소 분석 기반 키워드 추출 추가**
+- [ ] **Step 1: parsing.py에 형태소 분석 기반 키워드 추출 추가**
 
-Edit: `src/resume_agent/parser.py` - 새 메서드 추가
+Edit: `src/resume_agent/parsing.py` - 끝에 새 함수 추가
 
 ```python
 def extract_keywords_morphological(self, text: str, top_n: int = 20) -> List[str]:
@@ -818,9 +818,9 @@ def extract_keywords_morphological(self, text: str, top_n: int = 20) -> List[str
     return [kw for kw, _ in keyword_freq.most_common(top_n)]
 ```
 
-- [ ] **Step 2: parser.py의 기존 extract_keywords 메서드 업데이트**
+- [ ] **Step 2: parsing.py의 기존 키워드 추출 함수 확인**
 
-Edit: `src/resume_agent/parser.py` - `extract_keywords` 메서드 개선
+기존 키워드 추출 함수를 찾아서 형태소 분석 기반 버전을 통합합니다.
 
 ```python
 def extract_keywords(self, text: str, top_n: int = 20, use_morphological: bool = True) -> List[str]:
@@ -902,7 +902,7 @@ Expected: 기존 키워드/유사도 테스트 통과
 
 ```bash
 cd /home/ehddk/ai/ai/ai/resume-agent
-git add src/resume_agent/parser.py src/resume_agent/scoring.py
+git add src/resume_agent/parsing.py src/resume_agent/scoring.py
 git commit -m "feat(phase1): enhance keyword extraction with morphological analysis"
 ```
 
@@ -1502,7 +1502,7 @@ Expected: 기존 기능 회귀 없음
 | `src/resume_agent/semantic_engine.py` | 수정 | 모델 업그레이드 |
 | `src/resume_agent/experience_analyzer.py` | **신규** | 경험 심층 분석기 |
 | `src/resume_agent/models.py` | 수정 | 새 Pydantic 모델 추가 |
-| `src/resume_agent/parser.py` | 수정 | 형태소 분석 키워드 추출 |
+| `src/resume_agent/parsing.py` | 수정 | 형태소 분석 키워드 추출 |
 | `src/resume_agent/scoring.py` | 수정 | 의미적 유사도 계산 개선 |
 | `src/resume_agent/domain.py` | 수정 | knowledge hints에 분석기 통합 |
 | `src/resume_agent/classifier.py` | 수정 | 경험 기반 분류 보완 |

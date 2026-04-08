@@ -71,7 +71,6 @@ class PatternStats:
 
 
 class FeedbackDatabase:
-    """피드백 데이터베이스"""
 
     def __init__(self, db_path: str = "./kb/feedback"):
         self.db_path = Path(db_path)
@@ -87,15 +86,12 @@ class FeedbackDatabase:
         self._load()
 
     def _load(self) -> None:
-        """데이터 로드"""
-        # 피드백 히스토리 로드
         if self.feedback_file.exists():
             with open(self.feedback_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 for item in data.get("feedback", []):
                     self.feedback_history.append(UserFeedback(**item))
 
-        # 패턴 통계 로드
         if self.stats_file.exists():
             with open(self.stats_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -103,26 +99,22 @@ class FeedbackDatabase:
                     self.pattern_stats[pattern_id] = PatternStats(**stats_data)
 
     def _save(self) -> None:
-        """데이터 저장"""
         feedback_payload = {"feedback": [asdict(fb) for fb in self.feedback_history]}
         stats_payload = {
             "stats": {pid: asdict(stats) for pid, stats in self.pattern_stats.items()}
         }
 
-        # 피드백 히스토리 저장
         with open(self.feedback_file, "w", encoding="utf-8") as f:
             json.dump(feedback_payload, f, ensure_ascii=False, indent=2)
 
-        # 패턴 통계 저장
+
         with open(self.stats_file, "w", encoding="utf-8") as f:
             json.dump(stats_payload, f, ensure_ascii=False, indent=2)
 
     def save_feedback(self, feedback: UserFeedback) -> None:
-        """피드백 저장"""
         with self._lock:
             self.feedback_history.append(feedback)
 
-            # 패턴 통계 업데이트
             if feedback.pattern_used not in self.pattern_stats:
                 self.pattern_stats[feedback.pattern_used] = PatternStats(
                     pattern_id=feedback.pattern_used
@@ -137,7 +129,6 @@ class FeedbackDatabase:
             else:
                 stats.rejected_count += 1
 
-            # 평점 업데이트
             if feedback.rating is not None:
                 ratings = [
                     fb.rating
@@ -147,7 +138,6 @@ class FeedbackDatabase:
                 ]
                 stats.avg_rating = sum(ratings) / len(ratings) if ratings else 0.0
 
-            # 성공률 계산
             if stats.total_uses > 0:
                 stats.success_rate = stats.accepted_count / stats.total_uses
 
@@ -156,7 +146,6 @@ class FeedbackDatabase:
     def find_similar(
         self, context: Dict[str, Any], limit: int = 10
     ) -> List[PatternStats]:
-        """유사한 컨텍스트의 패턴 검색"""
         grouped: Dict[str, Dict[str, Any]] = {}
 
         for feedback in self.feedback_history:
@@ -210,19 +199,17 @@ class FeedbackDatabase:
         return similar_stats[:limit]
 
     def get_pattern_stats(self, pattern_id: str) -> Optional[PatternStats]:
-        """패턴 통계 조회"""
         return self.pattern_stats.get(pattern_id)
 
     def get_top_patterns(self, n: int = 10) -> List[PatternStats]:
-        """상위 패턴 반환 (성공률 기준)"""
         all_stats = list(self.pattern_stats.values())
         all_stats.sort(key=lambda x: x.success_rate, reverse=True)
         return all_stats[:n]
 
+
     def get_feedback_history(
         self, pattern_id: Optional[str] = None, limit: int = 50
     ) -> List[UserFeedback]:
-        """피드백 히스토리 조회"""
         history = list(self.feedback_history)
 
         if pattern_id:
@@ -232,15 +219,6 @@ class FeedbackDatabase:
 
 
 class FeedbackLearner:
-    """
-    피드백 학습 엔진
-
-    기능:
-    - 사용자 피드백 기록
-    - 패턴별 성공률 추적
-    - 학습된 패턴 기반 추천
-    - 피드백 분석 및 인사이트
-    """
 
     def __init__(self, db_path: str = "./kb/feedback"):
         self.db = FeedbackDatabase(db_path)
@@ -264,16 +242,6 @@ class FeedbackLearner:
         question_experience_map: Optional[List[Dict[str, str]]] = None,
         question_strategy_map: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
-        """
-        사용자 피드백 기록
-
-        Args:
-            draft_id: 초안 ID
-            pattern_used: 사용된 패턴
-            accepted: 수락 여부
-            rating: 평점 (1-5, 선택)
-            comment: 코멘트 (선택)
-        """
         feedback = UserFeedback(
             draft_id=draft_id,
             pattern_used=pattern_used,
@@ -309,7 +277,7 @@ class FeedbackLearner:
 
         recommendations = []
         for stats in similar_patterns:
-            if stats.success_rate > 0.5:  # 50% 이상 성공률만 추천
+            if stats.success_rate > 0.5:
                 recommendations.append(
                     {
                         "pattern_id": stats.pattern_id,
@@ -597,19 +565,14 @@ class FeedbackLearner:
         }
 
     def _calculate_confidence(self, stats: PatternStats) -> float:
-        """추천 신뢰도 계산"""
-        # 사용 횟수와 성공률을 기반으로 신뢰도 계산
-        usage_factor = min(1.0, stats.total_uses / 10)  # 10회 이상이면 최대
+        usage_factor = min(1.0, stats.total_uses / 10)
         success_factor = stats.success_rate
-
         confidence = (usage_factor * 0.4) + (success_factor * 0.6)
         return round(confidence, 2)
 
     def get_insights(self) -> Dict[str, Any]:
         """피드백 분석 인사이트"""
         top_patterns = self.db.get_top_patterns(5)
-
-        # 전체 통계
         all_stats = list(self.db.pattern_stats.values())
         total_feedback = sum(s.total_uses for s in all_stats)
         total_accepted = sum(s.accepted_count for s in all_stats)
@@ -618,16 +581,12 @@ class FeedbackLearner:
             total_accepted / total_feedback if total_feedback > 0 else 0
         )
 
-        # 평점 분석
         ratings = [
             fb.rating for fb in self.db.feedback_history if fb.rating is not None
         ]
         avg_rating = sum(ratings) / len(ratings) if ratings else 0
 
         return {
-            "total_feedback": total_feedback,
-            "overall_success_rate": round(overall_success_rate, 2),
-            "average_rating": round(avg_rating, 2),
             "top_patterns": [
                 {
                     "pattern_id": p.pattern_id,
@@ -640,17 +599,13 @@ class FeedbackLearner:
         }
 
     def _identify_improvement_areas(self) -> List[str]:
-        """개선 영역 식별"""
         areas = []
-
-        # 성공률이 낮은 패턴 식별
         for pattern_id, stats in self.db.pattern_stats.items():
             if stats.total_uses >= 3 and stats.success_rate < 0.5:
                 areas.append(
                     f"패턴 '{pattern_id}'의 성공률이 낮습니다 ({stats.success_rate:.0%})"
                 )
 
-        # 평점이 낮은 피드백 분석
         low_rated = [
             fb
             for fb in self.db.feedback_history
@@ -692,7 +647,6 @@ class FeedbackLearner:
 
 
 def create_feedback_learner(db_path: str = "./kb/feedback") -> FeedbackLearner:
-    """FeedbackLearner 인스턴스 생성 편의 함수"""
     return FeedbackLearner(db_path)
 
 

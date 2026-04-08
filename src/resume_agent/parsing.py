@@ -390,3 +390,65 @@ def calculate_sources_hash(sources: List[KnowledgeSource]) -> str:
     """모든 지식 소스의 ID와 내용을 기반으로 전체 해시를 생성합니다."""
     combined = "".join(sorted([s.id for s in sources]))
     return hashlib.sha1(combined.encode("utf-8")).hexdigest()[:16]
+
+
+def extract_keywords_morphological(text: str, top_n: int = 20) -> List[str]:
+    """형태소 분석 기반 키워드 추출 (kiwipiepy 활용)
+    
+    Kiwi 형태소 분석기를 사용하여 명사/동사/형용사를 추출합니다.
+    - 일반적인 조사/어미 제거
+    - 불용어 필터링
+    """
+    from kiwipiepy import Kiwi
+    
+    kiwi = Kiwi()
+    keywords: List[str] = []
+    stopwords = {
+        "것", "수", "등", "및", "에", "을", "를", "의", "가", "이", "은", "들",
+        "에", "에서", "에게", "한테", "께", "랑", "이랑", "나", "과", "와",
+        "때", "더", "년", "월", "일", "시", "분", "초",
+        "있습니다", "합니다", "했습니다", "했습니다", "했습니다",
+        "위해", "대한", "통해", "대해", "위한", "따라", "함으로써"
+    }
+    
+    # 형태소 분석
+    result = kiwi.tokenize(text)
+    
+    for token in result:
+        word = token.form
+        pos = token.tag
+        
+        # 명사(NNG, NNP), 동사(VV), 형용사(VA)만 추출
+        if pos in ['NNG', 'NNP', 'VV', 'VA'] and len(word) >= 2:
+            if word not in stopwords and not word.isdigit():
+                keywords.append(word)
+    
+    # 빈도수 기준 정렬
+    keyword_freq: Counter = Counter(keywords)
+    
+    # 중복 제거 후 상위 N개 반환
+    seen: List[str] = []
+    for kw, count in keyword_freq.most_common(top_n * 2):
+        if kw not in seen:
+            seen.append(kw)
+            if len(seen) >= top_n:
+                break
+    
+    return seen
+
+
+def compute_morphological_similarity(text1: str, text2: str) -> float:
+    """형태소 분석 기반 Jaccard 유사도 계산
+    
+    두 텍스트의 형태소 기반 키워드 Jaccard 유사도를 반환합니다.
+    """
+    kw1 = set(extract_keywords_morphological(text1, top_n=30))
+    kw2 = set(extract_keywords_morphological(text2, top_n=30))
+    
+    if not kw1 or not kw2:
+        return 0.0
+    
+    intersection = len(kw1 & kw2)
+    union = len(kw1 | kw2)
+    
+    return intersection / union if union > 0 else 0.0
