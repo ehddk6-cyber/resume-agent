@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -26,16 +26,16 @@ class VerificationStatus(str, Enum):
 
 
 class QuestionType(str, Enum):
-    TYPE_A = "TYPE_A"  # motivation / fit
-    TYPE_B = "TYPE_B"  # core capability
-    TYPE_C = "TYPE_C"  # collaboration
-    TYPE_D = "TYPE_D"  # growth / learning
-    TYPE_E = "TYPE_E"  # post-join contribution
-    TYPE_F = "TYPE_F"  # work principles
-    TYPE_G = "TYPE_G"  # failure and recovery
-    TYPE_H = "TYPE_H"  # customer response
-    TYPE_I = "TYPE_I"  # prioritization under pressure
-    TYPE_UNKNOWN = "TYPE_UNKNOWN"  # 분류 불가
+    TYPE_A = "TYPE_A"
+    TYPE_B = "TYPE_B"
+    TYPE_C = "TYPE_C"
+    TYPE_D = "TYPE_D"
+    TYPE_E = "TYPE_E"
+    TYPE_F = "TYPE_F"
+    TYPE_G = "TYPE_G"
+    TYPE_H = "TYPE_H"
+    TYPE_I = "TYPE_I"
+    TYPE_UNKNOWN = "TYPE_UNKNOWN"
 
 
 class SourceType(str, Enum):
@@ -56,12 +56,10 @@ class ArtifactType(str, Enum):
 
 
 class InterviewStyle(str, Enum):
-    """면접 스타일"""
-
-    FORMAL = "formal"  # 격식 있는 (대기업, 공공)
-    CASUAL = "casual"  # 편안한 (스타트업)
-    TECHNICAL = "technical"  # 기술 중심 (IT, 엔지니어링)
-    BEHAVIORAL = "behavioral"  # 행동 중심 (영업, 마케팅)
+    FORMAL = "formal"
+    CASUAL = "casual"
+    TECHNICAL = "technical"
+    BEHAVIORAL = "behavioral"
 
 
 class SuccessPattern(str, Enum):
@@ -268,6 +266,54 @@ class GeneratedArtifact(BaseModel):
     id: str
     artifact_type: ArtifactType
     accepted: bool = False
+
+
+class OutcomeResult(BaseModel):
+    """지원 결과 추적"""
+    artifact_id: str
+    application_id: str = ""
+    company_name: str
+    job_title: str = ""
+    outcome: Literal[
+        "pending", "screening_pass", "screening_fail",
+        "interview_invited", "interview_pass", "interview_fail",
+        "final_pass", "final_fail", "offer_received", "offer_declined"
+    ] = "pending"
+    outcome_date: Optional[str] = None
+    rejection_reason: Optional[str] = None
+    interview_count: int = 0
+    notes: Optional[str] = None
+
+
+class ABTestResult(BaseModel):
+    """A/B 테스트 결과"""
+    test_id: str
+    test_name: str
+    strategy_a: str
+    strategy_b: str
+    sample_size_a: int = 0
+    sample_size_b: int = 0
+    success_rate_a: float = 0.0
+    success_rate_b: float = 0.0
+    p_value: Optional[float] = None
+    confidence_level: float = 0.95
+    winner: Optional[str] = None
+    is_significant: bool = False
+    start_date: str = ""
+    end_date: Optional[str] = None
+
+
+class ExperienceOutcomeStats(BaseModel):
+    """경험-결과 통계"""
+    experience_id: str
+    experience_title: str
+    total_uses: int = 0
+    success_count: int = 0
+    fail_count: int = 0
+    success_rate: float = 0.0
+    avg_interview_count: float = 0.0
+    question_types_used: List[str] = Field(default_factory=list)
+    avg_rating: Optional[float] = None
     input_snapshot: dict[str, Any] = Field(default_factory=dict)
     output_path: Optional[str] = None
     raw_output_path: Optional[str] = None
