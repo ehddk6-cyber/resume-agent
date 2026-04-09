@@ -151,8 +151,10 @@ def _compress_hint_sources(
     return compressed
 
 
-def _normalize_match_text(text: str) -> str:
-    return re.sub(r"[\s\(\)\[\]·,./_-]+", "", (text or "").lower())
+def _normalize_match_text(text: Any) -> str:
+    if not isinstance(text, str):
+        return ""
+    return re.sub(r"[\s\(\)\[\]·,./_-]+", "", text.lower())
 
 
 def _company_aliases(company_name: str, company_type: str = "") -> set[str]:

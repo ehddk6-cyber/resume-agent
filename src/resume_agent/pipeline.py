@@ -1040,6 +1040,9 @@ def build_candidate_profile(
         "tone": "담백하고 근거 중심을 유지하되 질문 의도에 맞는 감정 온도를 한 문장 추가합니다.",
     }
 
+    blind_spot_summary = blind_spots[:3]
+    coaching_focus_summary = coaching_focus[:3]
+
     candidate_profile = {
         "style_preference": profile.style_preference,
         "communication_style": communication_style,
@@ -1049,8 +1052,8 @@ def build_candidate_profile(
         "abstraction_ratio": abstraction_ratio,
         "confidence_style": confidence_style,
         "signature_strengths": signature_strengths,
-        "blind_spots": blind_spots[:3],
-        "coaching_focus": coaching_focus[:3],
+        "blind_spots": blind_spot_summary,
+        "coaching_focus": coaching_focus_summary,
         "interview_strategy": interview_strategy,
         "profile_summary": (
             f"{profile.style_preference} 톤을 선호하는 "
@@ -1060,6 +1063,15 @@ def build_candidate_profile(
     }
     candidate_profile.update(build_candidate_profile_payload(personalized))
     candidate_profile["style_preference"] = profile.style_preference
+    candidate_profile["signature_strengths"] = _dedupe_preserve_order(
+        signature_strengths + list(personalized.strength_keywords[:4])
+    )[:4]
+    candidate_profile["blind_spots"] = _dedupe_preserve_order(
+        blind_spot_summary + list(personalized.weakness_details[:3])
+    )[:3]
+    candidate_profile["coaching_focus"] = _dedupe_preserve_order(
+        coaching_focus_summary + list(personalized.coaching_priorities[:3])
+    )[:3]
     write_json(ws.analysis_dir / "candidate_profile.json", candidate_profile)
     return candidate_profile
 
@@ -2188,6 +2200,31 @@ def build_kpi_dashboard(
     }
     write_json(ws.analysis_dir / "kpi_dashboard.json", dashboard)
     return dashboard
+
+
+def build_cumulative_effect_report(
+    ws: Workspace,
+    project: ApplicationProject,
+    artifact_type: str = "writer",
+) -> dict[str, Any]:
+    outcome_dashboard = build_outcome_dashboard(ws, project, artifact_type)
+    kpi_dashboard = build_kpi_dashboard(ws, project, artifact_type)
+
+    report = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "artifact_type": artifact_type,
+        "outcome_dashboard": outcome_dashboard,
+        "kpi_dashboard": kpi_dashboard,
+        "live_change_effectiveness": outcome_dashboard.get(
+            "live_change_effectiveness", {}
+        ),
+        "live_change_action_learning": outcome_dashboard.get(
+            "live_change_action_learning", {}
+        ),
+        "tracked_outcomes": kpi_dashboard.get("tracked_outcomes", {}),
+    }
+    write_json(ws.analysis_dir / "cumulative_effect_report.json", report)
+    return report
 
 
 def build_blind_benchmark_frame(

@@ -334,3 +334,7 @@ class LogicalStructureAnalyzer:
         quantified_bonus = 0.1 if has_quantified else 0.0
         score = min(1.0, claim_ratio * 0.8 + quantified_bonus + 0.1)
         return round(score, 2)
+
+
+class LogicalAnalyzer(LogicalStructureAnalyzer):
+    """기존 테스트/호출부 호환용 이름입니다."""

@@ -66,6 +66,8 @@ class TestCrawlBase:
                         ws = MagicMock()
                         ws.root = tmp_path
                         ws.sources_dir = tmp_path / "sources"
+                        ws.sources_raw_dir = tmp_path / "sources" / "raw"
+                        ws.sources_raw_dir.mkdir(parents=True, exist_ok=True)
                         MockWS.return_value = ws
                         result = crawl_base(ws, source_dir)
                         assert result is not None
@@ -79,41 +81,63 @@ class TestCrawlWebSources:
 
         with patch("resume_agent.pipeline.Workspace") as MockWS:
             with patch("resume_agent.pipeline.ingest_public_url") as mock_ingest:
-                with patch("resume_agent.pipeline.write_source_artifacts"):
-                    with patch(
-                        "resume_agent.pipeline.load_knowledge_sources", return_value=[]
-                    ):
+                with patch(
+                    "resume_agent.pipeline.fetch_public_url_snapshot",
+                    return_value={
+                        "url": "https://example.com",
+                        "title": "example",
+                        "cleaned_text": "example text",
+                        "raw_text": "example text",
+                        "content_hash": "hash-1",
+                        "status_code": 200,
+                        "fetched_at": "2026-04-09T00:00:00",
+                    },
+                ):
+                    with patch("resume_agent.pipeline.write_source_artifacts"):
                         with patch(
-                            "resume_agent.pipeline.merge_sources", return_value=[]
+                            "resume_agent.pipeline.load_knowledge_sources", return_value=[]
                         ):
-                            with patch("resume_agent.pipeline.save_knowledge_sources"):
-                                with patch(
-                                    "resume_agent.pipeline.summarize_knowledge_sources",
-                                    return_value={},
-                                ):
-                                    with patch("resume_agent.pipeline.write_json"):
-                                        with patch(
-                                            "resume_agent.pipeline.read_json_if_exists",
-                                            return_value=None,
-                                        ):
+                            with patch(
+                                "resume_agent.pipeline.merge_sources", return_value=[]
+                            ):
+                                with patch("resume_agent.pipeline.save_knowledge_sources"):
+                                    with patch(
+                                        "resume_agent.pipeline.summarize_knowledge_sources",
+                                        return_value={},
+                                    ):
+                                        with patch("resume_agent.pipeline.write_json"):
                                             with patch(
-                                                "resume_agent.pipeline._extract_jd_keywords_for_research",
-                                                return_value=[],
+                                                "resume_agent.pipeline.read_json_if_exists",
+                                                return_value=None,
                                             ):
-                                                source = MagicMock()
-                                                source.id = "s1"
-                                                mock_ingest.return_value = [source]
-                                                ws = MagicMock()
-                                                ws.root = tmp_path
-                                                ws.analysis_dir = tmp_path / "analysis"
-                                                ws.analysis_dir.mkdir(
-                                                    parents=True, exist_ok=True
-                                                )
-                                                MockWS.return_value = ws
-                                                result = crawl_web_sources(
-                                                    ws, ["https://example.com"]
-                                                )
-                                                assert result is not None
+                                                with patch(
+                                                    "resume_agent.pipeline._extract_jd_keywords_for_research",
+                                                    return_value=[],
+                                                ):
+                                                    source = MagicMock()
+                                                    source.id = "s1"
+                                                    mock_ingest.return_value = [source]
+                                                    ws = MagicMock()
+                                                    ws.root = tmp_path
+                                                    ws.analysis_dir = tmp_path / "analysis"
+                                                    ws.state_dir = tmp_path / "state"
+                                                    ws.sources_raw_dir = (
+                                                        tmp_path / "sources" / "raw"
+                                                    )
+                                                    ws.analysis_dir.mkdir(
+                                                        parents=True, exist_ok=True
+                                                    )
+                                                    ws.state_dir.mkdir(
+                                                        parents=True, exist_ok=True
+                                                    )
+                                                    ws.sources_raw_dir.mkdir(
+                                                        parents=True, exist_ok=True
+                                                    )
+                                                    MockWS.return_value = ws
+                                                    result = crawl_web_sources(
+                                                        ws, ["https://example.com"]
+                                                    )
+                                                    assert result is not None
 
 
 class TestExtractMarkdownSection:

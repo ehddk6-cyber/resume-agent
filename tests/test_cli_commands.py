@@ -173,6 +173,41 @@ class TestCmdStatus:
         assert "채용 공고" in output
 
 
+class TestCmdReport:
+    def test_report_command_prints_cumulative_effect_summary(self, tmp_path: Path, capsys):
+        from resume_agent.cli import build_parser, cmd_report
+
+        args = _make_args(str(tmp_path))
+        report_payload = {
+            "artifact_type": "writer",
+            "live_change_effectiveness": {
+                "linked_outcome_count": 2,
+                "high_vs_low_success_gap": 0.33,
+                "top_missing_titles": [{"title": "채용 공고"}],
+            },
+            "live_change_action_learning": {"latest_stage": "writer"},
+            "kpi_dashboard": {"tracked_outcomes": {"offer_received": 1}},
+        }
+
+        with patch("resume_agent.cli.Workspace") as MockWS:
+            with patch("resume_agent.cli.load_project", return_value=MagicMock()):
+                with patch(
+                    "resume_agent.cli.build_cumulative_effect_report",
+                    return_value=report_payload,
+                ) as mock_report:
+                    MockWS.return_value = _mock_workspace(tmp_path)
+                    parser = build_parser()
+                    parsed_args = parser.parse_args(["report", str(tmp_path)])
+                    assert parsed_args.func is cmd_report
+                    cmd_report(parsed_args)
+
+        mock_report.assert_called_once()
+        output = capsys.readouterr().out
+        assert "Cumulative Effect Report" in output
+        assert "live 연동 결과 수" in output
+        assert "채용 공고" in output
+
+
 # ──────────────────────────────────────────────────
 # cmd_crawl_base 테스트
 # ──────────────────────────────────────────────────

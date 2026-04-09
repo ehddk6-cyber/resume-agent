@@ -12,6 +12,7 @@ from .pipeline import (
     build_interview_prompt,
     build_review_prompt,
     build_company_research_prompt,
+    build_cumulative_effect_report,
     build_outcome_dashboard,
     build_kpi_dashboard,
     run_company_research_with_codex,
@@ -460,6 +461,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_status = sub.add_parser("status", help="Show current pipeline status dashboard.")
     p_status.add_argument("workspace")
     p_status.set_defaults(func=cmd_status)
+
+    p_report = sub.add_parser(
+        "report", help="Show cumulative live-signal effect report."
+    )
+    p_report.add_argument("workspace")
+    p_report.set_defaults(func=cmd_report)
 
     p_history = sub.add_parser("history", help="Show artifact generation history.")
     p_history.add_argument("workspace")
@@ -1547,6 +1554,35 @@ def cmd_status(args: argparse.Namespace) -> None:
             )
     except Exception:
         pass
+
+
+def cmd_report(args: argparse.Namespace) -> None:
+    """누적 live-signal 효과 리포트 출력"""
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    project = load_project(ws)
+    report = build_cumulative_effect_report(ws, project, "writer")
+
+    live_effectiveness = report.get("live_change_effectiveness", {}) or {}
+    action_learning = report.get("live_change_action_learning", {}) or {}
+    kpi_dashboard = report.get("kpi_dashboard", {}) or {}
+
+    console.print(
+        Panel(
+            f"아티팩트: {report.get('artifact_type', '-')}\n"
+            f"tracked outcomes: {kpi_dashboard.get('tracked_outcomes', {})}\n"
+            f"live 연동 결과 수: {live_effectiveness.get('linked_outcome_count', 0)}\n"
+            f"high-low 성공률 격차: {live_effectiveness.get('high_vs_low_success_gap', 0.0)}\n"
+            f"최근 학습 단계: {action_learning.get('latest_stage', '-')}\n"
+            f"반복 누락 신호: {', '.join(item.get('title', '') for item in live_effectiveness.get('top_missing_titles', [])[:3]) or '-'}",
+            title="Cumulative Effect Report",
+            border_style="cyan",
+        )
+    )
 
 
 def cmd_history(args: argparse.Namespace) -> None:

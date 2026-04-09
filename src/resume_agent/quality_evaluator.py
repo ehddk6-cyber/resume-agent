@@ -436,3 +436,14 @@ def evaluate_draft_quality(
     """초안 품질 평가 편의 함수"""
     evaluator = QualityEvaluator()
     return evaluator.evaluate_draft(draft, question, experience_context)
+
+
+def evaluate_answer_quality(
+    workspace: Any,
+    answer: str,
+    question: str,
+    experience_context: Optional[str] = None,
+) -> QualityScore:
+    """기존 호출부 호환용 품질 평가 엔트리포인트"""
+    _ = workspace
+    return evaluate_draft_quality(answer, question, experience_context)

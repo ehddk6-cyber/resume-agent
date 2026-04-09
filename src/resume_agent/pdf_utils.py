@@ -202,6 +202,9 @@ def split_text(text: str, chunk_size: int = 3000, overlap: int = 500) -> List[st
     if len(text) <= chunk_size:
         return [text]
 
+    # overlap가 chunk_size 이상이면 증가폭이 0 이하가 되어 무한 루프가 납니다.
+    step = max(1, chunk_size - overlap)
+
     chunks = []
     paragraphs = text.split("\n\n")
     current_chunk = ""
@@ -218,7 +221,7 @@ def split_text(text: str, chunk_size: int = 3000, overlap: int = 500) -> List[st
                 start = 0
                 while start < len(para):
                     chunks.append(para[start : start + chunk_size].strip())
-                    start += chunk_size - overlap
+                    start += step
                 current_chunk = ""
             else:
                 current_chunk = para + "\n\n"

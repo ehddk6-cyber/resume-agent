@@ -686,6 +686,7 @@ class TestScoring:
 
     def test_analyze_gaps_with_experiences(self):
         from resume_agent.scoring import analyze_gaps
+        from resume_agent.models import Experience, EvidenceLevel, VerificationStatus
 
         exp = Experience(
             id="e1",

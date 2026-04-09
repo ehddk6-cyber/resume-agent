@@ -409,17 +409,31 @@ def _build_allocation_reason(
 
 
 def score_experience(
-    question: Question,
-    experience: Experience,
-    priority_order: List[str],
-    already_used: List[str],
-    previous_organization: Optional[str],
+    question: Question | Experience,
+    experience: Experience | None = None,
+    priority_order: List[str] | None = None,
+    already_used: List[str] | None = None,
+    previous_organization: Optional[str] = None,
     outcome_summary: dict[str, Any] | None = None,
     strategy_outcome_summary: dict[str, Any] | None = None,
     current_pattern: str | None = None,
     feedback_adaptation_plan: dict[str, Any] | None = None,
     candidate_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    if experience is None and isinstance(question, Experience):
+        experience = question
+        question = Question(
+            id="legacy-score",
+            order_no=1,
+            question_text=experience.title or "경험 적합도",
+            detected_type=QuestionType.TYPE_UNKNOWN,
+        )
+    if experience is None:
+        raise TypeError("experience is required")
+
+    priority_order = priority_order or []
+    already_used = already_used or []
+
     question_text = question.question_text
     question_type = getattr(question, "detected_type", None)
     if not isinstance(question_type, QuestionType) or question_type == QuestionType.TYPE_UNKNOWN:

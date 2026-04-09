@@ -40,12 +40,18 @@ class TestCliParser:
 
         args = argparse.Namespace(workspace=str(tmp_path / "new_ws"))
         with patch("resume_agent.cli.init_workspace") as mock_init:
-            mock_ws = MagicMock()
-            mock_ws.root = tmp_path / "new_ws"
-            mock_ws.state_dir = tmp_path / "new_ws" / "state"
-            mock_ws.profile_dir = tmp_path / "new_ws" / "profile"
-            mock_init.return_value = mock_ws
-            cmd_init(args)
+            with patch("resume_agent.cli.crawl_base") as mock_crawl:
+                mock_ws = MagicMock()
+                mock_ws.root = tmp_path / "new_ws"
+                mock_ws.state_dir = tmp_path / "new_ws" / "state"
+                mock_ws.profile_dir = tmp_path / "new_ws" / "profile"
+                mock_init.return_value = mock_ws
+                mock_crawl.return_value = {
+                    "source_count": 0,
+                    "stored_count": 0,
+                    "analysis_path": "/tmp/analysis.md",
+                }
+                cmd_init(args)
 
     def test_crawl_base_command(self, tmp_path: Path):
         from resume_agent.cli import cmd_crawl_base
