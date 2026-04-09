@@ -1252,6 +1252,42 @@ def _build_recent_change_actions(
     return _dedupe_preserve_order(actions)[:3]
 
 
+def _assess_recent_change_action_coverage(
+    text: str,
+    priority_live_updates: list[dict[str, Any]],
+) -> dict[str, Any]:
+    lowered = (text or "").lower()
+    checks: list[dict[str, Any]] = []
+    for item in priority_live_updates[:3]:
+        keywords = [
+            str(keyword).strip()
+            for keyword in item.get("keywords", [])[:3]
+            if str(keyword).strip()
+        ]
+        covered_keywords = [
+            keyword for keyword in keywords if keyword.lower() in lowered
+        ]
+        checks.append(
+            {
+                "title": str(item.get("title") or item.get("url") or "공개 소스"),
+                "change_status": str(item.get("change_status") or ""),
+                "change_summary": str(item.get("change_summary") or ""),
+                "keywords": keywords,
+                "covered_keywords": covered_keywords,
+                "covered": bool(covered_keywords),
+            }
+        )
+
+    covered_count = sum(1 for item in checks if item["covered"])
+    return {
+        "checked_count": len(checks),
+        "covered_count": covered_count,
+        "missing_count": max(len(checks) - covered_count, 0),
+        "coverage_rate": round(covered_count / len(checks), 2) if checks else 0.0,
+        "items": checks,
+    }
+
+
 def _normalize_strategy_payload(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
@@ -3617,6 +3653,7 @@ def run_writer_with_codex(
         writer_committee_reaction_path = (
             ws.artifacts_dir / "writer_committee_reaction.json"
         )
+        writer_change_action_path = ws.artifacts_dir / "writer_change_actions.json"
         rewrite_report_md_path = ws.analysis_dir / "writer_rewrite_quality_report.md"
         rewrite_report_json_path = (
             ws.analysis_dir / "writer_rewrite_quality_report.json"
@@ -3978,6 +4015,10 @@ def run_writer_with_codex(
             if not normalized_text.strip()
             else "ok"
         )
+        recent_change_action_check = _assess_recent_change_action_coverage(
+            normalized_text,
+            build_live_source_update_summary(ws).get("priority_live_updates", []),
+        )
         result_quality_status = (
             "error"
             if result_quality_evaluation_error
@@ -4067,6 +4108,7 @@ def run_writer_with_codex(
                 error_reason=quality_evaluation_error,
             ),
         )
+        write_json(writer_change_action_path, recent_change_action_check)
         writer_feedback_learning = build_feedback_learning_context(
             ws, "writer", project=project
         )
@@ -4148,6 +4190,8 @@ def run_writer_with_codex(
             "writer_committee_reaction_path": relative(
                 ws.root, writer_committee_reaction_path
             ),
+            "writer_change_action_path": relative(ws.root, writer_change_action_path),
+            "recent_change_action_check": recent_change_action_check,
             "patina_max_result_path": relative(
                 ws.root, ws.analysis_dir / "patina_max_report.json"
             )
@@ -4525,6 +4569,8 @@ def run_writer_with_codex(
         "writer_defensibility_path": str(writer_defensibility_path),
         "writer_message_discipline_path": str(writer_message_discipline_path),
         "writer_committee_reaction_path": str(writer_committee_reaction_path),
+        "writer_change_action_path": str(writer_change_action_path),
+        "recent_change_action_check": recent_change_action_check,
         "rewrite_quality_report_path": str(rewrite_report_json_path)
         if rewrite_quality_report
         else None,
@@ -4738,6 +4784,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
         accepted_path = ws.artifacts_dir / "interview.md"
         defense_path = ws.artifacts_dir / "interview_defense.json"
         top001_defense_path = ws.artifacts_dir / "interview_top001.json"
+        interview_change_action_path = ws.artifacts_dir / "interview_change_actions.json"
 
         defense_simulations = []
         top001_interview_simulations: list[dict[str, Any]] = []
@@ -4832,6 +4879,11 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             accepted_path.write_text(normalized_text, encoding="utf-8")
         write_json(defense_path, defense_simulations)
         write_json(top001_defense_path, top001_interview_simulations)
+        recent_change_action_check = _assess_recent_change_action_coverage(
+            normalized_text,
+            build_live_source_update_summary(ws).get("priority_live_updates", []),
+        )
+        write_json(interview_change_action_path, recent_change_action_check)
         interview_feedback_learning = build_feedback_learning_context(
             ws, "interview", project=project
         )
@@ -4948,6 +5000,8 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
         "defense_simulations": defense_simulations,
         "defense_path": str(defense_path),
         "top001_defense_path": str(top001_defense_path),
+        "interview_change_action_path": str(interview_change_action_path),
+        "recent_change_action_check": recent_change_action_check,
         "application_strategy_path": str(ws.analysis_dir / "application_strategy.json"),
     }
 

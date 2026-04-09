@@ -34,6 +34,7 @@ from resume_agent.pipeline import (
     build_coach_prompt,
     build_interview_prompt,
     build_research_strategy_translation,
+    _assess_recent_change_action_coverage,
     build_self_intro_pack,
     run_coach,
     run_writer,
@@ -2523,6 +2524,23 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
         assert translation["recent_change_actions"]
         assert "추가 신호: 데이터, 자동화" in translation["recent_change_actions"][0]
 
+    def test_assess_recent_change_action_coverage_detects_keywords(self):
+        report = _assess_recent_change_action_coverage(
+            "저는 데이터 자동화 역량을 바탕으로 지원했습니다.",
+            [
+                {
+                    "title": "채용 공고",
+                    "change_status": "changed",
+                    "change_summary": "추가 신호: 데이터, 자동화",
+                    "keywords": ["데이터", "자동화"],
+                }
+            ],
+        )
+
+        assert report["checked_count"] == 1
+        assert report["covered_count"] == 1
+        assert report["items"][0]["covered_keywords"] == ["데이터", "자동화"]
+
     def test_run_coach_writes_top001_analysis_and_application_strategy(self, tmp_path):
         workspace = Workspace(tmp_path)
         workspace.ensure()
@@ -2571,6 +2589,19 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
             "## 블록 3: DRAFT ANSWERS\n\nQ1. 기관 가치와 맞닿은 협업 경험을 바탕으로 지원했습니다.",
             encoding="utf-8",
         )
+        write_json(
+            workspace.state_dir / "live_source_cache.json",
+            {
+                "https://example.com/jobs": {
+                    "url": "https://example.com/jobs",
+                    "title": "채용 공고",
+                    "change_status": "changed",
+                    "change_summary": "추가 신호: 데이터, 자동화",
+                    "keywords": ["데이터", "자동화"],
+                    "fetched_at": "2026-04-09T00:00:00+00:00",
+                }
+            },
+        )
         top001_response = {
             "vulnerabilities": ["근거 부족"],
             "weak_response": True,
@@ -2581,7 +2612,7 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
             with patch("resume_agent.pipeline._get_success_cases_for_analysis", return_value=[]):
                 with patch("resume_agent.pipeline.build_interview_prompt", return_value=workspace.outputs_dir / "latest_interview_prompt.md"):
                     with patch("resume_agent.pipeline.run_codex", return_value=0):
-                        with patch("resume_agent.pipeline.normalize_contract_output", return_value="## 블록 1: INTERVIEW ASSUMPTIONS\nok"):
+                        with patch("resume_agent.pipeline.normalize_contract_output", return_value="## 블록 1: INTERVIEW ASSUMPTIONS\n데이터 자동화"):
                             with patch("resume_agent.pipeline.validate_interview_contract", return_value={"passed": True, "missing": [], "semantic_missing": []}):
                                 with patch("resume_agent.pipeline.build_interview_defense_simulations", return_value=[]):
                                     with patch("resume_agent.pipeline.upsert_artifact"):
@@ -2593,9 +2624,11 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
                                                 result = run_interview_with_codex(workspace)
 
         assert Path(result["top001_defense_path"]).exists()
+        assert Path(result["interview_change_action_path"]).exists()
         strategy = read_json_if_exists(workspace.analysis_dir / "application_strategy.json")
         assert "근거 부족" in strategy["interview_pressure_points"]
         assert strategy["interview_strategy"]["weak_response_count"] == 1
+        assert result["recent_change_action_check"]["covered_count"] == 1
 
     def test_build_interview_defense_simulations_merges_top001_logic(self):
         project = ApplicationProject(
