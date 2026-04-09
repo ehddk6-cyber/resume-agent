@@ -438,6 +438,34 @@ def refresh_live_web_sources(ws: Workspace, urls: list[str]) -> dict[str, Any]:
     return crawl_web_sources(ws, urls)
 
 
+def refresh_existing_public_sources(ws: Workspace) -> dict[str, Any]:
+    ws.ensure()
+    initialize_state(ws)
+    knowledge_sources = load_knowledge_sources(ws)
+    urls = _dedupe_preserve_order(
+        [
+            str(source.url or "").strip()
+            for source in knowledge_sources
+            if source.source_type == SourceType.USER_URL_PUBLIC and source.url
+        ]
+    )
+    if not urls:
+        return {
+            "tracked_url_count": 0,
+            "source_count": 0,
+            "stored_count": len(knowledge_sources),
+            "new_url_count": 0,
+            "changed_url_count": 0,
+            "unchanged_url_count": 0,
+            "live_updates_path": str(ws.analysis_dir / "live_source_updates.json"),
+        }
+    result = refresh_live_web_sources(ws, urls)
+    return {
+        "tracked_url_count": len(urls),
+        **result,
+    }
+
+
 def _build_feedback_pattern_id(stage: str, project: ApplicationProject) -> str:
     question_types = sorted(
         {

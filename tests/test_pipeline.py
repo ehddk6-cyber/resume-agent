@@ -1408,6 +1408,52 @@ class TestCrawlWebSourcesLiveTracking:
         assert summary["changed_url_count"] == 1
         assert summary["latest_updates"][0]["url"] == "https://b.example.com"
 
+    def test_refresh_existing_public_sources_uses_stored_public_urls(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        save_knowledge_sources(
+            workspace,
+            [
+                KnowledgeSource(
+                    id="src1",
+                    source_type=SourceType.USER_URL_PUBLIC,
+                    title="채용 공고",
+                    url="https://example.com/jobs",
+                    raw_text="raw",
+                    cleaned_text="clean",
+                    meta=KnowledgeSourceMeta(),
+                ),
+                KnowledgeSource(
+                    id="src2",
+                    source_type=SourceType.LOCAL_TEXT,
+                    title="로컬 메모",
+                    raw_text="memo",
+                    cleaned_text="memo",
+                    meta=KnowledgeSourceMeta(),
+                ),
+            ],
+        )
+
+        from resume_agent.pipeline import refresh_existing_public_sources
+
+        with patch(
+            "resume_agent.pipeline.refresh_live_web_sources",
+            return_value={
+                "source_count": 1,
+                "stored_count": 2,
+                "new_url_count": 0,
+                "changed_url_count": 1,
+                "unchanged_url_count": 0,
+                "live_updates_path": str(workspace.analysis_dir / "live_source_updates.json"),
+            },
+        ) as mock_refresh:
+            result = refresh_existing_public_sources(workspace)
+
+        mock_refresh.assert_called_once_with(workspace, ["https://example.com/jobs"])
+        assert result["tracked_url_count"] == 1
+        assert result["changed_url_count"] == 1
+
 
 class TestNcsProfile:
     def test_build_ncs_profile_creates_priority_map(self, tmp_path):

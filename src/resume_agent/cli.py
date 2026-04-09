@@ -20,6 +20,7 @@ from .pipeline import (
     crawl_web_sources,
     crawl_web_sources_auto,
     refresh_live_web_sources,
+    refresh_existing_public_sources,
     build_coach_prompt,
     run_coach,
     run_interview,
@@ -369,6 +370,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=8,
         help="자동 웹 조사 시 실제 ingest 할 최대 URL 수 (default: 8).",
+    )
+    p_company.add_argument(
+        "--refresh-live",
+        action="store_true",
+        help="이미 수집한 공개 URL을 프롬프트 생성 전에 다시 확인합니다.",
     )
     p_company.set_defaults(func=cmd_company_research)
 
@@ -1243,6 +1249,14 @@ def cmd_company_research(args: argparse.Namespace) -> None:
             "Auto web research: "
             f"{auto_result['discovered_url_count']}개 후보 URL, "
             f"{auto_result['ingested_url_count']}개 ingest"
+        )
+    if getattr(args, "refresh_live", False):
+        refresh_result = refresh_existing_public_sources(ws)
+        print(
+            "Live refresh: "
+            f"{refresh_result['tracked_url_count']}개 추적 URL, "
+            f"changed={refresh_result['changed_url_count']}, "
+            f"unchanged={refresh_result['unchanged_url_count']}"
         )
     prompt_path = build_company_research_prompt(ws)
     if args.run_codex:

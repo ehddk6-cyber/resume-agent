@@ -731,6 +731,7 @@ class TestCmdCompanyResearch:
             str(tmp_path),
             run_codex=False,
             auto_web=True,
+            refresh_live=False,
             max_results_per_query=3,
             max_urls=8,
         )
@@ -746,6 +747,32 @@ class TestCmdCompanyResearch:
                         }
                         mock_next.return_value = "다음 단계"
                         cmd_company_research(args)
+
+    def test_with_refresh_live(self, tmp_path: Path):
+        from resume_agent.cli import cmd_company_research
+
+        args = _make_args(
+            str(tmp_path),
+            run_codex=False,
+            auto_web=False,
+            refresh_live=True,
+        )
+        with patch("resume_agent.cli.Workspace") as MockWS:
+            with patch("resume_agent.cli.build_company_research_prompt") as mock_build:
+                with patch(
+                    "resume_agent.cli.refresh_existing_public_sources"
+                ) as mock_refresh:
+                    with patch("resume_agent.cli.next_step") as mock_next:
+                        MockWS.return_value = _mock_workspace(tmp_path)
+                        mock_build.return_value = "/tmp/prompt.md"
+                        mock_refresh.return_value = {
+                            "tracked_url_count": 2,
+                            "changed_url_count": 1,
+                            "unchanged_url_count": 1,
+                        }
+                        mock_next.return_value = "다음 단계"
+                        cmd_company_research(args)
+                        mock_refresh.assert_called_once()
 
 
 class TestCmdRefreshLive:
