@@ -347,6 +347,26 @@ class TestWriterRewriteHelpers:
 
         assert needs_writer_rewrite(validation, quality) is True
 
+    def test_needs_writer_rewrite_when_priority_rule_coverage_is_low(self):
+        validation = ValidationResult(passed=True)
+        quality = [{"overall_score": 0.9, "humanization_score": 0.9}]
+        result_quality = [{"overall": 0.9}]
+
+        assert (
+            needs_writer_rewrite(
+                validation,
+                quality,
+                result_quality,
+                {
+                    "checked_count": 1,
+                    "covered_count": 0,
+                    "missing_count": 1,
+                    "coverage_rate": 0.0,
+                },
+            )
+            is True
+        )
+
     def test_build_writer_rewrite_prompt_includes_validation_and_feedback(self):
         validation = ValidationResult(passed=False, missing=["문항별 글자수 표기"])
         quality = [

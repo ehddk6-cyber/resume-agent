@@ -140,6 +140,39 @@ class TestCmdOutcomeRecord:
         mock_kpi_dashboard.assert_called_once()
 
 
+class TestCmdStatus:
+    def test_status_prints_live_change_effectiveness(self, tmp_path: Path, capsys):
+        from resume_agent.cli import cmd_status
+
+        args = _make_args(str(tmp_path))
+        with patch("resume_agent.cli.Workspace") as MockWS:
+            with patch("resume_agent.cli.load_artifacts", return_value=[]):
+                with patch(
+                    "resume_agent.cli.load_project",
+                    return_value=MagicMock(company_name="", job_title="", career_stage=""),
+                ):
+                    with patch(
+                        "resume_agent.cli.read_json_if_exists",
+                        return_value={
+                            "artifact_type": "writer",
+                            "recommended_pattern": "writer|공공|TYPE_A",
+                            "overall_success_rate": 0.7,
+                            "high_risk_hotspots": [],
+                            "live_change_effectiveness": {
+                                "linked_outcome_count": 3,
+                                "high_vs_low_success_gap": 0.25,
+                                "top_missing_titles": [{"title": "채용 공고"}],
+                            },
+                        },
+                    ):
+                        MockWS.return_value = _mock_workspace(tmp_path)
+                        cmd_status(args)
+
+        output = capsys.readouterr().out
+        assert "live 연동 결과 수" in output
+        assert "채용 공고" in output
+
+
 # ──────────────────────────────────────────────────
 # cmd_crawl_base 테스트
 # ──────────────────────────────────────────────────

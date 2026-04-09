@@ -41,6 +41,7 @@ from .validators import validate_experience
 from .interactive import run_interactive_coach
 from .progress import print_status
 from .state import load_artifacts, load_project
+from .utils import read_json_if_exists
 
 
 def main() -> int:
@@ -1514,12 +1515,16 @@ def cmd_status(args: argparse.Namespace) -> None:
     try:
         dashboard = read_json_if_exists(ws.analysis_dir / "outcome_dashboard.json")
         if dashboard:
+            live_effectiveness = dashboard.get("live_change_effectiveness", {}) or {}
             console.print(
                 Panel(
                     f"아티팩트: {dashboard.get('artifact_type', '-')}\n"
                     f"권장 패턴: {dashboard.get('recommended_pattern', '-')}\n"
                     f"성공률: {dashboard.get('overall_success_rate', 0)}\n"
-                    f"고위험 패턴 수: {len(dashboard.get('high_risk_hotspots', []))}",
+                    f"고위험 패턴 수: {len(dashboard.get('high_risk_hotspots', []))}\n"
+                    f"live 연동 결과 수: {live_effectiveness.get('linked_outcome_count', 0)}\n"
+                    f"high-low 성공률 격차: {live_effectiveness.get('high_vs_low_success_gap', 0.0)}\n"
+                    f"반복 누락 신호: {', '.join(item.get('title', '') for item in live_effectiveness.get('top_missing_titles', [])[:3]) or '-'}",
                     title="Outcome Dashboard",
                     border_style="magenta",
                 )

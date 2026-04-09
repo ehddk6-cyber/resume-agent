@@ -4035,6 +4035,7 @@ def run_writer_with_codex(
         result_quality_evaluations: list[dict[str, Any]] = []
         quality_evaluation_error: str | None = None
         result_quality_evaluation_error: str | None = None
+        recent_change_priority_rule_check: dict[str, Any] = {}
         ncs_profile = read_json_if_exists(ws.analysis_dir / "ncs_profile.json")
         narrative_ssot = read_json_if_exists(ws.analysis_dir / "narrative_ssot.json")
         if not ncs_profile:
@@ -4075,6 +4076,17 @@ def run_writer_with_codex(
             except Exception as e:
                 result_quality_evaluation_error = str(e)
                 logger.warning(f"Result-focused quality evaluation failed: {e}")
+        live_updates = build_live_source_update_summary(ws).get(
+            "priority_live_updates", []
+        )
+        research_strategy_translation = read_json_if_exists(
+            ws.analysis_dir / "research_strategy_translation.json"
+        )
+        recent_change_priority_rule_check = _assess_recent_change_priority_rule_coverage(
+            normalized_text,
+            priority_live_updates=live_updates,
+            research_strategy_translation=research_strategy_translation,
+        )
 
         def _rewrite_with_constraints(
             previous_output: str,
@@ -4106,6 +4118,7 @@ def run_writer_with_codex(
                 ),
                 candidate_profile=build_candidate_profile(ws, project, experiences),
                 writer_brief=writer_brief,
+                recent_change_priority_rule_check=recent_change_priority_rule_check,
                 focus_mode=focus_mode,
             )
             rewrite_prompt_path = rewrite_dir / "rewrite_prompt.md"
@@ -4177,6 +4190,7 @@ def run_writer_with_codex(
             validation,
             quality_evaluations,
             result_quality_evaluations,
+            recent_change_priority_rule_check,
         ):
             logger.warning(
                 "Writer quality below threshold. Attempting targeted rewrite."
@@ -4341,12 +4355,6 @@ def run_writer_with_codex(
             else "skipped"
             if not normalized_text.strip()
             else "ok"
-        )
-        live_updates = build_live_source_update_summary(ws).get(
-            "priority_live_updates", []
-        )
-        research_strategy_translation = read_json_if_exists(
-            ws.analysis_dir / "research_strategy_translation.json"
         )
         recent_change_action_check = _assess_recent_change_action_coverage(
             normalized_text,
@@ -7090,6 +7098,7 @@ def needs_writer_rewrite(
     validation: ValidationResult,
     quality_evaluations: list[dict[str, Any]],
     result_quality_evaluations: list[dict[str, Any]] | None = None,
+    recent_change_priority_rule_check: dict[str, Any] | None = None,
 ) -> bool:
     if not validation.passed:
         return True
@@ -7145,6 +7154,12 @@ def needs_writer_rewrite(
         for item in (result_quality_evaluations or [])
         if float(item.get("overall", 1.0)) < 0.72
     ]
+    low_priority_rule_coverage = (
+        isinstance(recent_change_priority_rule_check, dict)
+        and int(recent_change_priority_rule_check.get("checked_count", 0) or 0) > 0
+        and float(recent_change_priority_rule_check.get("coverage_rate", 1.0) or 0.0)
+        < 0.67
+    )
     return bool(
         low_scores
         or low_humanization
@@ -7155,6 +7170,7 @@ def needs_writer_rewrite(
         or low_message_discipline
         or low_cliche_blocking
         or low_result_quality
+        or low_priority_rule_coverage
     )
 
 
@@ -7374,6 +7390,7 @@ def build_writer_rewrite_prompt(
     feedback_learning: dict[str, Any] | None = None,
     candidate_profile: dict[str, Any] | None = None,
     writer_brief: dict[str, Any] | None = None,
+    recent_change_priority_rule_check: dict[str, Any] | None = None,
     focus_mode: str = "full",
 ) -> str:
     issues: list[str] = []
@@ -7388,6 +7405,21 @@ def build_writer_rewrite_prompt(
         )
     if validation.missing:
         issues.append("형식/계약 누락: " + ", ".join(validation.missing))
+    if (
+        isinstance(recent_change_priority_rule_check, dict)
+        and int(recent_change_priority_rule_check.get("checked_count", 0) or 0) > 0
+    ):
+        missing_titles = [
+            str(item.get("title") or "").strip()
+            for item in recent_change_priority_rule_check.get("items", [])
+            if isinstance(item, dict)
+            and not item.get("covered")
+            and str(item.get("title") or "").strip()
+        ]
+        if missing_titles:
+            issues.append(
+                "최신 공개 신호 우선반영 누락: " + ", ".join(missing_titles[:3])
+            )
     if not char_only_mode:
         for item in quality_evaluations:
             overall = float(item.get("overall_score", 0.0))
