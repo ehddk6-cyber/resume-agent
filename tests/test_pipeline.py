@@ -32,6 +32,7 @@ from resume_agent.pipeline import (
     build_kpi_dashboard,
     build_writer_result_quality_evaluations,
     build_coach_prompt,
+    build_interview_prompt,
     build_research_strategy_translation,
     build_self_intro_pack,
     run_coach,
@@ -1779,6 +1780,19 @@ class TestFeedbackLearningAndAutoWebResearch:
                 }
             },
         )
+        write_json(
+            workspace.state_dir / "live_source_cache.json",
+            {
+                "https://example.com/jobs": {
+                    "url": "https://example.com/jobs",
+                    "title": "채용 공고",
+                    "change_status": "changed",
+                    "change_summary": "추가 신호: 데이터, 자동화",
+                    "keywords": ["데이터", "자동화"],
+                    "fetched_at": "2026-04-09T00:00:00+00:00",
+                }
+            },
+        )
 
         from resume_agent.company_analyzer import analyze_company
         from resume_agent.pipeline import build_draft_prompt
@@ -1803,6 +1817,40 @@ class TestFeedbackLearningAndAutoWebResearch:
         assert '"narrative_ssot"' in content
         assert '"outcome_dashboard"' in content
         assert '"research_strategy_translation"' in content
+        assert '"recent_change_actions"' in content
+        assert "추가 신호: 데이터, 자동화" in content
+
+    def test_build_interview_prompt_includes_recent_change_actions(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        project = ApplicationProject(
+            company_name="테스트공사",
+            job_title="데이터 분석",
+            company_type="공공",
+            questions=[Question(id="q1", order_no=1, question_text="지원동기")],
+        )
+        save_project(workspace, project)
+        write_json(
+            workspace.state_dir / "live_source_cache.json",
+            {
+                "https://example.com/jobs": {
+                    "url": "https://example.com/jobs",
+                    "title": "채용 공고",
+                    "change_status": "changed",
+                    "change_summary": "추가 신호: 데이터, 자동화",
+                    "keywords": ["데이터", "자동화"],
+                    "fetched_at": "2026-04-09T00:00:00+00:00",
+                }
+            },
+        )
+
+        prompt_path = build_interview_prompt(workspace)
+        content = Path(prompt_path).read_text(encoding="utf-8")
+
+        assert '"research_strategy_translation"' in content
+        assert '"recent_change_actions"' in content
+        assert "추가 신호: 데이터, 자동화" in content
 
     def test_build_knowledge_hints_includes_semantic_score(self, tmp_path):
         workspace = Workspace(tmp_path)
