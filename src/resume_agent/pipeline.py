@@ -76,6 +76,7 @@ from .answer_quality import (
     analyze_humanization,
 )
 from .defense_simulator import simulate_interview_defense, DefenseSimulator
+from .profiler import ApplicantProfiler, build_candidate_profile_payload
 from .state import (
     initialize_state,
     load_artifacts,
@@ -87,6 +88,7 @@ from .state import (
     save_project,
     save_knowledge_sources,
     save_success_cases,
+    upsert_profile_snapshot,
     upsert_artifact,
     write_json,
 )
@@ -785,6 +787,8 @@ def build_candidate_profile(
     experiences: List[Experience],
 ) -> dict[str, Any]:
     profile = load_profile(ws)
+    personalized = ApplicantProfiler().build_profile(experiences, profile_id="default")
+    upsert_profile_snapshot(ws, personalized)
     total = len(experiences) or 1
     metric_count = sum(1 for item in experiences if item.metrics.strip())
     contribution_count = sum(
@@ -899,6 +903,8 @@ def build_candidate_profile(
             f"주요 강점은 {', '.join(signature_strengths[:3])}입니다."
         ),
     }
+    candidate_profile.update(build_candidate_profile_payload(personalized))
+    candidate_profile["style_preference"] = profile.style_preference
     write_json(ws.analysis_dir / "candidate_profile.json", candidate_profile)
     return candidate_profile
 
@@ -3099,6 +3105,7 @@ def run_coach(ws: Workspace) -> dict[str, Any]:
         )
         save_project(ws, project)
         experiences = load_experiences(ws)
+        candidate_profile = build_candidate_profile(ws, project, experiences)
         progress.step("프로젝트/경험 로드", status="success")
 
         gap_report = analyze_gaps(project, experiences)
@@ -3113,6 +3120,7 @@ def run_coach(ws: Workspace) -> dict[str, Any]:
             strategy_outcome_summary=feedback_learning.get("strategy_outcome_summary"),
             current_pattern=feedback_learning.get("current_pattern"),
             feedback_adaptation_plan=feedback_learning.get("adaptation_plan"),
+            candidate_profile=candidate_profile,
         )
         progress.step("갭 분석 및 코칭 아티팩트 생성", status="success")
 
@@ -3175,6 +3183,7 @@ def run_coach(ws: Workspace) -> dict[str, Any]:
         feedback_adaptation_plan=feedback_learning.get("adaptation_plan"),
         question_strategies=writer_brief.get("question_strategies"),
         writer_contract=writer_brief.get("writer_contract"),
+        candidate_profile=candidate_profile,
     )
     validation_dict = validate_coach_contract(artifact["rendered"])
     validation = ValidationResult(
@@ -4879,6 +4888,7 @@ def build_coach_prompt(
     save_project(ws, project)
     experiences = load_experiences(ws)
     knowledge_sources = load_knowledge_sources(ws)
+    candidate_profile = build_candidate_profile(ws, project, experiences)
     feedback_learning = build_feedback_learning_context(ws, "coach", project=project)
     artifact = coach_artifact or build_coach_artifact(
         project,
@@ -4887,6 +4897,7 @@ def build_coach_prompt(
         outcome_summary=feedback_learning.get("outcome_summary"),
         strategy_outcome_summary=feedback_learning.get("strategy_outcome_summary"),
         current_pattern=feedback_learning.get("current_pattern"),
+        candidate_profile=candidate_profile,
     )
     company_analysis = None
     if project.company_name:
@@ -4909,7 +4920,6 @@ def build_coach_prompt(
         experiences=experiences,
         company_analysis=company_analysis,
     )
-    candidate_profile = build_candidate_profile(ws, project, experiences)
     narrative_ssot = build_narrative_ssot(
         ws,
         project,
@@ -4925,7 +4935,9 @@ def build_coach_prompt(
     outcome_dashboard = build_outcome_dashboard(ws, project, "coach")
     kpi_dashboard = build_kpi_dashboard(ws, project, "coach")
 
-    hints = build_knowledge_hints(knowledge_sources, project)
+    hints = build_knowledge_hints(
+        knowledge_sources, project, applicant_profile=candidate_profile
+    )
     question_specific_hints = build_question_specific_knowledge_hints(
         knowledge_sources, project
     )
@@ -5007,8 +5019,11 @@ def build_draft_prompt(ws: Workspace, target_path: Path, company_analysis=None) 
     experiences = load_experiences(ws)
     knowledge_sources = load_knowledge_sources(ws)
     question_map = read_json_if_exists(ws.analysis_dir / "question_map.json")
+    candidate_profile = build_candidate_profile(ws, project, experiences)
 
-    hints = build_knowledge_hints(knowledge_sources, project)
+    hints = build_knowledge_hints(
+        knowledge_sources, project, applicant_profile=candidate_profile
+    )
     question_specific_hints = build_question_specific_knowledge_hints(
         knowledge_sources, project
     )
@@ -5030,7 +5045,6 @@ def build_draft_prompt(ws: Workspace, target_path: Path, company_analysis=None) 
         jd_keywords=jd_keywords,
         company_analysis=company_analysis,
     )
-    candidate_profile = build_candidate_profile(ws, project, experiences)
     narrative_ssot = build_narrative_ssot(
         ws,
         project,
@@ -5185,7 +5199,9 @@ def build_interview_prompt(ws: Workspace, company_analysis=None) -> Path:
     data_block = build_data_block(
         project=project,
         experiences=select_primary_experiences(experiences, question_map),
-        knowledge_hints=build_knowledge_hints(knowledge_sources, project),
+        knowledge_hints=build_knowledge_hints(
+            knowledge_sources, project, applicant_profile=candidate_profile
+        ),
         extra=extra,
     )
     content = PROMPT_INTERVIEW.format(data_block=data_block)
@@ -5220,6 +5236,7 @@ def build_company_research_prompt(
     experiences = load_experiences(ws)
     knowledge_sources = load_knowledge_sources(ws)
     question_map = read_json_if_exists(ws.analysis_dir / "question_map.json")
+    candidate_profile = build_candidate_profile(ws, project, experiences)
 
     company_analysis = None
     if project.company_name:
@@ -5244,7 +5261,6 @@ def build_company_research_prompt(
         jd_keywords=jd_keywords,
         company_analysis=company_analysis,
     )
-    candidate_profile = build_candidate_profile(ws, project, experiences)
     narrative_ssot = build_narrative_ssot(
         ws,
         project,
@@ -5264,7 +5280,9 @@ def build_company_research_prompt(
     data_block = build_data_block(
         project=project,
         experiences=experiences[:3],
-        knowledge_hints=build_knowledge_hints(knowledge_sources, project),
+        knowledge_hints=build_knowledge_hints(
+            knowledge_sources, project, applicant_profile=candidate_profile
+        ),
         extra={
             "question_map": question_map,
             "jd_keywords": jd_keywords,

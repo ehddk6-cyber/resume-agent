@@ -186,6 +186,34 @@ class CompanyAnalysis(BaseModel):
     discouraged_phrases: List[str] = Field(default_factory=list)
 
 
+class WritingStyleAnalysis(BaseModel):
+    avg_sentence_words: float = 0.0
+    avg_sentence_chars: float = 0.0
+    dominant_tone: str = "balanced"
+    formality_level: str = "balanced"
+    sentence_style: str = "balanced"
+    evidence_density: float = 0.0
+    confidence_tendency: str = "balanced"
+    expression_patterns: List[str] = Field(default_factory=list)
+    keyword_frequency: Dict[str, int] = Field(default_factory=dict)
+
+
+class ApplicantProfile(BaseModel):
+    profile_id: str = "default"
+    source_count: int = 0
+    analyzed_text_count: int = 0
+    writing_style: WritingStyleAnalysis = Field(default_factory=WritingStyleAnalysis)
+    strength_keywords: List[str] = Field(default_factory=list)
+    weakness_codes: List[str] = Field(default_factory=list)
+    weakness_details: List[str] = Field(default_factory=list)
+    recommendation_summary: List[str] = Field(default_factory=list)
+    answer_style_preferences: List[str] = Field(default_factory=list)
+    coaching_priorities: List[str] = Field(default_factory=list)
+    generated_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.timezone.utc)
+    )
+
+
 class QuestionAnalysis(BaseModel):
     """질문 분석 결과"""
 

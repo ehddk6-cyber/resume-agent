@@ -48,6 +48,15 @@ _SEMANTIC_EQUIVALENTS = {
     "직무": {"업무", "실무", "역할"},
 }
 
+
+def _extract_profile_snapshot(candidate_profile: dict[str, Any] | None) -> dict[str, Any]:
+    if not candidate_profile:
+        return {}
+    nested = candidate_profile.get("personalized_profile")
+    if isinstance(nested, dict):
+        return nested
+    return candidate_profile
+
 # 임베딩 모듈 지연 로딩 (순환 import 방지)
 _ST_MODEL_SCORING = None
 _ST_CLASS_SCORING = None
@@ -136,7 +145,17 @@ def _semantic_adjustment_fallback(
 
 def _semantic_adjustment(question_text: str, haystack: str) -> tuple[int, list[str]]:
     """의미적 유사도 가점 — 임베딩 우선, 폴백"""
-    return _semantic_adjustment_embedding(question_text, haystack)
+    fallback_adjustment, fallback_notes = _semantic_adjustment_fallback(
+        question_text, haystack
+    )
+    if fallback_adjustment > 0:
+        return fallback_adjustment, fallback_notes
+    embedding_adjustment, embedding_notes = _semantic_adjustment_embedding(
+        question_text, haystack
+    )
+    if fallback_adjustment > embedding_adjustment:
+        return fallback_adjustment, fallback_notes
+    return embedding_adjustment, embedding_notes
 
 
 def _outcome_alignment_adjustment(
@@ -303,6 +322,47 @@ def _feedback_adaptation_adjustment(
     return 0, []
 
 
+def _personalization_adjustment(
+    experience: Experience,
+    candidate_profile: dict[str, Any] | None,
+) -> tuple[int, list[str]]:
+    profile = _extract_profile_snapshot(candidate_profile)
+    if not profile:
+        return 0, []
+
+    strengths = {
+        str(item).strip().lower()
+        for item in profile.get("strength_keywords", []) or []
+        if str(item).strip()
+    }
+    weakness_codes = {
+        str(item).strip() for item in profile.get("weakness_codes", []) or []
+    }
+    style = profile.get("writing_style", {}) or {}
+    haystack = " ".join(
+        [experience.title, experience.action, experience.result, " ".join(experience.tags)]
+    ).lower()
+
+    adjustment = 0
+    notes: list[str] = []
+    if any(keyword and keyword.lower() in haystack for keyword in strengths):
+        adjustment += 2
+        notes.append("지원자 고유 강점과 맞닿는 경험이라 가점")
+    if "low_metrics" in weakness_codes and not metric_present(experience):
+        adjustment -= 2
+        notes.append("지원자 약점이 수치 부족이라 정량 근거 없는 경험을 감점")
+    if "low_contribution" in weakness_codes and not experience.personal_contribution.strip():
+        adjustment -= 2
+        notes.append("지원자 약점이 개인 기여 불명확이라 기여도 약한 경험을 감점")
+    if "low_evidence" in weakness_codes and not experience.evidence_text.strip():
+        adjustment -= 1
+        notes.append("지원자 약점이 증빙 부족이라 근거 없는 경험을 감점")
+    if style.get("dominant_tone") == "logical" and metric_present(experience):
+        adjustment += 1
+        notes.append("현재 지원자 문체와 잘 맞는 근거 중심 경험이라 가점")
+    return adjustment, notes
+
+
 def metric_present(experience: Experience) -> bool:
     metric_text = experience.metrics.strip()
     return bool(metric_text and metric_text != "정량 수치 없음")
@@ -358,6 +418,7 @@ def score_experience(
     strategy_outcome_summary: dict[str, Any] | None = None,
     current_pattern: str | None = None,
     feedback_adaptation_plan: dict[str, Any] | None = None,
+    candidate_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     question_text = question.question_text
     question_type = getattr(question, "detected_type", None)
@@ -419,6 +480,11 @@ def score_experience(
         feedback_adaptation_plan,
     )
     score += adaptation_adjustment
+    personalization_adjustment, personalization_notes = _personalization_adjustment(
+        experience,
+        candidate_profile,
+    )
+    score += personalization_adjustment
 
     return {
         "score": score,
@@ -427,8 +493,14 @@ def score_experience(
         "outcome_adjustment": outcome_adjustment,
         "strategy_adjustment": strategy_adjustment,
         "adaptation_adjustment": adaptation_adjustment,
+        "personalization_adjustment": personalization_adjustment,
         "semantic_adjustment": semantic_adjustment,
-        "outcome_notes": [*outcome_notes, *strategy_notes, *adaptation_notes],
+        "outcome_notes": [
+            *outcome_notes,
+            *strategy_notes,
+            *adaptation_notes,
+            *personalization_notes,
+        ],
         "semantic_notes": semantic_notes,
     }
 
@@ -450,6 +522,7 @@ def allocate_experiences(
     strategy_outcome_summary: dict[str, Any] | None = None,
     current_pattern: str | None = None,
     feedback_adaptation_plan: dict[str, Any] | None = None,
+    candidate_profile: dict[str, Any] | None = None,
 ) -> List[dict[str, Any]]:
     allocations: List[dict[str, Any]] = []
     used_experience_ids: List[str] = []
@@ -469,6 +542,7 @@ def allocate_experiences(
                     strategy_outcome_summary,
                     current_pattern,
                     feedback_adaptation_plan,
+                    candidate_profile,
                 ),
             }
             for exp in experiences

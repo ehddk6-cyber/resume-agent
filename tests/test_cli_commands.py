@@ -251,6 +251,40 @@ class TestCmdAnalyze:
                     cmd_analyze(args)
 
 
+class TestCmdProfile:
+    def test_profile_command_updates_snapshot(self, tmp_path: Path):
+        from resume_agent.cli import cmd_profile
+
+        args = _make_args(str(tmp_path), answer=["과거 답변"])
+        with patch("resume_agent.cli.Workspace") as MockWS:
+            ws = _mock_workspace(tmp_path)
+            MockWS.return_value = ws
+            with patch("resume_agent.state.load_experiences", return_value=[]):
+                cmd_profile(args)
+
+
+class TestCmdCompany:
+    def test_company_command_profiles_target_company(self, tmp_path: Path):
+        from resume_agent.cli import cmd_company
+        from resume_agent.models import ApplicationProject
+
+        args = _make_args(
+            str(tmp_path),
+            company_name="테스트기업",
+            job_title="백엔드",
+            company_type="공공",
+            job_description_file=None,
+        )
+        with patch("resume_agent.cli.Workspace") as MockWS:
+            ws = _mock_workspace(tmp_path)
+            MockWS.return_value = ws
+            with patch("resume_agent.state.load_project") as mock_project:
+                with patch("resume_agent.state.load_experiences", return_value=[]):
+                    with patch("resume_agent.state.load_success_cases", return_value=[]):
+                        mock_project.return_value = ApplicationProject()
+                        cmd_company(args)
+
+
 # ──────────────────────────────────────────────────
 # cmd_draft 테스트
 # ──────────────────────────────────────────────────

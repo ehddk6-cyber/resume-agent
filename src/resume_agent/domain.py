@@ -571,9 +571,13 @@ def build_experience_knowledge_hints(
 
 
 def build_knowledge_hints(
-    sources: List[KnowledgeSource], project: ApplicationProject
+    sources: List[KnowledgeSource],
+    project: ApplicationProject,
+    applicant_profile: dict[str, Any] | None = None,
 ) -> List[dict[str, Any]]:
     if not sources:
+        if applicant_profile:
+            return [_build_personalized_profile_hint(applicant_profile, project)]
         return []
 
     try:
@@ -637,7 +641,7 @@ def build_knowledge_hints(
 
     semantic_hint_cap = int(get_config_value("writer.semantic_hint_cap", 32))
     use_semantic_hinting = len(valid_sources) <= semantic_hint_cap
-    return _rank_knowledge_hints(
+    hints = _rank_knowledge_hints(
         valid_sources,
         vectorizer=vectorizer,
         tfidf_matrix=tfidf_matrix,
@@ -647,6 +651,56 @@ def build_knowledge_hints(
         use_semantic_hinting=use_semantic_hinting,
         limit=5,
     )
+    if applicant_profile:
+        hints.insert(0, _build_personalized_profile_hint(applicant_profile, project))
+    return hints[:6]
+
+
+def _build_personalized_profile_hint(
+    applicant_profile: dict[str, Any],
+    project: ApplicationProject,
+) -> dict[str, Any]:
+    profile = applicant_profile.get("personalized_profile", applicant_profile)
+    strengths = list(
+        profile.get("strength_keywords", [])
+        or applicant_profile.get("signature_strengths", [])
+        or []
+    )
+    weaknesses = list(
+        profile.get("weakness_details", [])
+        or applicant_profile.get("blind_spots", [])
+        or []
+    )
+    recommendations = list(
+        profile.get("recommendation_summary", [])
+        or applicant_profile.get("coaching_focus", [])
+        or []
+    )
+    writing_style = profile.get(
+        "writing_style",
+        applicant_profile.get("writing_style", {}),
+    ) or {}
+
+    return {
+        "title": "지원자 프로파일 힌트",
+        "company_name": project.company_name,
+        "job_title": project.job_title,
+        "signal": (
+            f"개인화 코칭 / {writing_style.get('dominant_tone', 'balanced')} / "
+            f"{', '.join(strengths[:2]) or '직무 적합성'}"
+        ),
+        "structure_summary": "지원자 고유 문체와 강약점을 반영한 답변 방향입니다.",
+        "caution": weaknesses[0] if weaknesses else "강점만 반복하지 말고 약점 보완 문장도 함께 준비하세요.",
+        "question_types": [],
+        "applicable_question_types": [],
+        "evidence_focus": strengths[:3],
+        "structure_signals": {
+            "has_star": True,
+            "has_metrics": "low_metrics" not in set(profile.get("weakness_codes", [])),
+            "warns_against_copying": True,
+        },
+        "match_reasons": recommendations[:3] or ["지원자 프로파일 기반 추천"],
+    }
 
 
 def _fallback_build_knowledge_hints(
@@ -714,6 +768,7 @@ def build_coach_artifact(
     feedback_adaptation_plan: dict[str, Any] | None = None,
     question_strategies: List[dict[str, Any]] | None = None,
     writer_contract: dict[str, Any] | None = None,
+    candidate_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     allocations = allocate_experiences(
         project.questions,
@@ -723,6 +778,7 @@ def build_coach_artifact(
         strategy_outcome_summary=strategy_outcome_summary,
         current_pattern=current_pattern,
         feedback_adaptation_plan=feedback_adaptation_plan,
+        candidate_profile=candidate_profile,
     )
     current_summary: List[str] = []
     required_inputs: List[str] = []

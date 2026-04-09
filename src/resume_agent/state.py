@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from .logger import get_logger
 from .models import (
     ApplicationProject,
+    ApplicantProfile,
     EvidenceLevel,
     Experience,
     GeneratedArtifact,
@@ -52,6 +53,8 @@ def initialize_state(ws: Workspace) -> None:
     ]
     write_if_missing(ws.state_dir / "experiences.json", default_exps)
     write_if_missing(ws.state_dir / "project.json", ApplicationProject().model_dump())
+    write_if_missing(ws.state_dir / "profiles.json", [])
+    write_if_missing(ws.state_dir / "company_patterns.json", {})
     write_if_missing(ws.state_dir / "knowledge_sources.json", [])
     write_if_missing(ws.state_dir / "success_cases.json", [])
     write_if_missing(ws.state_dir / "artifacts.json", [])
@@ -94,6 +97,30 @@ def save_experiences(ws: Workspace, experiences: List[Experience]) -> None:
 
 def save_project(ws: Workspace, project: ApplicationProject) -> None:
     write_json(ws.state_dir / "project.json", project.model_dump())
+
+
+def load_profiles(ws: Workspace) -> List[ApplicantProfile]:
+    data = read_json(ws.state_dir / "profiles.json", [])
+    return [ApplicantProfile.model_validate(item) for item in data]
+
+
+def save_profiles(ws: Workspace, profiles: List[ApplicantProfile]) -> None:
+    write_json(ws.state_dir / "profiles.json", [item.model_dump() for item in profiles])
+
+
+def upsert_profile_snapshot(ws: Workspace, profile: ApplicantProfile) -> None:
+    profiles = load_profiles(ws)
+    filtered = [item for item in profiles if item.profile_id != profile.profile_id]
+    filtered.append(profile)
+    save_profiles(ws, filtered)
+
+
+def load_company_patterns(ws: Workspace) -> dict[str, Any]:
+    return read_json(ws.state_dir / "company_patterns.json", {})
+
+
+def save_company_patterns(ws: Workspace, patterns: dict[str, Any]) -> None:
+    write_json(ws.state_dir / "company_patterns.json", patterns)
 
 
 def save_knowledge_sources(ws: Workspace, sources: List[KnowledgeSource]) -> None:
@@ -159,6 +186,7 @@ def write_json(path: Path, data: Any) -> None:
             f"Object of type {type(value).__name__} is not JSON serializable"
         )
 
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(data, indent=2, ensure_ascii=False, default=_json_default),
         encoding="utf-8",

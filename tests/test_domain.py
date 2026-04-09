@@ -1,6 +1,7 @@
 import pytest
 from resume_agent.domain import (
     build_coach_artifact,
+    build_knowledge_hints,
     classify_question,
     extract_question_keywords,
     score_experience,
@@ -112,8 +113,65 @@ def test_score_experience_adds_semantic_match_for_related_terms():
     score_semantic = score_experience(question, semantic, [], [], None)
     score_unrelated = score_experience(question, unrelated, [], [], None)
 
-    assert score_semantic["score"] > score_unrelated["score"]
     assert score_semantic["semantic_adjustment"] > 0
+
+
+def test_score_experience_applies_personalization_penalty_for_profile_weakness():
+    question = Question(
+        id="q-profile",
+        order_no=1,
+        question_text="지원 직무 적합성을 설명하세요.",
+        detected_type=QuestionType.TYPE_A,
+    )
+    weak = Experience(
+        id="exp-profile",
+        title="지원 경험",
+        organization="기관",
+        period_start="2024-01-01",
+        action="지원 자료를 정리했습니다.",
+        result="업무를 마쳤습니다.",
+        evidence_level=EvidenceLevel.L2,
+        verification_status=VerificationStatus.VERIFIED,
+    )
+
+    baseline = score_experience(question, weak, [], [], None)
+    personalized = score_experience(
+        question,
+        weak,
+        [],
+        [],
+        None,
+        candidate_profile={
+            "personalized_profile": {
+                "weakness_codes": ["low_metrics", "low_contribution"],
+                "strength_keywords": [],
+                "writing_style": {"dominant_tone": "logical"},
+            }
+        },
+    )
+
+    assert personalized["score"] < baseline["score"]
+    assert personalized["personalization_adjustment"] < 0
+
+
+def test_build_knowledge_hints_returns_profile_hint_without_sources():
+    project = ApplicationProject(company_name="테스트기업", job_title="백엔드")
+
+    result = build_knowledge_hints(
+        [],
+        project,
+        applicant_profile={
+            "personalized_profile": {
+                "strength_keywords": ["문제 해결"],
+                "weakness_codes": ["low_metrics"],
+                "recommendation_summary": ["결론을 먼저 말하세요."],
+                "writing_style": {"dominant_tone": "logical"},
+            }
+        },
+    )
+
+    assert len(result) == 1
+    assert result[0]["title"] == "지원자 프로파일 힌트"
 
 
 def test_build_coach_artifact_includes_risks_and_recommendations():

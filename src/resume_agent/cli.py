@@ -183,7 +183,25 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["codex", "claude", "gemini", "kilo", "cline", "opencode"],
         help="CLI tool to use for LLM execution (default: codex).",
     )
+    p_coach.add_argument(
+        "--psychology-pack",
+        action="store_true",
+        help="지원자 프로파일 기반 면접 심리 코칭 팩을 함께 출력합니다.",
+    )
     p_coach.set_defaults(func=cmd_coach)
+
+    p_profile = sub.add_parser(
+        "profile",
+        help="지원자 글쓰기 스타일과 강약점을 분석해 프로파일을 저장합니다.",
+    )
+    p_profile.add_argument("workspace")
+    p_profile.add_argument(
+        "--answer",
+        action="append",
+        default=[],
+        help="추가로 분석할 과거 답변 텍스트. 반복 가능.",
+    )
+    p_profile.set_defaults(func=cmd_profile)
 
     p_writer = sub.add_parser("writer", help="Build writer prompt or run Codex.")
     p_writer.add_argument("workspace")
@@ -339,6 +357,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="자동 웹 조사 시 실제 ingest 할 최대 URL 수 (default: 8).",
     )
     p_company.set_defaults(func=cmd_company_research)
+
+    p_company_profile = sub.add_parser(
+        "company",
+        help="기업별 미션/가치와 합격 패턴을 요약합니다.",
+    )
+    p_company_profile.add_argument("workspace")
+    p_company_profile.add_argument("--company-name")
+    p_company_profile.add_argument("--job-title")
+    p_company_profile.add_argument("--company-type")
+    p_company_profile.add_argument(
+        "--job-description-file",
+        help="미션/가치 파싱에 반영할 JD 또는 메모 파일 경로.",
+    )
+    p_company_profile.set_defaults(func=cmd_company)
 
     p_resume = sub.add_parser("resume", help="Resume pipeline from last checkpoint.")
     p_resume.add_argument("workspace")
@@ -706,6 +738,78 @@ def cmd_coach(args: argparse.Namespace) -> None:
         )
         print(f"Codex exit code: {exit_code}")
         print(f"Wrote coach Codex output to {output_path}")
+    if getattr(args, "psychology_pack", False):
+        from .interview_coach import InterviewCoach
+        from .profiler import ApplicantProfiler
+        from .state import load_experiences
+
+        experiences = load_experiences(ws)
+        profile = ApplicantProfiler().build_profile(experiences, profile_id="default")
+        support_pack = InterviewCoach().build_support_pack(profile)
+        print("\n[Psychology Pack]")
+        for key, items in support_pack.items():
+            print(f"{key}:")
+            for item in items:
+                print(f"- {item}")
+
+
+def cmd_profile(args: argparse.Namespace) -> None:
+    from .profiler import ApplicantProfiler
+    from .state import load_experiences, upsert_profile_snapshot
+
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    experiences = load_experiences(ws)
+    profiler = ApplicantProfiler()
+    profile = profiler.build_profile(
+        experiences,
+        past_answers=list(args.answer or []),
+        profile_id="default",
+    )
+    upsert_profile_snapshot(ws, profile)
+
+    print("Applicant profile updated.")
+    print(f"- source_count: {profile.source_count}")
+    print(f"- dominant_tone: {profile.writing_style.dominant_tone}")
+    print(f"- strengths: {', '.join(profile.strength_keywords[:4])}")
+    if profile.weakness_details:
+        print(f"- weaknesses: {', '.join(profile.weakness_details[:3])}")
+    if profile.coaching_priorities:
+        print(f"- coaching: {', '.join(profile.coaching_priorities[:2])}")
+
+
+def cmd_company(args: argparse.Namespace) -> None:
+    from .company_profiler import CompanyProfiler
+    from .state import load_experiences, load_project, load_success_cases
+    from .profiler import ApplicantProfiler
+
+    ws = Workspace(Path(args.workspace))
+    ws.ensure()
+    project = load_project(ws)
+    if args.company_name:
+        project.company_name = args.company_name
+    if args.job_title:
+        project.job_title = args.job_title
+    if args.company_type:
+        project.company_type = args.company_type
+
+    jd_text = ""
+    if getattr(args, "job_description_file", None):
+        jd_text = Path(args.job_description_file).read_text(encoding="utf-8")
+
+    experiences = load_experiences(ws)
+    applicant_profile = ApplicantProfiler().build_profile(experiences, profile_id="default")
+    result = CompanyProfiler(ws, load_success_cases(ws)).profile_company(
+        project,
+        job_description=jd_text,
+        applicant_profile=applicant_profile,
+    )
+
+    print("Company profile updated.")
+    print(f"- company: {result['company_name']}")
+    print(f"- mission_keywords: {', '.join(result['mission_keywords']) or '-'}")
+    print(f"- value_keywords: {', '.join(result['value_keywords']) or '-'}")
+    print(f"- tailored_tips: {' / '.join(result['tailored_tips'])}")
 
 
 def cmd_ingest(args: argparse.Namespace) -> None:
