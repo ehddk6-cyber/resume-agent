@@ -1312,6 +1312,55 @@ class TestResearchBriefAndSourceGrading:
             for item in grading["cross_check"]["key_areas"]
         )
 
+    def test_build_source_grading_prioritizes_changed_live_sources(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        project = ApplicationProject(
+            company_name="테스트데이터",
+            job_title="데이터 분석",
+            questions=[Question(id="q1", order_no=1, question_text="지원동기")],
+        )
+        save_project(workspace, project)
+        save_knowledge_sources(
+            workspace,
+            [
+                KnowledgeSource(
+                    id="src1",
+                    source_type=SourceType.USER_URL_PUBLIC,
+                    title="채용 공고",
+                    url="https://example.com/jobs",
+                    raw_text="데이터 분석 역량",
+                    cleaned_text="데이터 분석 역량",
+                    meta=KnowledgeSourceMeta(),
+                ),
+                KnowledgeSource(
+                    id="src2",
+                    source_type=SourceType.LOCAL_TEXT,
+                    title="로컬 메모",
+                    raw_text="데이터 분석 문화",
+                    cleaned_text="데이터 분석 문화",
+                    meta=KnowledgeSourceMeta(),
+                ),
+            ],
+        )
+        write_json(
+            workspace.state_dir / "live_source_cache.json",
+            {
+                "https://example.com/jobs": {
+                    "url": "https://example.com/jobs",
+                    "change_status": "changed",
+                }
+            },
+        )
+
+        from resume_agent.pipeline import build_source_grading
+
+        grading = build_source_grading(workspace)
+
+        assert grading["assessments"][0]["url"] == "https://example.com/jobs"
+        assert grading["assessments"][0]["freshness_status"] == "changed"
+
     def test_build_research_brief_includes_live_source_updates(self, tmp_path):
         workspace = Workspace(tmp_path)
         workspace.ensure()

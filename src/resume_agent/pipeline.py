@@ -443,6 +443,17 @@ def refresh_live_web_sources(ws: Workspace, urls: list[str]) -> dict[str, Any]:
     return crawl_web_sources(ws, urls)
 
 
+def build_live_priority_by_url(ws: Workspace) -> dict[str, str]:
+    ws.ensure()
+    initialize_state(ws)
+    cache = load_live_source_cache(ws)
+    return {
+        str(url): str(payload.get("change_status") or "")
+        for url, payload in cache.items()
+        if isinstance(payload, dict) and str(url).strip()
+    }
+
+
 def refresh_existing_public_sources(ws: Workspace) -> dict[str, Any]:
     ws.ensure()
     initialize_state(ws)
@@ -2965,6 +2976,7 @@ def build_source_grading(
     question_terms = _tokenize_research_terms(
         " ".join(question.question_text for question in project.questions)
     )[:6]
+    live_priority_by_url = build_live_priority_by_url(ws)
     company_terms = _tokenize_research_terms(
         f"{project.company_name} {project.job_title} {project.company_type}"
     )[:6]
@@ -3000,6 +3012,11 @@ def build_source_grading(
         tokens = _tokenize_research_terms(f"{source.title}\n{source.cleaned_text}")[:30]
         source_tokens[source.id] = tokens
         grade, rationale = _grade_source_reliability(source)
+        freshness_status = (
+            str(live_priority_by_url.get(str(source.url or "")) or "")
+            if source.url
+            else ""
+        )
         supporting_areas = [
             area["area"] for area in key_areas if set(tokens) & set(area["keywords"])
         ]
@@ -3013,8 +3030,22 @@ def build_source_grading(
                 "rationale": rationale,
                 "supporting_areas": supporting_areas,
                 "keywords": tokens[:12],
+                "freshness_status": freshness_status,
+                "freshness_priority": 2
+                if freshness_status == "changed"
+                else 1
+                if freshness_status == "new"
+                else 0,
             }
         )
+    assessments.sort(
+        key=lambda item: (
+            int(item.get("freshness_priority", 0)),
+            len(item.get("supporting_areas", [])),
+            str(item.get("title") or ""),
+        ),
+        reverse=True,
+    )
 
     area_results: list[dict[str, Any]] = []
     for area in key_areas:
@@ -5411,6 +5442,7 @@ def build_company_research_prompt(
         job_description=jd_text,
     )
     live_source_updates = build_live_source_update_summary(ws)
+    live_priority_by_url = build_live_priority_by_url(ws)
 
     company_analysis = None
     if project.company_name:
@@ -5455,7 +5487,10 @@ def build_company_research_prompt(
         project=project,
         experiences=experiences[:3],
         knowledge_hints=build_knowledge_hints(
-            knowledge_sources, project, applicant_profile=candidate_profile
+            knowledge_sources,
+            project,
+            applicant_profile=candidate_profile,
+            live_priority_by_url=live_priority_by_url,
         ),
         extra={
             "question_map": question_map,
@@ -5464,7 +5499,9 @@ def build_company_research_prompt(
             if company_analysis
             else None,
             "question_specific_hints": build_question_specific_knowledge_hints(
-                knowledge_sources, project
+                knowledge_sources,
+                project,
+                live_priority_by_url=live_priority_by_url,
             ),
             "research_notes": project.research_notes,
             "research_brief": brief,

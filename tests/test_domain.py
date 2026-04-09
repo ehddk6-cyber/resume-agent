@@ -14,8 +14,10 @@ from resume_agent.models import (
     ApplicationProject,
     EvidenceLevel,
     Experience,
+    KnowledgeSource,
     Question,
     QuestionType,
+    SourceType,
     VerificationStatus,
 )
 
@@ -172,6 +174,46 @@ def test_build_knowledge_hints_returns_profile_hint_without_sources():
 
     assert len(result) == 1
     assert result[0]["title"] == "지원자 프로파일 힌트"
+
+
+def test_build_knowledge_hints_applies_live_freshness_bonus():
+    project = ApplicationProject(
+        company_name="테스트기업",
+        job_title="백엔드",
+        questions=[
+            Question(
+                id="q1",
+                order_no=1,
+                question_text="직무 역량을 설명하세요.",
+                detected_type=QuestionType.TYPE_B,
+            )
+        ],
+    )
+    changed_source = KnowledgeSource(
+        id="src1",
+        title="변경된 채용 공고",
+        source_type=SourceType.USER_URL_PUBLIC,
+        url="https://example.com/jobs",
+        raw_text="백엔드 개발과 협업 역량",
+        cleaned_text="백엔드 개발과 협업 역량",
+        pattern={
+            "company_name": "테스트기업",
+            "job_title": "백엔드",
+            "question_types": ["TYPE_B"],
+            "structure_summary": "직무역량 구조",
+            "retrieval_terms": ["테스트기업", "백엔드", "협업"],
+        },
+    )
+
+    hints = build_knowledge_hints(
+        [changed_source],
+        project,
+        live_priority_by_url={"https://example.com/jobs": "changed"},
+    )
+
+    assert hints
+    assert hints[0]["freshness_status"] == "changed"
+    assert "최근 변경된 공개 소스" in hints[0]["match_reasons"]
 
 
 def test_build_coach_artifact_includes_risks_and_recommendations():

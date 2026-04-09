@@ -262,6 +262,7 @@ def _build_hint_entry(
     vector_score: float,
     combined_score: float,
     match_reasons: list[str],
+    freshness_status: str = "",
     question: Question | None = None,
 ) -> dict[str, Any]:
     pattern = source.pattern
@@ -281,6 +282,7 @@ def _build_hint_entry(
         "semantic_score": round(semantic_score, 3),
         "vector_score": round(vector_score, 3),
         "combined_score": round(combined_score, 3),
+        "freshness_status": freshness_status,
     }
     if question is not None:
         entry["question_id"] = question.id
@@ -297,6 +299,7 @@ def _rank_knowledge_hints(
     tfidf_matrix: Any,
     project: ApplicationProject,
     doc_texts: list[str],
+    live_priority_by_url: dict[str, str] | None = None,
     question: Question | None = None,
     use_semantic_hinting: bool = True,
     limit: int = 5,
@@ -359,12 +362,28 @@ def _rank_knowledge_hints(
             _semantic_similarity(query_text, doc_texts[idx]) if use_semantic_hinting else 0.0
         )
         vector_score = vector_scores.get(source.id, 0.0) if use_semantic_hinting else 0.0
+        freshness_status = ""
+        freshness_bonus = 0.0
+        if source.url and live_priority_by_url:
+            freshness_status = str(live_priority_by_url.get(source.url) or "")
+            if freshness_status == "changed":
+                freshness_bonus = 0.08
+                reasons = [*reasons, "최근 변경된 공개 소스"]
+            elif freshness_status == "new":
+                freshness_bonus = 0.05
+                reasons = [*reasons, "최근 추가된 공개 소스"]
 
         if pattern.structure_signals.has_metrics:
             tfidf_score += 0.05
             reasons = [*reasons, "정량 결과 포함"]
 
-        combined_score = tfidf_score + bonus + (semantic_score * 0.15) + (vector_score * 0.2)
+        combined_score = (
+            tfidf_score
+            + bonus
+            + freshness_bonus
+            + (semantic_score * 0.15)
+            + (vector_score * 0.2)
+        )
         if combined_score <= 0.05:
             continue
         hints.append(
@@ -375,6 +394,7 @@ def _rank_knowledge_hints(
                 vector_score=vector_score,
                 combined_score=combined_score,
                 match_reasons=reasons,
+                freshness_status=freshness_status,
                 question=question,
             )
         )
@@ -394,7 +414,9 @@ def _rank_knowledge_hints(
 
 
 def build_question_specific_knowledge_hints(
-    sources: List[KnowledgeSource], project: ApplicationProject
+    sources: List[KnowledgeSource],
+    project: ApplicationProject,
+    live_priority_by_url: dict[str, str] | None = None,
 ) -> List[dict[str, Any]]:
     if not sources or not project.questions:
         return []
@@ -462,6 +484,7 @@ def build_question_specific_knowledge_hints(
             tfidf_matrix=tfidf_matrix,
             project=project,
             doc_texts=doc_texts,
+            live_priority_by_url=live_priority_by_url,
             question=question,
             use_semantic_hinting=use_semantic_hinting,
             limit=3,
@@ -574,6 +597,7 @@ def build_knowledge_hints(
     sources: List[KnowledgeSource],
     project: ApplicationProject,
     applicant_profile: dict[str, Any] | None = None,
+    live_priority_by_url: dict[str, str] | None = None,
 ) -> List[dict[str, Any]]:
     if not sources:
         if applicant_profile:
@@ -647,6 +671,7 @@ def build_knowledge_hints(
         tfidf_matrix=tfidf_matrix,
         project=project,
         doc_texts=doc_texts,
+        live_priority_by_url=live_priority_by_url,
         question=None,
         use_semantic_hinting=use_semantic_hinting,
         limit=5,
