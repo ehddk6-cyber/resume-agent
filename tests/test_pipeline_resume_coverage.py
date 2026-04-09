@@ -188,6 +188,63 @@ def test_build_outcome_dashboard_collects_hotspots(tmp_path: Path):
     assert dashboard["high_risk_hotspots"][0]["experience_id"] == "exp-1"
 
 
+def test_build_outcome_dashboard_includes_live_change_effectiveness(tmp_path: Path):
+    from datetime import datetime, timezone
+
+    from resume_agent.models import ArtifactType, GeneratedArtifact, OutcomeResult, ValidationResult
+    from resume_agent.pipeline import build_outcome_dashboard
+    from resume_agent.state import write_json
+
+    ws = _workspace(tmp_path)
+    project = _project()
+    artifact = GeneratedArtifact(
+        id="writer-001",
+        artifact_type=ArtifactType.WRITER,
+        accepted=True,
+        input_snapshot={
+            "recent_change_action_check": {
+                "checked_count": 1,
+                "covered_count": 1,
+                "missing_count": 0,
+                "coverage_rate": 1.0,
+                "items": [
+                    {"title": "채용 공고", "covered": True},
+                ],
+            }
+        },
+        output_path="artifacts/writer.md",
+        raw_output_path="artifacts/writer_raw.md",
+        validation=ValidationResult(passed=True),
+        created_at=datetime.now(timezone.utc),
+    )
+    outcome = OutcomeResult(
+        artifact_id="writer-001",
+        company_name=project.company_name,
+        job_title=project.job_title,
+        outcome="offer_received",
+    )
+    write_json(ws.state_dir / "artifacts.json", [artifact.model_dump()])
+    write_json(ws.state_dir / "outcomes.json", [outcome.model_dump()])
+
+    feedback_context = {
+        "strategy_outcome_summary": {
+            "experience_stats_by_question_type": {
+                "TYPE_A": {"exp-1": {"weighted_net_score": 4, "total_uses": 2}}
+            }
+        },
+        "current_pattern": "writer|공공|TYPE_A",
+        "overall_success_rate": 0.7,
+        "outcome_summary": {},
+        "recommended_pattern": "writer|공공|TYPE_A",
+    }
+
+    with patch("resume_agent.pipeline.build_feedback_learning_context", return_value=feedback_context):
+        dashboard = build_outcome_dashboard(ws, project, "writer")
+
+    assert dashboard["live_change_effectiveness"]["linked_outcome_count"] == 1
+    assert dashboard["live_change_effectiveness"]["coverage_bands"]["high"]["success_rate"] == 1.0
+
+
 def test_evaluate_narrative_ssot_alignment_marks_missing_claims_and_offtrack():
     from resume_agent.pipeline import evaluate_narrative_ssot_alignment
 

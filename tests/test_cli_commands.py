@@ -109,6 +109,37 @@ class TestCmdInteractive:
                 mock_interactive.assert_called_once()
 
 
+class TestCmdOutcomeRecord:
+    def test_records_outcome_and_refreshes_dashboards_for_known_artifact(self, tmp_path: Path):
+        from resume_agent.cli import cmd_outcome_record
+
+        args = _make_args(
+            str(tmp_path),
+            artifact_id="writer-001",
+            application_id="app-001",
+            company="테스트공사",
+            job_title="데이터 분석",
+            outcome="offer_received",
+        )
+        mock_result = MagicMock(
+            artifact_id="writer-001",
+            outcome="offer_received",
+            company_name="테스트공사",
+            job_title="데이터 분석",
+        )
+
+        with patch("resume_agent.cli.Workspace") as MockWS:
+            with patch("resume_agent.outcome_tracker.OutcomeTracker.record_outcome", return_value=mock_result):
+                with patch("resume_agent.cli.load_project", return_value=MagicMock()):
+                    with patch("resume_agent.cli.build_outcome_dashboard") as mock_outcome_dashboard:
+                        with patch("resume_agent.cli.build_kpi_dashboard") as mock_kpi_dashboard:
+                            MockWS.return_value = _mock_workspace(tmp_path)
+                            cmd_outcome_record(args)
+
+        mock_outcome_dashboard.assert_called_once()
+        mock_kpi_dashboard.assert_called_once()
+
+
 # ──────────────────────────────────────────────────
 # cmd_crawl_base 테스트
 # ──────────────────────────────────────────────────

@@ -294,6 +294,7 @@ class GeneratedArtifact(BaseModel):
     id: str
     artifact_type: ArtifactType
     accepted: bool = False
+    input_snapshot: dict[str, Any] = Field(default_factory=dict)
     output_path: Optional[str] = None
     raw_output_path: Optional[str] = None
     validation: ValidationResult = Field(default_factory=ValidationResult)

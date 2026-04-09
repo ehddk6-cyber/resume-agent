@@ -12,6 +12,8 @@ from .pipeline import (
     build_interview_prompt,
     build_review_prompt,
     build_company_research_prompt,
+    build_outcome_dashboard,
+    build_kpi_dashboard,
     run_company_research_with_codex,
     run_export,
     ingest_examples,
@@ -1606,6 +1608,18 @@ def cmd_outcome_record(args: argparse.Namespace) -> None:
     result = tracker.record_outcome(outcome)
     print(f"결과 기록 완료: {result.artifact_id} -> {result.outcome}")
     print(f"   회사: {result.company_name}, 직무: {result.job_title}")
+
+    artifact_prefix = str(result.artifact_id).split("-", 1)[0].strip().lower()
+    artifact_type = {
+        "writer": "writer",
+        "interview": "interview",
+        "coach": "coach",
+        "company_research": "company_research",
+    }.get(artifact_prefix)
+    if artifact_type:
+        project = load_project(ws)
+        build_outcome_dashboard(ws, project, artifact_type)
+        build_kpi_dashboard(ws, project, artifact_type)
 
 
 def cmd_outcome_list(args: argparse.Namespace) -> None:

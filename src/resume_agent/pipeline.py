@@ -1320,6 +1320,117 @@ def _summarize_recent_change_action_check(report: dict[str, Any] | None) -> dict
     }
 
 
+_POSITIVE_TRACKED_OUTCOMES = {
+    "screening_pass",
+    "interview_invited",
+    "interview_pass",
+    "final_pass",
+    "offer_received",
+}
+
+_NEGATIVE_TRACKED_OUTCOMES = {
+    "screening_fail",
+    "interview_fail",
+    "final_fail",
+    "offer_declined",
+}
+
+
+def build_live_change_effectiveness_summary(
+    ws: Workspace,
+    artifact_type: str | None = None,
+) -> dict[str, Any]:
+    from .outcome_tracker import OutcomeTracker
+
+    artifacts = load_artifacts(ws)
+    outcomes = OutcomeTracker(ws).get_all_outcomes()
+    outcomes_by_id = {item.artifact_id: item for item in outcomes if item.artifact_id}
+
+    tracked_artifact_count = 0
+    linked_outcome_count = 0
+    success_count = 0
+    fail_count = 0
+    pending_count = 0
+    missing_title_counts: dict[str, int] = {}
+    coverage_bands: dict[str, dict[str, Any]] = {
+        "high": {"count": 0, "success_count": 0, "success_rate": 0.0},
+        "medium": {"count": 0, "success_count": 0, "success_rate": 0.0},
+        "low": {"count": 0, "success_count": 0, "success_rate": 0.0},
+    }
+
+    for artifact in artifacts:
+        current_type = (
+            artifact.artifact_type.value
+            if hasattr(artifact.artifact_type, "value")
+            else str(artifact.artifact_type)
+        )
+        current_type = current_type.strip().lower()
+        if artifact_type and current_type != str(artifact_type).strip().lower():
+            continue
+        input_snapshot = artifact.input_snapshot or {}
+        if not isinstance(input_snapshot, dict):
+            continue
+        report = input_snapshot.get("recent_change_action_check")
+        if not isinstance(report, dict):
+            continue
+
+        tracked_artifact_count += 1
+        outcome = outcomes_by_id.get(artifact.id)
+        if outcome is None:
+            continue
+
+        linked_outcome_count += 1
+        outcome_key = str(outcome.outcome or "pending").strip().lower()
+        coverage_rate = float(report.get("coverage_rate", 0.0) or 0.0)
+        if coverage_rate >= 0.67:
+            band = "high"
+        elif coverage_rate >= 0.34:
+            band = "medium"
+        else:
+            band = "low"
+        coverage_bands[band]["count"] += 1
+
+        if outcome_key in _POSITIVE_TRACKED_OUTCOMES:
+            success_count += 1
+            coverage_bands[band]["success_count"] += 1
+        elif outcome_key in _NEGATIVE_TRACKED_OUTCOMES:
+            fail_count += 1
+            for item in report.get("items", []) or []:
+                if not isinstance(item, dict) or item.get("covered"):
+                    continue
+                title = str(item.get("title") or "").strip()
+                if title:
+                    missing_title_counts[title] = missing_title_counts.get(title, 0) + 1
+        else:
+            pending_count += 1
+
+    for stats in coverage_bands.values():
+        count = int(stats.get("count", 0) or 0)
+        successes = int(stats.get("success_count", 0) or 0)
+        stats["success_rate"] = round(successes / count, 2) if count else 0.0
+
+    top_missing_titles = [
+        {"title": title, "count": count}
+        for title, count in sorted(
+            missing_title_counts.items(),
+            key=lambda item: (-item[1], item[0]),
+        )[:5]
+    ]
+
+    high_success_rate = float(coverage_bands["high"]["success_rate"])
+    low_success_rate = float(coverage_bands["low"]["success_rate"])
+    return {
+        "tracked_artifact_count": tracked_artifact_count,
+        "linked_outcome_count": linked_outcome_count,
+        "success_count": success_count,
+        "fail_count": fail_count,
+        "pending_count": pending_count,
+        "coverage_bands": coverage_bands,
+        "high_vs_low_success_gap": round(high_success_rate - low_success_rate, 2),
+        "top_missing_titles": top_missing_titles,
+    }
+
+
 def _normalize_strategy_payload(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
@@ -1753,6 +1864,9 @@ def build_outcome_dashboard(
         if isinstance(application_strategy, dict)
         else {}
     )
+    live_change_effectiveness = build_live_change_effectiveness_summary(
+        ws, artifact_type=artifact_type
+    )
     dashboard = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "artifact_type": artifact_type,
@@ -1762,6 +1876,7 @@ def build_outcome_dashboard(
         "recommended_pattern": feedback_learning.get("recommended_pattern"),
         "high_risk_hotspots": top_hotspots[:5],
         "live_change_action_learning": live_change_action_learning,
+        "live_change_effectiveness": live_change_effectiveness,
     }
     write_json(ws.analysis_dir / "outcome_dashboard.json", dashboard)
     return dashboard
@@ -1861,6 +1976,9 @@ def build_kpi_dashboard(
         if isinstance(application_strategy, dict)
         else {}
     )
+    live_change_effectiveness = build_live_change_effectiveness_summary(
+        ws, artifact_type=artifact_type
+    )
     company_signal_reuse_rate = round(
         (
             len([value for value in question_strategy.values() if value])
@@ -1933,6 +2051,25 @@ def build_kpi_dashboard(
         "writer_quality_metrics": writer_quality_metrics,
         "result_quality_metrics": result_quality_metrics,
         "tracked_outcomes": outcome_breakdown,
+        "live_change_linked_outcomes": live_change_effectiveness.get(
+            "linked_outcome_count", 0
+        ),
+        "live_change_high_coverage_success_rate": (
+            live_change_effectiveness.get("coverage_bands", {})
+            .get("high", {})
+            .get("success_rate", 0.0)
+        ),
+        "live_change_low_coverage_success_rate": (
+            live_change_effectiveness.get("coverage_bands", {})
+            .get("low", {})
+            .get("success_rate", 0.0)
+        ),
+        "live_change_success_gap": live_change_effectiveness.get(
+            "high_vs_low_success_gap", 0.0
+        ),
+        "live_change_top_missing_titles": live_change_effectiveness.get(
+            "top_missing_titles", []
+        ),
     }
     write_json(ws.analysis_dir / "kpi_dashboard.json", dashboard)
     return dashboard
@@ -4994,6 +5131,10 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             else None,
             "defense_simulations": defense_simulations,
             "top001_interview_simulations": top001_interview_simulations,
+            "interview_change_action_path": str(
+                interview_change_action_path.relative_to(ws.root)
+            ),
+            "recent_change_action_check": recent_change_action_check,
         },
         output_path=str(accepted_path.relative_to(ws.root)),
         raw_output_path=str(raw_output_path.relative_to(ws.root)),
