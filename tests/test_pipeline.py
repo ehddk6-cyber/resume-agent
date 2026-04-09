@@ -36,6 +36,7 @@ from resume_agent.pipeline import (
     build_interview_prompt,
     build_research_strategy_translation,
     _assess_recent_change_action_coverage,
+    _assess_recent_change_priority_rule_coverage,
     build_self_intro_pack,
     run_coach,
     run_writer,
@@ -2676,6 +2677,26 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
         assert report["covered_count"] == 1
         assert report["items"][0]["covered_keywords"] == ["데이터", "자동화"]
 
+    def test_assess_recent_change_priority_rule_coverage_detects_missing_title_keywords(self):
+        report = _assess_recent_change_priority_rule_coverage(
+            "저는 데이터 자동화 역량을 기반으로 지원했습니다.",
+            priority_live_updates=[
+                {
+                    "title": "채용 공고",
+                    "keywords": ["데이터", "자동화"],
+                }
+            ],
+            research_strategy_translation={
+                "recent_change_effectiveness": {
+                    "top_missing_titles": ["채용 공고"]
+                }
+            },
+        )
+
+        assert report["checked_count"] == 1
+        assert report["covered_count"] == 1
+        assert report["items"][0]["covered_keywords"] == ["데이터", "자동화"]
+
     def test_run_coach_writes_top001_analysis_and_application_strategy(self, tmp_path):
         workspace = Workspace(tmp_path)
         workspace.ensure()
@@ -2760,6 +2781,7 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
 
         assert Path(result["top001_defense_path"]).exists()
         assert Path(result["interview_change_action_path"]).exists()
+        assert Path(result["interview_priority_rule_audit_path"]).exists()
         strategy = read_json_if_exists(workspace.analysis_dir / "application_strategy.json")
         assert "근거 부족" in strategy["interview_pressure_points"]
         assert strategy["interview_strategy"]["weak_response_count"] == 1
@@ -2770,6 +2792,7 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
             == 1.0
         )
         assert result["recent_change_action_check"]["covered_count"] == 1
+        assert result["recent_change_priority_rule_check"]["checked_count"] >= 0
 
     def test_build_interview_defense_simulations_merges_top001_logic(self):
         project = ApplicationProject(

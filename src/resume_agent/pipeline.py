@@ -1348,6 +1348,61 @@ def _assess_recent_change_action_coverage(
     }
 
 
+def _assess_recent_change_priority_rule_coverage(
+    text: str,
+    *,
+    priority_live_updates: list[dict[str, Any]],
+    research_strategy_translation: dict[str, Any] | None,
+) -> dict[str, Any]:
+    lowered = (text or "").lower()
+    translation = (
+        research_strategy_translation
+        if isinstance(research_strategy_translation, dict)
+        else {}
+    )
+    effectiveness = translation.get("recent_change_effectiveness", {})
+    target_titles = [
+        str(title).strip()
+        for title in effectiveness.get("top_missing_titles", []) or []
+        if str(title).strip()
+    ][:3]
+    update_by_title = {
+        str(item.get("title") or "").strip(): item
+        for item in priority_live_updates
+        if isinstance(item, dict) and str(item.get("title") or "").strip()
+    }
+
+    checks: list[dict[str, Any]] = []
+    for title in target_titles:
+        source_item = update_by_title.get(title, {})
+        keywords = [
+            str(keyword).strip()
+            for keyword in source_item.get("keywords", [])[:3]
+            if str(keyword).strip()
+        ]
+        covered_keywords = [
+            keyword for keyword in keywords if keyword.lower() in lowered
+        ]
+        title_covered = title.lower() in lowered
+        checks.append(
+            {
+                "title": title,
+                "keywords": keywords,
+                "covered_keywords": covered_keywords,
+                "covered": bool(covered_keywords) or title_covered,
+            }
+        )
+
+    covered_count = sum(1 for item in checks if item["covered"])
+    return {
+        "checked_count": len(checks),
+        "covered_count": covered_count,
+        "missing_count": max(len(checks) - covered_count, 0),
+        "coverage_rate": round(covered_count / len(checks), 2) if checks else 0.0,
+        "items": checks,
+    }
+
+
 def _summarize_recent_change_action_check(report: dict[str, Any] | None) -> dict[str, Any]:
     if not isinstance(report, dict):
         return {}
@@ -3923,6 +3978,9 @@ def run_writer_with_codex(
             ws.artifacts_dir / "writer_committee_reaction.json"
         )
         writer_change_action_path = ws.artifacts_dir / "writer_change_actions.json"
+        writer_priority_rule_audit_path = (
+            ws.artifacts_dir / "writer_priority_rule_audit.json"
+        )
         rewrite_report_md_path = ws.analysis_dir / "writer_rewrite_quality_report.md"
         rewrite_report_json_path = (
             ws.analysis_dir / "writer_rewrite_quality_report.json"
@@ -4284,9 +4342,20 @@ def run_writer_with_codex(
             if not normalized_text.strip()
             else "ok"
         )
+        live_updates = build_live_source_update_summary(ws).get(
+            "priority_live_updates", []
+        )
+        research_strategy_translation = read_json_if_exists(
+            ws.analysis_dir / "research_strategy_translation.json"
+        )
         recent_change_action_check = _assess_recent_change_action_coverage(
             normalized_text,
-            build_live_source_update_summary(ws).get("priority_live_updates", []),
+            live_updates,
+        )
+        recent_change_priority_rule_check = _assess_recent_change_priority_rule_coverage(
+            normalized_text,
+            priority_live_updates=live_updates,
+            research_strategy_translation=research_strategy_translation,
         )
         result_quality_status = (
             "error"
@@ -4378,6 +4447,7 @@ def run_writer_with_codex(
             ),
         )
         write_json(writer_change_action_path, recent_change_action_check)
+        write_json(writer_priority_rule_audit_path, recent_change_priority_rule_check)
         writer_feedback_learning = build_feedback_learning_context(
             ws, "writer", project=project
         )
@@ -4387,9 +4457,7 @@ def run_writer_with_codex(
         writer_differentiation = build_writer_differentiation_report(
             project,
             quality_evaluations,
-            research_strategy_translation=read_json_if_exists(
-                ws.analysis_dir / "research_strategy_translation.json"
-            ),
+            research_strategy_translation=research_strategy_translation,
             application_strategy=application_strategy
             if isinstance(application_strategy, dict)
             else None,
@@ -4462,6 +4530,10 @@ def run_writer_with_codex(
             ),
             "writer_change_action_path": relative(ws.root, writer_change_action_path),
             "recent_change_action_check": recent_change_action_check,
+            "writer_priority_rule_audit_path": relative(
+                ws.root, writer_priority_rule_audit_path
+            ),
+            "recent_change_priority_rule_check": recent_change_priority_rule_check,
             "patina_max_result_path": relative(
                 ws.root, ws.analysis_dir / "patina_max_report.json"
             )
@@ -4512,6 +4584,9 @@ def run_writer_with_codex(
             ),
             "writer_committee_reaction_path": relative(
                 ws.root, writer_committee_reaction_path
+            ),
+            "writer_priority_rule_audit_path": relative(
+                ws.root, writer_priority_rule_audit_path
             ),
             "patina_max_result_path": relative(
                 ws.root, ws.analysis_dir / "patina_max_report.json"
@@ -4841,6 +4916,8 @@ def run_writer_with_codex(
         "writer_committee_reaction_path": str(writer_committee_reaction_path),
         "writer_change_action_path": str(writer_change_action_path),
         "recent_change_action_check": recent_change_action_check,
+        "writer_priority_rule_audit_path": str(writer_priority_rule_audit_path),
+        "recent_change_priority_rule_check": recent_change_priority_rule_check,
         "rewrite_quality_report_path": str(rewrite_report_json_path)
         if rewrite_quality_report
         else None,
@@ -5055,6 +5132,9 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
         defense_path = ws.artifacts_dir / "interview_defense.json"
         top001_defense_path = ws.artifacts_dir / "interview_top001.json"
         interview_change_action_path = ws.artifacts_dir / "interview_change_actions.json"
+        interview_priority_rule_audit_path = (
+            ws.artifacts_dir / "interview_priority_rule_audit.json"
+        )
 
         defense_simulations = []
         top001_interview_simulations: list[dict[str, Any]] = []
@@ -5149,11 +5229,25 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             accepted_path.write_text(normalized_text, encoding="utf-8")
         write_json(defense_path, defense_simulations)
         write_json(top001_defense_path, top001_interview_simulations)
+        research_strategy_translation = read_json_if_exists(
+            ws.analysis_dir / "research_strategy_translation.json"
+        )
+        live_updates = build_live_source_update_summary(ws).get(
+            "priority_live_updates", []
+        )
         recent_change_action_check = _assess_recent_change_action_coverage(
             normalized_text,
-            build_live_source_update_summary(ws).get("priority_live_updates", []),
+            live_updates,
+        )
+        recent_change_priority_rule_check = _assess_recent_change_priority_rule_coverage(
+            normalized_text,
+            priority_live_updates=live_updates,
+            research_strategy_translation=research_strategy_translation,
         )
         write_json(interview_change_action_path, recent_change_action_check)
+        write_json(
+            interview_priority_rule_audit_path, recent_change_priority_rule_check
+        )
         interview_feedback_learning = build_feedback_learning_context(
             ws, "interview", project=project
         )
@@ -5195,6 +5289,10 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
                 interview_change_action_path.relative_to(ws.root)
             ),
             "recent_change_action_check": recent_change_action_check,
+            "interview_priority_rule_audit_path": str(
+                interview_priority_rule_audit_path.relative_to(ws.root)
+            ),
+            "recent_change_priority_rule_check": recent_change_priority_rule_check,
         },
         output_path=str(accepted_path.relative_to(ws.root)),
         raw_output_path=str(raw_output_path.relative_to(ws.root)),
@@ -5277,6 +5375,8 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
         "top001_defense_path": str(top001_defense_path),
         "interview_change_action_path": str(interview_change_action_path),
         "recent_change_action_check": recent_change_action_check,
+        "interview_priority_rule_audit_path": str(interview_priority_rule_audit_path),
+        "recent_change_priority_rule_check": recent_change_priority_rule_check,
         "application_strategy_path": str(ws.analysis_dir / "application_strategy.json"),
     }
 
