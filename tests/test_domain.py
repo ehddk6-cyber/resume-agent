@@ -269,6 +269,37 @@ def test_build_coach_artifact_renders_question_strategies_and_writer_contract():
     assert "adaptive mode" in artifact["rendered"]
 
 
+def test_build_coach_artifact_renders_personalized_sections():
+    project = ApplicationProject(company_name="테스트기업", job_title="백엔드")
+    artifact = build_coach_artifact(
+        project,
+        [],
+        {"needs_verification": [], "question_risks": [], "recommendations": []},
+        candidate_profile={
+            "profile_summary": "논리형 지원자입니다.",
+            "personalized_profile": {
+                "strength_keywords": ["문제 해결", "근거 중심 서술"],
+                "weakness_details": ["성과 수치가 자주 빠집니다."],
+                "coaching_priorities": ["결론-행동-결과 순서를 고정하세요."],
+            },
+        },
+        company_profile={
+            "mission_keywords": ["공익", "정확"],
+            "value_keywords": ["책임"],
+            "tailored_tips": ["공익 관점을 먼저 연결하세요."],
+        },
+        interview_support_pack={
+            "anxiety_management": ["호흡 4-6 패턴을 5회 반복하세요."],
+            "confidence_exercises": ["강점 2개를 다시 읽으세요."],
+            "interview_day_checklist": ["수치 근거 3개를 확인하세요."],
+        },
+    )
+
+    assert "## PERSONALIZED PROFILE" in artifact["rendered"]
+    assert "## COMPANY FIT SIGNALS" in artifact["rendered"]
+    assert "## INTERVIEW PSYCHOLOGY PACK" in artifact["rendered"]
+
+
 def test_allocate_experiences_uses_outcome_summary_to_prefer_defensible_experience():
     question = Question(
         id="q1",

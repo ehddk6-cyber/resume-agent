@@ -769,6 +769,8 @@ def build_coach_artifact(
     question_strategies: List[dict[str, Any]] | None = None,
     writer_contract: dict[str, Any] | None = None,
     candidate_profile: dict[str, Any] | None = None,
+    company_profile: dict[str, Any] | None = None,
+    interview_support_pack: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     allocations = allocate_experiences(
         project.questions,
@@ -838,6 +840,9 @@ def build_coach_artifact(
         "allocations": allocations,
         "question_strategies": question_strategies or [],
         "writer_contract": writer_contract or {},
+        "candidate_profile": candidate_profile or {},
+        "company_profile": company_profile or {},
+        "interview_support_pack": interview_support_pack or {},
     }
     artifact["rendered"] = render_coach_artifact(artifact)
     return artifact
@@ -888,6 +893,52 @@ def render_coach_artifact(artifact: dict[str, Any]) -> str:
                 *[f"- {item}" for item in artifact["recommendations"]],
             ]
         )
+    candidate_profile = artifact.get("candidate_profile") or {}
+    personal = candidate_profile.get("personalized_profile", candidate_profile) or {}
+    if candidate_profile:
+        lines.extend(["", "## PERSONALIZED PROFILE"])
+        summary = candidate_profile.get("profile_summary")
+        if summary:
+            lines.append(f"- Summary: {summary}")
+        strengths = personal.get("strength_keywords", []) or candidate_profile.get(
+            "signature_strengths", []
+        )
+        if strengths:
+            lines.append(f"- Strengths: {', '.join(strengths[:4])}")
+        weaknesses = personal.get("weakness_details", []) or candidate_profile.get(
+            "blind_spots", []
+        )
+        if weaknesses:
+            lines.append(f"- Blind spots: {', '.join(weaknesses[:3])}")
+        priorities = personal.get("coaching_priorities", []) or candidate_profile.get(
+            "coaching_focus", []
+        )
+        if priorities:
+            lines.append(f"- Coaching priorities: {', '.join(priorities[:3])}")
+    if artifact.get("company_profile"):
+        company_profile = artifact["company_profile"]
+        lines.extend(["", "## COMPANY FIT SIGNALS"])
+        if company_profile.get("mission_keywords"):
+            lines.append(
+                f"- Mission keywords: {', '.join(company_profile.get('mission_keywords', [])[:3])}"
+            )
+        if company_profile.get("value_keywords"):
+            lines.append(
+                f"- Value keywords: {', '.join(company_profile.get('value_keywords', [])[:3])}"
+            )
+        if company_profile.get("tailored_tips"):
+            lines.extend(
+                [f"- Fit tip: {item}" for item in company_profile.get("tailored_tips", [])[:3]]
+            )
+    if artifact.get("interview_support_pack"):
+        support_pack = artifact["interview_support_pack"]
+        lines.extend(["", "## INTERVIEW PSYCHOLOGY PACK"])
+        for item in support_pack.get("anxiety_management", [])[:2]:
+            lines.append(f"- Anxiety: {item}")
+        for item in support_pack.get("confidence_exercises", [])[:2]:
+            lines.append(f"- Confidence: {item}")
+        for item in support_pack.get("interview_day_checklist", [])[:3]:
+            lines.append(f"- Checklist: {item}")
     if artifact.get("allocations"):
         lines.extend(["", "## ALLOCATIONS"])
         for item in artifact["allocations"]:

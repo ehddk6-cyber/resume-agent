@@ -164,7 +164,7 @@ PROMPT_COMPANY_RESEARCH = """# ROLE
 # SOURCE OF TRUTH
 - 현재 대화와 DATA 에 포함된 정보
 - 사용자가 붙여넣은 JD, 회사 소개, 연구 메모
-- DATA.extra 안의 company_analysis, jd_keywords, question_map, research_brief, source_grading, ncs_profile
+- DATA.extra 안의 company_analysis, company_profile, jd_keywords, question_map, research_brief, source_grading, ncs_profile, candidate_profile
 - 위 범위를 벗어난 외부 사실은 절대 추가하지 않는다
 
 # CORE RULES
@@ -205,6 +205,7 @@ PROMPT_COMPANY_RESEARCH = """# ROLE
 
 ## 블록 2: 입력 기반 핵심 신호
 - DATA.extra.company_analysis 에서 활용 가능한 신호
+- DATA.extra.company_profile 가 있으면 mission_keywords, value_keywords, tailored_tips 를 우선 반영한다.
 - JD 키워드와 역할 키워드
 - 각 신호의 근거 문장 또는 근거 항목
 - 신뢰도: 높음 / 중간 / 낮음
@@ -379,6 +380,8 @@ MODE ∈ {{COACH, FAST_COACH, WRITER_HANDOFF_ONLY, INTERVIEW_HANDOFF_ONLY, DUAL_
 - DATA.extra.question_specific_hints 가 있으면 문항별로 유사 합격사례의 구조, 근거 유형, 매치 사유를 우선 참고한다.
 - DATA.extra.company_analysis.success_case_stats 가 있으면 정량성과 STAR 비율, 고객/협업 패턴 비율을 코칭 우선순위에 반영한다.
 - DATA.extra.company_analysis.discouraged_phrases 가 있으면 표현 복제가 의심되는 문구는 handoff 전략에서 금지 표현으로 분류한다.
+- DATA.extra.company_profile 가 있으면 mission_keywords / value_keywords / tailored_tips 를 코칭 우선순위와 회사 적합성 포인트에 반영한다.
+- DATA.extra.interview_support_pack 이 있으면 anxiety_management / confidence_exercises / interview_day_checklist 를 실제 준비 행동으로 압축한다.
 - 자기소개 코칭은 "회사/직무 접점 -> 대표 경험 -> 첫 기여 포인트" 순서를 기본 뼈대로 잡는다.
 
 # EVIDENCE LADDER
