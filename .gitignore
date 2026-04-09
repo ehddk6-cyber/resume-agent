@@ -45,7 +45,11 @@ my_dream_job/
 
 # Data files
 *.csv
-*.Zone.Identifier
+*:Zone.Identifier
+.pytest-*
+.pytest-tmp/
+.split.out
+.t80.*
 
 # 민감 개인정보
 .secrets.json
