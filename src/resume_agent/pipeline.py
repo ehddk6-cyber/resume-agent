@@ -419,6 +419,9 @@ def build_live_source_update_summary(
         if isinstance(value, dict) and (not urls or key in urls)
     ]
     records.sort(key=lambda item: str(item.get("fetched_at") or ""), reverse=True)
+    priority_updates = [
+        item for item in records if item.get("change_status") in {"changed", "new"}
+    ]
     return {
         "tracked_url_count": len(records),
         "new_url_count": sum(
@@ -430,6 +433,8 @@ def build_live_source_update_summary(
         "unchanged_url_count": sum(
             1 for item in records if item.get("change_status") == "unchanged"
         ),
+        "priority_update_count": len(priority_updates),
+        "priority_live_updates": priority_updates[:5],
         "latest_updates": records[:5],
     }
 
@@ -2778,6 +2783,7 @@ def build_research_brief(ws: Workspace) -> dict[str, Any]:
             ),
             "live_source_tracked_count": live_source_updates["tracked_url_count"],
             "recent_live_change_count": live_source_updates["changed_url_count"],
+            "priority_live_update_count": live_source_updates["priority_update_count"],
         },
         "assumptions": [
             "외부 공개 웹 자료는 사용자가 수집하거나 crawl-web으로 ingest한 범위만 사용한다.",
@@ -2797,6 +2803,7 @@ def build_research_brief(ws: Workspace) -> dict[str, Any]:
         "key_questions": _dedupe_preserve_order(key_questions)[:5],
         "freshness_target": f"{datetime.now().date().isoformat()} 기준 최신 제공 자료",
         "live_source_updates": live_source_updates,
+        "priority_live_updates": live_source_updates["priority_live_updates"],
     }
     write_json(ws.analysis_dir / "research_brief.json", brief)
     return brief
@@ -5466,6 +5473,7 @@ def build_company_research_prompt(
             "candidate_profile": candidate_profile,
             "company_profile": company_profile,
             "live_source_updates": live_source_updates,
+            "priority_live_updates": live_source_updates["priority_live_updates"],
             "narrative_ssot": narrative_ssot,
             "research_strategy_translation": research_strategy_translation,
             "outcome_dashboard": outcome_dashboard,

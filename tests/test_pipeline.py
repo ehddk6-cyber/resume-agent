@@ -1233,6 +1233,7 @@ class TestBuildCompanyResearchPrompt:
         assert '"source_grading"' in content
         assert '"ncs_profile"' in content
         assert '"live_source_updates"' in content
+        assert '"priority_live_updates"' in content
 
 
 class TestRunCompanyResearchWithCodex:
@@ -1334,6 +1335,7 @@ class TestResearchBriefAndSourceGrading:
 
         assert brief["live_source_updates"]["tracked_url_count"] == 1
         assert brief["live_source_updates"]["changed_url_count"] == 1
+        assert brief["priority_live_updates"][0]["url"] == "https://example.com/jobs"
 
 
 class TestCrawlWebSourcesLiveTracking:
@@ -1406,6 +1408,8 @@ class TestCrawlWebSourcesLiveTracking:
 
         assert summary["tracked_url_count"] == 2
         assert summary["changed_url_count"] == 1
+        assert summary["priority_update_count"] == 1
+        assert summary["priority_live_updates"][0]["url"] == "https://b.example.com"
         assert summary["latest_updates"][0]["url"] == "https://b.example.com"
 
     def test_refresh_existing_public_sources_uses_stored_public_urls(self, tmp_path):

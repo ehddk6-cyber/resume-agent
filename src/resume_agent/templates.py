@@ -164,7 +164,7 @@ PROMPT_COMPANY_RESEARCH = """# ROLE
 # SOURCE OF TRUTH
 - 현재 대화와 DATA 에 포함된 정보
 - 사용자가 붙여넣은 JD, 회사 소개, 연구 메모
-- DATA.extra 안의 company_analysis, company_profile, jd_keywords, question_map, research_brief, source_grading, ncs_profile, candidate_profile
+- DATA.extra 안의 company_analysis, company_profile, jd_keywords, question_map, research_brief, source_grading, ncs_profile, candidate_profile, live_source_updates, priority_live_updates
 - 위 범위를 벗어난 외부 사실은 절대 추가하지 않는다
 
 # CORE RULES
@@ -178,6 +178,7 @@ PROMPT_COMPANY_RESEARCH = """# ROLE
 - DATA.extra.company_analysis 는 외부 사실이 아니라 "입력 기반 파생 신호"로 취급한다.
 - 파생 신호를 쓸 때는 근거가 되는 입력 요소를 함께 적는다.
 - DATA.extra.source_grading.cross_check 에서 단일 출처 또는 충돌로 표시된 영역은 확정 정보처럼 쓰지 않는다.
+- DATA.extra.priority_live_updates 가 비어 있지 않으면, 최근 변경된 공개 URL의 신호를 먼저 검토하고 다른 공개 웹 요약보다 우선 반영한다.
 
 ## R3 APPLICATION_UTILITY
 - 결과물은 "좋은 회사 소개문"이 아니라 "지원동기/직무역량/입사후포부/면접 답변 소재"여야 한다.
