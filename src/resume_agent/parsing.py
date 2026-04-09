@@ -3,6 +3,7 @@ import hashlib
 import html
 import re
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, List
 from urllib.parse import parse_qs, unquote, urlparse
@@ -323,7 +324,7 @@ def ingest_source_file(path: Path) -> tuple[List[KnowledgeSource], List[SuccessC
     return [build_generic_source(path, text)], []
 
 
-def ingest_public_url(url: str, timeout: int = 15) -> List[KnowledgeSource]:
+def fetch_public_url_snapshot(url: str, timeout: int = 15) -> dict[str, Any]:
     response = requests.get(
         url,
         timeout=timeout,
@@ -332,7 +333,31 @@ def ingest_public_url(url: str, timeout: int = 15) -> List[KnowledgeSource]:
     response.raise_for_status()
     title_match = re.search(r"(?is)<title[^>]*>(.*?)</title>", response.text)
     title = strip_html_text(title_match.group(1)) if title_match else url
-    return [build_url_source(url=url, text=response.text, title=title)]
+    cleaned_text = clean_source_text(strip_html_text(response.text))
+    digest_source = cleaned_text or response.text or url
+    content_hash = hashlib.sha1(digest_source.encode("utf-8")).hexdigest()
+    return {
+        "url": url,
+        "title": title,
+        "raw_text": response.text,
+        "cleaned_text": cleaned_text,
+        "content_hash": content_hash,
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "status_code": getattr(response, "status_code", 200),
+    }
+
+
+def ingest_public_url(
+    url: str, timeout: int = 15, snapshot: dict[str, Any] | None = None
+) -> List[KnowledgeSource]:
+    current_snapshot = snapshot or fetch_public_url_snapshot(url, timeout=timeout)
+    return [
+        build_url_source(
+            url=url,
+            text=str(current_snapshot.get("raw_text") or ""),
+            title=str(current_snapshot.get("title") or url),
+        )
+    ]
 
 
 def discover_public_urls(

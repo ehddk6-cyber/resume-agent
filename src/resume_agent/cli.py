@@ -19,6 +19,7 @@ from .pipeline import (
     crawl_base,
     crawl_web_sources,
     crawl_web_sources_auto,
+    refresh_live_web_sources,
     build_coach_prompt,
     run_coach,
     run_interview,
@@ -167,6 +168,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum URLs to ingest after discovery.",
     )
     p_crawl_web_auto.set_defaults(func=cmd_crawl_web_auto)
+
+    p_refresh_live = sub.add_parser(
+        "refresh-live",
+        help="공개 URL의 최신 스냅샷을 다시 수집하고 변경 여부를 기록합니다.",
+    )
+    p_refresh_live.add_argument("workspace")
+    p_refresh_live.add_argument(
+        "--url",
+        action="append",
+        required=True,
+        help="최신성 추적할 공개 URL. 반복 가능.",
+    )
+    p_refresh_live.set_defaults(func=cmd_refresh_live)
 
     p_gaps = sub.add_parser("my-gaps", help="Run deterministic gap analysis.")
     p_gaps.add_argument("workspace")
@@ -641,6 +655,20 @@ def cmd_crawl_web_auto(args: argparse.Namespace) -> None:
     print(f"Ingested {result['ingested_url_count']} URL(s).")
     print(f"Knowledge base now has {result['stored_count']} item(s).")
     print(f"Discovery written to {result['discovery_path']}")
+
+
+def cmd_refresh_live(args: argparse.Namespace) -> None:
+    ws = Workspace(Path(args.workspace))
+    result = refresh_live_web_sources(ws, args.url)
+    print(f"Refreshed {len(args.url)} live URL(s).")
+    print(
+        "Change summary: "
+        f"new={result['new_url_count']}, "
+        f"changed={result['changed_url_count']}, "
+        f"unchanged={result['unchanged_url_count']}"
+    )
+    print(f"Knowledge base now has {result['stored_count']} item(s).")
+    print(f"Live updates written to {result['live_updates_path']}")
 
 
 def cmd_my_gaps(args: argparse.Namespace) -> None:

@@ -748,6 +748,25 @@ class TestCmdCompanyResearch:
                         cmd_company_research(args)
 
 
+class TestCmdRefreshLive:
+    def test_basic(self, tmp_path: Path):
+        from resume_agent.cli import cmd_refresh_live
+
+        args = _make_args(str(tmp_path), url=["https://example.com/jobs"])
+        with patch("resume_agent.cli.Workspace") as MockWS:
+            with patch("resume_agent.cli.refresh_live_web_sources") as mock_refresh:
+                MockWS.return_value = _mock_workspace(tmp_path)
+                mock_refresh.return_value = {
+                    "new_url_count": 1,
+                    "changed_url_count": 0,
+                    "unchanged_url_count": 0,
+                    "stored_count": 1,
+                    "live_updates_path": "/tmp/live_source_updates.json",
+                }
+                cmd_refresh_live(args)
+                mock_refresh.assert_called_once()
+
+
 # ──────────────────────────────────────────────────
 # cmd_mock_interview 테스트
 # ──────────────────────────────────────────────────

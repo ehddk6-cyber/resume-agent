@@ -55,6 +55,7 @@ def initialize_state(ws: Workspace) -> None:
     write_if_missing(ws.state_dir / "project.json", ApplicationProject().model_dump())
     write_if_missing(ws.state_dir / "profiles.json", [])
     write_if_missing(ws.state_dir / "company_patterns.json", {})
+    write_if_missing(ws.state_dir / "live_source_cache.json", {})
     write_if_missing(ws.state_dir / "knowledge_sources.json", [])
     write_if_missing(ws.state_dir / "success_cases.json", [])
     write_if_missing(ws.state_dir / "artifacts.json", [])
@@ -121,6 +122,14 @@ def load_company_patterns(ws: Workspace) -> dict[str, Any]:
 
 def save_company_patterns(ws: Workspace, patterns: dict[str, Any]) -> None:
     write_json(ws.state_dir / "company_patterns.json", patterns)
+
+
+def load_live_source_cache(ws: Workspace) -> dict[str, Any]:
+    return read_json(ws.state_dir / "live_source_cache.json", {})
+
+
+def save_live_source_cache(ws: Workspace, cache: dict[str, Any]) -> None:
+    write_json(ws.state_dir / "live_source_cache.json", cache)
 
 
 def save_knowledge_sources(ws: Workspace, sources: List[KnowledgeSource]) -> None:

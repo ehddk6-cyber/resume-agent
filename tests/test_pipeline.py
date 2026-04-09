@@ -42,6 +42,7 @@ from resume_agent.pipeline import (
     build_ncs_profile,
     classify_project_questions_with_llm_fallback,
     build_source_grading,
+    build_live_source_update_summary,
     build_feedback_learning_context,
     build_blind_benchmark_frame,
     extract_question_answer_details,
@@ -72,6 +73,7 @@ from resume_agent.state import (
     save_knowledge_sources,
     save_project,
     write_json,
+    load_live_source_cache,
 )
 from resume_agent.workspace import Workspace
 from resume_agent.parsing import ingest_source_file
@@ -1230,6 +1232,7 @@ class TestBuildCompanyResearchPrompt:
         assert '"research_brief"' in content
         assert '"source_grading"' in content
         assert '"ncs_profile"' in content
+        assert '"live_source_updates"' in content
 
 
 class TestRunCompanyResearchWithCodex:
@@ -1307,6 +1310,103 @@ class TestResearchBriefAndSourceGrading:
             item["status"] == "corroborated"
             for item in grading["cross_check"]["key_areas"]
         )
+
+    def test_build_research_brief_includes_live_source_updates(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        write_json(
+            workspace.state_dir / "live_source_cache.json",
+            {
+                "https://example.com/jobs": {
+                    "url": "https://example.com/jobs",
+                    "title": "채용 공고",
+                    "content_hash": "hash-1",
+                    "fetched_at": "2026-04-09T01:02:03+00:00",
+                    "change_status": "changed",
+                }
+            },
+        )
+
+        from resume_agent.pipeline import build_research_brief
+
+        brief = build_research_brief(workspace)
+
+        assert brief["live_source_updates"]["tracked_url_count"] == 1
+        assert brief["live_source_updates"]["changed_url_count"] == 1
+
+
+class TestCrawlWebSourcesLiveTracking:
+    def test_crawl_web_sources_tracks_change_status(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+
+        from resume_agent.pipeline import crawl_web_sources
+
+        snapshots = [
+            {
+                "url": "https://example.com/jobs",
+                "title": "Example Jobs",
+                "raw_text": "<html><title>Example Jobs</title><body>first</body></html>",
+                "cleaned_text": "first",
+                "content_hash": "hash-1",
+                "fetched_at": "2026-04-09T00:00:00+00:00",
+                "status_code": 200,
+            },
+            {
+                "url": "https://example.com/jobs",
+                "title": "Example Jobs",
+                "raw_text": "<html><title>Example Jobs</title><body>second</body></html>",
+                "cleaned_text": "second",
+                "content_hash": "hash-2",
+                "fetched_at": "2026-04-09T00:05:00+00:00",
+                "status_code": 200,
+            },
+        ]
+
+        with patch(
+            "resume_agent.pipeline.fetch_public_url_snapshot",
+            side_effect=snapshots,
+        ):
+            first = crawl_web_sources(workspace, ["https://example.com/jobs"])
+            second = crawl_web_sources(workspace, ["https://example.com/jobs"])
+
+        assert first["new_url_count"] == 1
+        assert second["changed_url_count"] == 1
+        cache = load_live_source_cache(workspace)
+        assert cache["https://example.com/jobs"]["content_hash"] == "hash-2"
+        assert (workspace.analysis_dir / "live_source_updates.json").exists()
+
+    def test_build_live_source_update_summary_returns_recent_items(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        write_json(
+            workspace.state_dir / "live_source_cache.json",
+            {
+                "https://a.example.com": {
+                    "url": "https://a.example.com",
+                    "title": "A",
+                    "content_hash": "a",
+                    "fetched_at": "2026-04-09T00:00:00+00:00",
+                    "change_status": "unchanged",
+                },
+                "https://b.example.com": {
+                    "url": "https://b.example.com",
+                    "title": "B",
+                    "content_hash": "b",
+                    "fetched_at": "2026-04-09T01:00:00+00:00",
+                    "change_status": "changed",
+                },
+            },
+        )
+
+        summary = build_live_source_update_summary(workspace)
+
+        assert summary["tracked_url_count"] == 2
+        assert summary["changed_url_count"] == 1
+        assert summary["latest_updates"][0]["url"] == "https://b.example.com"
 
 
 class TestNcsProfile:
@@ -2403,11 +2503,23 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
             "resume_agent.pipeline.discover_public_urls", return_value=discovered
         ):
             with patch(
-                "resume_agent.pipeline.ingest_public_url", return_value=[source]
+                "resume_agent.pipeline.fetch_public_url_snapshot",
+                return_value={
+                    "url": "https://example.com/careers/data",
+                    "title": "채용 공고",
+                    "raw_text": "<html>공고</html>",
+                    "cleaned_text": "데이터 분석 채용 공고",
+                    "content_hash": "web-hash-1",
+                    "fetched_at": "2026-04-09T00:00:00+00:00",
+                    "status_code": 200,
+                },
             ):
-                result = crawl_web_sources_auto(
-                    workspace, max_results_per_query=1, max_urls=1
-                )
+                with patch(
+                    "resume_agent.pipeline.ingest_public_url", return_value=[source]
+                ):
+                    result = crawl_web_sources_auto(
+                        workspace, max_results_per_query=1, max_urls=1
+                    )
 
         assert result["discovered_url_count"] == 1
         assert result["ingested_url_count"] == 1

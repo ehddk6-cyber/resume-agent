@@ -16,6 +16,8 @@ from resume_agent.state import (
     save_experiences,
     load_knowledge_sources,
     save_knowledge_sources,
+    load_live_source_cache,
+    save_live_source_cache,
     load_success_cases,
     save_success_cases,
     load_artifacts,
@@ -116,6 +118,7 @@ class TestInitializeState:
             ws.state_dir / "profile.json",
             ws.state_dir / "experiences.json",
             ws.state_dir / "project.json",
+            ws.state_dir / "live_source_cache.json",
             ws.state_dir / "knowledge_sources.json",
             ws.state_dir / "success_cases.json",
             ws.state_dir / "artifacts.json",
@@ -171,6 +174,19 @@ class TestKnowledgeSources:
     def test_save_and_load(self, ws):
         save_knowledge_sources(ws, [])
         assert load_knowledge_sources(ws) == []
+
+
+class TestLiveSourceCache:
+    def test_save_and_load(self, ws):
+        cache = {
+            "https://example.com/jobs": {
+                "title": "Jobs",
+                "content_hash": "abc123",
+                "change_status": "new",
+            }
+        }
+        save_live_source_cache(ws, cache)
+        assert load_live_source_cache(ws) == cache
 
 
 class TestArtifacts:

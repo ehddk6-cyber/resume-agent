@@ -47,7 +47,12 @@ from .domain import (
     calculate_readability_score,
     audit_facts,
 )
-from .parsing import discover_public_urls, ingest_source_file, ingest_public_url
+from .parsing import (
+    discover_public_urls,
+    fetch_public_url_snapshot,
+    ingest_source_file,
+    ingest_public_url,
+)
 from .classifier import (
     classify_question,
     classify_question_regex_only,
@@ -83,10 +88,12 @@ from .state import (
     initialize_state,
     load_artifacts,
     load_experiences,
+    load_live_source_cache,
     load_knowledge_sources,
     load_profile,
     load_project,
     load_success_cases,
+    save_live_source_cache,
     save_project,
     save_knowledge_sources,
     save_success_cases,
@@ -339,24 +346,96 @@ def crawl_base(ws: Workspace, source_path: Path | None = None) -> dict[str, Any]
 def crawl_web_sources(ws: Workspace, urls: list[str]) -> dict[str, Any]:
     ws.ensure()
     initialize_state(ws)
+    cache = load_live_source_cache(ws)
     ingested: List[KnowledgeSource] = []
+    updates: List[dict[str, Any]] = []
 
     for url in urls:
-        for source in ingest_public_url(url):
+        snapshot = fetch_public_url_snapshot(url)
+        previous = cache.get(url) if isinstance(cache.get(url), dict) else None
+        change_status = "new"
+        if previous:
+            change_status = (
+                "unchanged"
+                if str(previous.get("content_hash") or "") == snapshot["content_hash"]
+                else "changed"
+            )
+        cache[url] = {
+            "url": url,
+            "title": snapshot["title"],
+            "content_hash": snapshot["content_hash"],
+            "fetched_at": snapshot["fetched_at"],
+            "status_code": snapshot["status_code"],
+            "change_status": change_status,
+        }
+        updates.append(cache[url])
+
+        for source in ingest_public_url(url, snapshot=snapshot):
             write_source_artifacts(ws, source)
             ingested.append(source)
 
     merged = merge_sources(load_knowledge_sources(ws), ingested)
     save_knowledge_sources(ws, merged)
+    save_live_source_cache(ws, cache)
     summary = summarize_knowledge_sources(merged)
     summary_path = ws.analysis_dir / "knowledge_hints.json"
     write_json(summary_path, [item.model_dump() for item in merged])
+    updates_path = ws.analysis_dir / "live_source_updates.json"
+    write_json(
+        updates_path,
+        {
+            "tracked_url_count": len(cache),
+            "checked_url_count": len(urls),
+            "updates": updates,
+        },
+    )
     return {
         "source_count": len(ingested),
         "stored_count": len(merged),
         "summary": summary,
         "analysis_path": str(summary_path),
+        "live_updates_path": str(updates_path),
+        "new_url_count": sum(
+            1 for item in updates if item.get("change_status") == "new"
+        ),
+        "changed_url_count": sum(
+            1 for item in updates if item.get("change_status") == "changed"
+        ),
+        "unchanged_url_count": sum(
+            1 for item in updates if item.get("change_status") == "unchanged"
+        ),
     }
+
+
+def build_live_source_update_summary(
+    ws: Workspace, urls: list[str] | None = None
+) -> dict[str, Any]:
+    ws.ensure()
+    initialize_state(ws)
+    cache = load_live_source_cache(ws)
+    records = [
+        value
+        for key, value in cache.items()
+        if isinstance(value, dict) and (not urls or key in urls)
+    ]
+    records.sort(key=lambda item: str(item.get("fetched_at") or ""), reverse=True)
+    return {
+        "tracked_url_count": len(records),
+        "new_url_count": sum(
+            1 for item in records if item.get("change_status") == "new"
+        ),
+        "changed_url_count": sum(
+            1 for item in records if item.get("change_status") == "changed"
+        ),
+        "unchanged_url_count": sum(
+            1 for item in records if item.get("change_status") == "unchanged"
+        ),
+        "latest_updates": records[:5],
+    }
+
+
+def refresh_live_web_sources(ws: Workspace, urls: list[str]) -> dict[str, Any]:
+    return crawl_web_sources(ws, urls)
 
 
 def _build_feedback_pattern_id(stage: str, project: ApplicationProject) -> str:
@@ -2632,6 +2711,7 @@ def build_research_brief(ws: Workspace) -> dict[str, Any]:
     project = load_project(ws)
     question_map = read_json_if_exists(ws.analysis_dir / "question_map.json")
     knowledge_sources = load_knowledge_sources(ws)
+    live_source_updates = build_live_source_update_summary(ws)
     jd_keywords = _extract_jd_keywords_for_research(ws)
     key_questions: list[str] = []
 
@@ -2668,6 +2748,8 @@ def build_research_brief(ws: Workspace) -> dict[str, Any]:
                 source.source_type.value == "user_url_public"
                 for source in knowledge_sources
             ),
+            "live_source_tracked_count": live_source_updates["tracked_url_count"],
+            "recent_live_change_count": live_source_updates["changed_url_count"],
         },
         "assumptions": [
             "외부 공개 웹 자료는 사용자가 수집하거나 crawl-web으로 ingest한 범위만 사용한다.",
@@ -2686,6 +2768,7 @@ def build_research_brief(ws: Workspace) -> dict[str, Any]:
         ],
         "key_questions": _dedupe_preserve_order(key_questions)[:5],
         "freshness_target": f"{datetime.now().date().isoformat()} 기준 최신 제공 자료",
+        "live_source_updates": live_source_updates,
     }
     write_json(ws.analysis_dir / "research_brief.json", brief)
     return brief
@@ -5292,6 +5375,7 @@ def build_company_research_prompt(
         candidate_profile,
         job_description=jd_text,
     )
+    live_source_updates = build_live_source_update_summary(ws)
 
     company_analysis = None
     if project.company_name:
@@ -5353,6 +5437,7 @@ def build_company_research_prompt(
             "ncs_profile": ncs_profile,
             "candidate_profile": candidate_profile,
             "company_profile": company_profile,
+            "live_source_updates": live_source_updates,
             "narrative_ssot": narrative_ssot,
             "research_strategy_translation": research_strategy_translation,
             "outcome_dashboard": outcome_dashboard,
