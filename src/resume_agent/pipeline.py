@@ -354,12 +354,14 @@ def crawl_web_sources(ws: Workspace, urls: list[str]) -> dict[str, Any]:
         snapshot = fetch_public_url_snapshot(url)
         previous = cache.get(url) if isinstance(cache.get(url), dict) else None
         change_status = "new"
+        change_summary = "신규 추적 시작"
         if previous:
             change_status = (
                 "unchanged"
                 if str(previous.get("content_hash") or "") == snapshot["content_hash"]
                 else "changed"
             )
+            change_summary = _summarize_live_source_change(previous, snapshot, change_status)
         cache[url] = {
             "url": url,
             "title": snapshot["title"],
@@ -367,6 +369,11 @@ def crawl_web_sources(ws: Workspace, urls: list[str]) -> dict[str, Any]:
             "fetched_at": snapshot["fetched_at"],
             "status_code": snapshot["status_code"],
             "change_status": change_status,
+            "change_summary": change_summary,
+            "cleaned_excerpt": str(snapshot.get("cleaned_text") or "")[:280],
+            "keywords": _tokenize_research_terms(
+                str(snapshot.get("cleaned_text") or "")
+            )[:12],
         }
         updates.append(cache[url])
 
@@ -452,6 +459,29 @@ def build_live_priority_by_url(ws: Workspace) -> dict[str, str]:
         for url, payload in cache.items()
         if isinstance(payload, dict) and str(url).strip()
     }
+
+
+def _summarize_live_source_change(
+    previous: dict[str, Any],
+    snapshot: dict[str, Any],
+    change_status: str,
+) -> str:
+    if change_status == "unchanged":
+        return "변경 없음"
+    if change_status == "new":
+        return "신규 추적 시작"
+
+    previous_terms = _tokenize_research_terms(str(previous.get("cleaned_excerpt") or ""))
+    current_terms = _tokenize_research_terms(str(snapshot.get("cleaned_text") or ""))
+    added = [term for term in current_terms if term not in previous_terms][:3]
+    removed = [term for term in previous_terms if term not in current_terms][:3]
+
+    parts: list[str] = []
+    if added:
+        parts.append(f"추가 신호: {', '.join(added)}")
+    if removed:
+        parts.append(f"약화 신호: {', '.join(removed)}")
+    return " / ".join(parts) if parts else "본문 변경 감지"
 
 
 def refresh_existing_public_sources(ws: Workspace) -> dict[str, Any]:

@@ -1427,6 +1427,7 @@ class TestCrawlWebSourcesLiveTracking:
         assert second["changed_url_count"] == 1
         cache = load_live_source_cache(workspace)
         assert cache["https://example.com/jobs"]["content_hash"] == "hash-2"
+        assert "추가 신호" in cache["https://example.com/jobs"]["change_summary"]
         assert (workspace.analysis_dir / "live_source_updates.json").exists()
 
     def test_build_live_source_update_summary_returns_recent_items(self, tmp_path):
