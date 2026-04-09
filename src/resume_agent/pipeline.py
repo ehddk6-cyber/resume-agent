@@ -1148,6 +1148,7 @@ def build_research_strategy_translation(
         ws.analysis_dir / "source_grading.json"
     )
     live_source_updates = build_live_source_update_summary(ws)
+    live_change_effectiveness = build_live_change_effectiveness_summary(ws)
     cross_check = (
         (source_grading or {}).get("cross_check", {})
         if isinstance(source_grading, dict)
@@ -1182,9 +1183,28 @@ def build_research_strategy_translation(
             if missing_count
             else "교차검증된 신호를 지원동기와 직무적합성 문항에 우선 반영합니다.",
         ],
-        "recent_change_actions": _build_recent_change_actions(
-            live_source_updates.get("priority_live_updates", []),
-            project=project,
+        "recent_change_effectiveness": {
+            "linked_outcome_count": int(
+                live_change_effectiveness.get("linked_outcome_count", 0) or 0
+            ),
+            "high_vs_low_success_gap": float(
+                live_change_effectiveness.get("high_vs_low_success_gap", 0.0) or 0.0
+            ),
+            "top_missing_titles": [
+                item.get("title")
+                for item in live_change_effectiveness.get("top_missing_titles", []) or []
+                if isinstance(item, dict) and item.get("title")
+            ][:5],
+        },
+        "recent_change_priority_rules": _build_live_change_priority_rules(
+            live_change_effectiveness
+        ),
+        "recent_change_actions": _apply_live_change_effectiveness_to_actions(
+            _build_recent_change_actions(
+                live_source_updates.get("priority_live_updates", []),
+                project=project,
+            ),
+            live_change_effectiveness,
         ),
     }
 
@@ -1250,6 +1270,46 @@ def _build_recent_change_actions(
             "최근 변경된 공개 신호가 없으면 기존 교차검증 결과를 유지하고 과도한 주장 확장은 피합니다."
         )
     return _dedupe_preserve_order(actions)[:3]
+
+
+def _build_live_change_priority_rules(
+    effectiveness: dict[str, Any] | None,
+) -> list[str]:
+    if not isinstance(effectiveness, dict):
+        return []
+
+    linked_outcomes = int(effectiveness.get("linked_outcome_count", 0) or 0)
+    success_gap = float(effectiveness.get("high_vs_low_success_gap", 0.0) or 0.0)
+    top_missing_titles = [
+        str(item.get("title") or "").strip()
+        for item in effectiveness.get("top_missing_titles", []) or []
+        if isinstance(item, dict) and str(item.get("title") or "").strip()
+    ]
+
+    rules: list[str] = []
+    if linked_outcomes:
+        rules.append(
+            f"최근 실제 결과 {linked_outcomes}건 기준으로 최신 공개 신호 반영률을 추적하고 있으므로, 이번 초안도 변경 신호를 명시적으로 드러냅니다."
+        )
+    if success_gap >= 0.15:
+        rules.append(
+            f"최근 변경 반영률이 높은 산출물이 더 좋은 결과를 보여줬으므로(성공률 격차 {success_gap:.2f}), 최신 신호를 답변 첫 문단과 면접 첫 답변에 우선 배치합니다."
+        )
+    if top_missing_titles:
+        rules.append(
+            f"실패 사례에서 반복 누락된 공개 신호는 {', '.join(top_missing_titles[:3])} 이므로, 이번에는 해당 근거를 직접 문장에 넣습니다."
+        )
+    return _dedupe_preserve_order(rules)[:3]
+
+
+def _apply_live_change_effectiveness_to_actions(
+    actions: list[str],
+    effectiveness: dict[str, Any] | None,
+) -> list[str]:
+    priority_rules = _build_live_change_priority_rules(effectiveness)
+    if not priority_rules:
+        return _dedupe_preserve_order(actions)[:3]
+    return _dedupe_preserve_order(priority_rules + actions)[:4]
 
 
 def _assess_recent_change_action_coverage(

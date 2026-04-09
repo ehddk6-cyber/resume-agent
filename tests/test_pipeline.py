@@ -1821,6 +1821,7 @@ class TestFeedbackLearningAndAutoWebResearch:
         assert '"outcome_dashboard"' in content
         assert '"research_strategy_translation"' in content
         assert '"recent_change_actions"' in content
+        assert '"recent_change_priority_rules"' in content
         assert "추가 신호: 데이터, 자동화" in content
 
     def test_build_interview_prompt_includes_recent_change_actions(self, tmp_path):
@@ -1853,6 +1854,7 @@ class TestFeedbackLearningAndAutoWebResearch:
 
         assert '"research_strategy_translation"' in content
         assert '"recent_change_actions"' in content
+        assert '"recent_change_priority_rules"' in content
         assert "추가 신호: 데이터, 자동화" in content
 
     def test_build_knowledge_hints_includes_semantic_score(self, tmp_path):
@@ -2592,6 +2594,70 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
 
         assert translation["recent_change_actions"]
         assert "추가 신호: 데이터, 자동화" in translation["recent_change_actions"][0]
+
+    def test_build_research_strategy_translation_includes_effectiveness_priority_rules(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        project = ApplicationProject(
+            company_name="테스트공사",
+            job_title="데이터 분석",
+            questions=[Question(id="q1", order_no=1, question_text="지원동기")],
+        )
+        save_project(workspace, project)
+        write_json(
+            workspace.state_dir / "live_source_cache.json",
+            {
+                "https://example.com/jobs": {
+                    "url": "https://example.com/jobs",
+                    "title": "채용 공고",
+                    "change_status": "changed",
+                    "change_summary": "추가 신호: 데이터, 자동화",
+                    "keywords": ["데이터", "자동화"],
+                    "fetched_at": "2026-04-09T00:00:00+00:00",
+                }
+            },
+        )
+        artifact = GeneratedArtifact(
+            id="writer-001",
+            artifact_type=ArtifactType.WRITER,
+            accepted=True,
+            input_snapshot={
+                "recent_change_action_check": {
+                    "checked_count": 1,
+                    "covered_count": 0,
+                    "missing_count": 1,
+                    "coverage_rate": 0.0,
+                    "items": [{"title": "채용 공고", "covered": False}],
+                }
+            },
+            output_path="artifacts/writer.md",
+            raw_output_path="artifacts/writer_raw.md",
+            validation=ValidationResult(passed=True),
+            created_at=datetime.now(timezone.utc),
+        )
+        write_json(workspace.state_dir / "artifacts.json", [artifact.model_dump()])
+        write_json(
+            workspace.state_dir / "outcomes.json",
+            [
+                {
+                    "artifact_id": "writer-001",
+                    "company_name": "테스트공사",
+                    "job_title": "데이터 분석",
+                    "outcome": "interview_fail",
+                }
+            ],
+        )
+
+        translation = build_research_strategy_translation(
+            workspace,
+            project,
+            source_grading={"cross_check": {"single_source_area_count": 0, "missing_area_count": 0}},
+        )
+
+        assert translation["recent_change_priority_rules"]
+        assert "채용 공고" in " ".join(translation["recent_change_priority_rules"])
+        assert translation["recent_change_effectiveness"]["linked_outcome_count"] == 1
 
     def test_assess_recent_change_action_coverage_detects_keywords(self):
         report = _assess_recent_change_action_coverage(

@@ -693,6 +693,7 @@ _PROMPT_WRITER_LEGACY = """# ROLE
 - DATA.extra.ncs_profile.question_alignment[].recommended_ability_units 가 있으면 문항이 어떤 능력단위를 증명하는지 문장 안에서 드러나게 한다.
 - DATA.extra.narrative_ssot 가 있으면 core_claims, evidence_experience_ids, answer_anchor 를 writer 답변의 공통 기준으로 사용한다.
 - DATA.extra.question_specific_hints 가 있으면 문항별 top 힌트의 evidence_focus, match_reasons, applicable_question_types 를 먼저 참고해 구조를 잡는다.
+- DATA.extra.research_strategy_translation.recent_change_priority_rules 가 있으면, 최근 결과 학습 기준으로 어떤 공개 신호를 이번 초안에서 반드시 전면 배치할지 우선순위 규칙으로 따른다.
 - DATA.extra.research_strategy_translation.recent_change_actions 가 있으면, 최근 공개 소스 변화에 맞춰 어떤 문장을 최신화해야 하는지 우선 반영한다.
 - 자소서 문항이 달라도 핵심 주장과 근거 경험 축은 narrative_ssot 와 충돌하지 않게 유지한다.
 - TYPE_A(지원동기): company_analysis.core_values 또는 culture_keywords 를 지원동기에 반영한다.
@@ -920,6 +921,7 @@ _PROMPT_INTERVIEW_LEGACY = """# ROLE
 - DATA.extra.ncs_profile 이 있으면 priority_competencies 와 interview_watchouts 를 압박 포인트 설계에 반영한다.
 - DATA.extra.ncs_profile.ability_units / question_alignment[].recommended_ability_units 가 있으면 능력단위 기준의 꼬리질문도 포함한다.
 - DATA.extra.narrative_ssot 가 있으면 core_claims 와 answer_anchor 를 기준으로 자소서-자기소개-면접 답변의 공통 축을 유지한다.
+- DATA.extra.research_strategy_translation.recent_change_priority_rules 가 있으면, 최근 실제 결과 기준으로 무엇을 먼저 검증하고 답변 첫머리에 내세울지 압박 질문과 방어 전략에 반영한다.
 - DATA.extra.research_strategy_translation.recent_change_actions 가 있으면, 최근 공개 소스 변화에 맞춰 어떤 답변 포인트를 강화/수정해야 하는지 압박 질문과 답변 프레임에 반영한다.
 - 면접 답변 프레임은 narrative_ssot.evidence_experience_ids 에 포함된 경험과 충돌하지 않게 설계한다.
 - company_analysis.role_industry_strategy.committee_personas 가 있으면 단일 면접관이 아니라 위원회형 면접으로 간주한다.
