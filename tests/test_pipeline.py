@@ -2442,6 +2442,39 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
         assert strategy["company_signal_summary"]["core_values"] == ["공공성"]
         assert (workspace.analysis_dir / "research_strategy_translation_top001.json").exists()
 
+    def test_build_research_strategy_translation_includes_recent_change_actions(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        project = ApplicationProject(
+            company_name="테스트공사",
+            job_title="데이터 분석",
+            questions=[Question(id="q1", order_no=1, question_text="지원동기")],
+        )
+        save_project(workspace, project)
+        write_json(
+            workspace.state_dir / "live_source_cache.json",
+            {
+                "https://example.com/jobs": {
+                    "url": "https://example.com/jobs",
+                    "title": "채용 공고",
+                    "change_status": "changed",
+                    "change_summary": "추가 신호: 데이터, 자동화",
+                    "keywords": ["데이터", "자동화"],
+                    "fetched_at": "2026-04-09T00:00:00+00:00",
+                }
+            },
+        )
+
+        translation = build_research_strategy_translation(
+            workspace,
+            project,
+            source_grading={"cross_check": {"single_source_area_count": 0, "missing_area_count": 0}},
+        )
+
+        assert translation["recent_change_actions"]
+        assert "추가 신호: 데이터, 자동화" in translation["recent_change_actions"][0]
+
     def test_run_coach_writes_top001_analysis_and_application_strategy(self, tmp_path):
         workspace = Workspace(tmp_path)
         workspace.ensure()

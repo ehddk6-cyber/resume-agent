@@ -180,6 +180,7 @@ PROMPT_COMPANY_RESEARCH = """# ROLE
 - DATA.extra.source_grading.cross_check 에서 단일 출처 또는 충돌로 표시된 영역은 확정 정보처럼 쓰지 않는다.
 - DATA.extra.priority_live_updates 가 비어 있지 않으면, 최근 변경된 공개 URL의 신호를 먼저 검토하고 다른 공개 웹 요약보다 우선 반영한다.
 - 각 priority_live_updates 항목에 change_summary 가 있으면, 무엇이 새로 강조되거나 약해졌는지 요약 신호로 활용한다.
+- DATA.extra.research_strategy_translation.recent_change_actions 가 있으면, 자소서와 면접 답변에서 어떤 문장을 최신화할지 직접 실행 지침으로 반영한다.
 
 ## R3 APPLICATION_UTILITY
 - 결과물은 "좋은 회사 소개문"이 아니라 "지원동기/직무역량/입사후포부/면접 답변 소재"여야 한다.

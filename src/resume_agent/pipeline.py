@@ -1147,6 +1147,7 @@ def build_research_strategy_translation(
     source_grading = source_grading or read_json_if_exists(
         ws.analysis_dir / "source_grading.json"
     )
+    live_source_updates = build_live_source_update_summary(ws)
     cross_check = (
         (source_grading or {}).get("cross_check", {})
         if isinstance(source_grading, dict)
@@ -1181,6 +1182,10 @@ def build_research_strategy_translation(
             if missing_count
             else "교차검증된 신호를 지원동기와 직무적합성 문항에 우선 반영합니다.",
         ],
+        "recent_change_actions": _build_recent_change_actions(
+            live_source_updates.get("priority_live_updates", []),
+            project=project,
+        ),
     }
 
     top001_translation: dict[str, Any] = {}
@@ -1212,6 +1217,39 @@ def build_research_strategy_translation(
         research_strategy=top001_translation or translation,
     )
     return translation
+
+
+def _build_recent_change_actions(
+    priority_live_updates: list[dict[str, Any]],
+    *,
+    project: ApplicationProject,
+) -> list[str]:
+    actions: list[str] = []
+    for item in priority_live_updates[:3]:
+        title = str(item.get("title") or item.get("url") or "공개 소스").strip()
+        summary = str(item.get("change_summary") or "").strip()
+        status = str(item.get("change_status") or "").strip()
+        keywords = [str(keyword) for keyword in item.get("keywords", [])[:3]]
+
+        if status == "changed":
+            if summary:
+                actions.append(
+                    f"{title} 변화에 맞춰 지원동기와 직무적합성 문장에서 '{summary}'를 반영해 최신 우선순위를 설명합니다."
+                )
+            elif keywords:
+                actions.append(
+                    f"{title}에서 다시 강조된 {', '.join(keywords)} 신호를 답변 첫 문단 근거로 앞세웁니다."
+                )
+        elif status == "new":
+            actions.append(
+                f"{title} 신규 공개 신호를 기존 경험과 연결해 {project.job_title or '지원 직무'} 적합성 근거를 보강합니다."
+            )
+
+    if not actions:
+        actions.append(
+            "최근 변경된 공개 신호가 없으면 기존 교차검증 결과를 유지하고 과도한 주장 확장은 피합니다."
+        )
+    return _dedupe_preserve_order(actions)[:3]
 
 
 def _normalize_strategy_payload(value: Any) -> Any:
