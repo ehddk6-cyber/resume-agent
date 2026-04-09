@@ -29,6 +29,7 @@ from resume_agent.pipeline import (
     build_writer_differentiation_report,
     build_adaptive_strategy_layer,
     build_feedback_adaptation_plan,
+    build_outcome_dashboard,
     build_kpi_dashboard,
     build_writer_result_quality_evaluations,
     build_coach_prompt,
@@ -51,6 +52,7 @@ from resume_agent.pipeline import (
     build_writer_char_limit_report,
     enforce_writer_char_limits,
     enforce_patina_char_limits,
+    update_application_strategy,
 )
 from resume_agent.scoring import allocate_experiences
 from resume_agent.models import (
@@ -2369,6 +2371,71 @@ Q1: 저는 사무행정 직무에 바로 투입 가능한 근거 중심 문제�
         assert dashboard["result_quality_metrics"]["persuasiveness"] == 0.75
         assert (workspace.analysis_dir / "kpi_dashboard.json").exists()
 
+    def test_update_application_strategy_records_recent_change_action_learning(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        project = ApplicationProject(
+            company_name="테스트공사",
+            job_title="데이터 분석",
+            company_type="공공",
+            questions=[Question(id="q1", order_no=1, question_text="지원동기")],
+        )
+
+        strategy = update_application_strategy(
+            workspace,
+            project=project,
+            stage="writer",
+            recent_change_action_check={
+                "checked_count": 2,
+                "covered_count": 1,
+                "missing_count": 1,
+                "coverage_rate": 0.5,
+                "items": [
+                    {"title": "채용 공고", "covered": True},
+                    {"title": "조직 소개", "covered": False},
+                ],
+            },
+        )
+
+        learning = strategy["live_change_action_learning"]
+        assert learning["latest_stage"] == "writer"
+        assert learning["average_coverage_rate"] == 0.5
+        assert learning["focus_titles"] == ["조직 소개"]
+        assert learning["stage_reports"]["writer"]["covered_titles"] == ["채용 공고"]
+
+    def test_build_outcome_dashboard_includes_live_change_action_learning(self, tmp_path):
+        workspace = Workspace(tmp_path)
+        workspace.ensure()
+        initialize_state(workspace)
+        project = ApplicationProject(
+            company_name="테스트공사",
+            job_title="데이터 분석",
+            company_type="공공",
+            questions=[Question(id="q1", order_no=1, question_text="지원동기")],
+        )
+        save_project(workspace, project)
+        write_json(
+            workspace.analysis_dir / "application_strategy.json",
+            {
+                "live_change_action_learning": {
+                    "latest_stage": "interview",
+                    "average_coverage_rate": 0.75,
+                    "focus_titles": ["조직 소개"],
+                    "stage_reports": {
+                        "writer": {"coverage_rate": 0.5},
+                        "interview": {"coverage_rate": 1.0},
+                    },
+                }
+            },
+        )
+
+        dashboard = build_outcome_dashboard(workspace, project, "writer")
+
+        assert dashboard["live_change_action_learning"]["latest_stage"] == "interview"
+        assert dashboard["live_change_action_learning"]["average_coverage_rate"] == 0.75
+        assert dashboard["live_change_action_learning"]["focus_titles"] == ["조직 소개"]
+
     def test_build_writer_result_quality_evaluations_exposes_result_dimensions(self):
         project = ApplicationProject(
             company_name="테스트공사",
@@ -2628,6 +2695,12 @@ Q1. 저는 직접 데이터를 분석하고 기준표를 만들어 처리 시간
         strategy = read_json_if_exists(workspace.analysis_dir / "application_strategy.json")
         assert "근거 부족" in strategy["interview_pressure_points"]
         assert strategy["interview_strategy"]["weak_response_count"] == 1
+        assert (
+            strategy["live_change_action_learning"]["stage_reports"]["interview"][
+                "coverage_rate"
+            ]
+            == 1.0
+        )
         assert result["recent_change_action_check"]["covered_count"] == 1
 
     def test_build_interview_defense_simulations_merges_top001_logic(self):

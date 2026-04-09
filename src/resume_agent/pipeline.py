@@ -1288,6 +1288,38 @@ def _assess_recent_change_action_coverage(
     }
 
 
+def _summarize_recent_change_action_check(report: dict[str, Any] | None) -> dict[str, Any]:
+    if not isinstance(report, dict):
+        return {}
+
+    items = report.get("items", [])
+    if not isinstance(items, list):
+        items = []
+
+    missing_titles = [
+        str(item.get("title") or "").strip()
+        for item in items
+        if isinstance(item, dict)
+        and not item.get("covered")
+        and str(item.get("title") or "").strip()
+    ]
+    covered_titles = [
+        str(item.get("title") or "").strip()
+        for item in items
+        if isinstance(item, dict)
+        and item.get("covered")
+        and str(item.get("title") or "").strip()
+    ]
+    return {
+        "checked_count": int(report.get("checked_count", 0) or 0),
+        "covered_count": int(report.get("covered_count", 0) or 0),
+        "missing_count": int(report.get("missing_count", 0) or 0),
+        "coverage_rate": float(report.get("coverage_rate", 0.0) or 0.0),
+        "missing_titles": missing_titles[:5],
+        "covered_titles": covered_titles[:5],
+    }
+
+
 def _normalize_strategy_payload(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
@@ -1565,6 +1597,7 @@ def update_application_strategy(
     writer_differentiation: dict[str, Any] | None = None,
     adaptive_strategy: dict[str, Any] | None = None,
     feedback_adaptation_plan: dict[str, Any] | None = None,
+    recent_change_action_check: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     strategy = _read_application_strategy(ws)
     strategy.update(
@@ -1634,6 +1667,37 @@ def update_application_strategy(
         strategy["adaptive_strategy_layer"] = adaptive_strategy
     if feedback_adaptation_plan:
         strategy["feedback_adaptation_plan"] = feedback_adaptation_plan
+    if recent_change_action_check:
+        live_change_action_learning = strategy.get("live_change_action_learning", {})
+        if not isinstance(live_change_action_learning, dict):
+            live_change_action_learning = {}
+        stage_reports = live_change_action_learning.get("stage_reports", {})
+        if not isinstance(stage_reports, dict):
+            stage_reports = {}
+        stage_reports[stage] = _summarize_recent_change_action_check(
+            recent_change_action_check
+        )
+        valid_reports = [
+            report
+            for report in stage_reports.values()
+            if isinstance(report, dict) and report.get("checked_count", 0)
+        ]
+        average_coverage_rate = (
+            round(
+                sum(float(report.get("coverage_rate", 0.0)) for report in valid_reports)
+                / len(valid_reports),
+                2,
+            )
+            if valid_reports
+            else 0.0
+        )
+        live_change_action_learning = {
+            "latest_stage": stage,
+            "average_coverage_rate": average_coverage_rate,
+            "stage_reports": stage_reports,
+            "focus_titles": stage_reports[stage].get("missing_titles", []),
+        }
+        strategy["live_change_action_learning"] = live_change_action_learning
 
     stage_payloads = strategy.get("stage_payloads", {})
     if not isinstance(stage_payloads, dict):
@@ -1649,6 +1713,7 @@ def update_application_strategy(
             "writer_differentiation": writer_differentiation,
             "adaptive_strategy": adaptive_strategy,
             "feedback_adaptation_plan": feedback_adaptation_plan,
+            "recent_change_action_check": recent_change_action_check,
         }
     )
     strategy["stage_payloads"] = stage_payloads
@@ -1682,6 +1747,12 @@ def build_outcome_dashboard(
     top_hotspots.sort(
         key=lambda item: (item["weighted_net_score"], -item["total_uses"])
     )
+    application_strategy = read_json_if_exists(ws.analysis_dir / "application_strategy.json")
+    live_change_action_learning = (
+        application_strategy.get("live_change_action_learning", {})
+        if isinstance(application_strategy, dict)
+        else {}
+    )
     dashboard = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "artifact_type": artifact_type,
@@ -1690,6 +1761,7 @@ def build_outcome_dashboard(
         "outcome_summary": feedback_learning.get("outcome_summary", {}),
         "recommended_pattern": feedback_learning.get("recommended_pattern"),
         "high_risk_hotspots": top_hotspots[:5],
+        "live_change_action_learning": live_change_action_learning,
     }
     write_json(ws.analysis_dir / "outcome_dashboard.json", dashboard)
     return dashboard
@@ -4137,6 +4209,7 @@ def run_writer_with_codex(
                 candidate_profile=build_candidate_profile(ws, project, experiences),
             ),
             feedback_adaptation_plan=writer_feedback_learning.get("adaptation_plan"),
+            recent_change_action_check=recent_change_action_check,
         )
 
     snapshot = GeneratedArtifact(
@@ -4902,6 +4975,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
                 ),
             ),
             feedback_adaptation_plan=interview_feedback_learning.get("adaptation_plan"),
+            recent_change_action_check=recent_change_action_check,
         )
         progress.step(
             f"검증 {'통과' if validation.passed else '실패'}",
