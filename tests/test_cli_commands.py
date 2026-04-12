@@ -186,7 +186,11 @@ class TestCmdReport:
                 "top_missing_titles": [{"title": "채용 공고"}],
             },
             "live_change_action_learning": {"latest_stage": "writer"},
-            "kpi_dashboard": {"tracked_outcomes": {"offer_received": 1}},
+            "kpi_dashboard": {
+                "tracked_outcomes": {"offer_received": 1},
+                "priority_rule_quality_summary": {"average_coverage_rate": 0.5},
+            },
+            "ab_test_summary": {"weighted_recommendation": "B"},
         }
 
         with patch("resume_agent.cli.Workspace") as MockWS:
@@ -205,7 +209,44 @@ class TestCmdReport:
         output = capsys.readouterr().out
         assert "Cumulative Effect Report" in output
         assert "live 연동 결과 수" in output
+        assert "가중 권장 Variant" in output
+        assert "priority-rule 평균 커버리지" in output
         assert "채용 공고" in output
+
+
+class TestCmdAbStatus:
+    def test_ab_status_prints_weighted_summary(self, tmp_path: Path, capsys):
+        from resume_agent.cli import cmd_ab_status
+        from resume_agent.models import ABTestResult
+
+        args = _make_args(str(tmp_path))
+        current_test = ABTestResult(
+            test_id="test_1",
+            test_name="Strategy Test",
+            strategy_a="default",
+            strategy_b="alt",
+            sample_size_a=10,
+            sample_size_b=10,
+            success_rate_a=0.6,
+            success_rate_b=0.5,
+        )
+
+        with patch("resume_agent.cli.Workspace") as MockWS:
+            with patch(
+                "resume_agent.cli.read_json_if_exists",
+                return_value={"live_change_success_gap": 0.25},
+            ):
+                with patch(
+                    "resume_agent.ab_testing.ABTest.get_current_test",
+                    return_value=current_test,
+                ):
+                    MockWS.return_value = _mock_workspace(tmp_path)
+                    cmd_ab_status(args)
+
+        output = capsys.readouterr().out
+        assert "가중 보너스" in output
+        assert "기본 권장 Variant" in output
+        assert "65.0%" in output
 
 
 # ──────────────────────────────────────────────────

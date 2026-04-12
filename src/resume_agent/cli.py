@@ -1570,6 +1570,10 @@ def cmd_report(args: argparse.Namespace) -> None:
     live_effectiveness = report.get("live_change_effectiveness", {}) or {}
     action_learning = report.get("live_change_action_learning", {}) or {}
     kpi_dashboard = report.get("kpi_dashboard", {}) or {}
+    ab_test_summary = report.get("ab_test_summary", {}) or {}
+    priority_rule_quality = report.get("priority_rule_quality_summary") or kpi_dashboard.get(
+        "priority_rule_quality_summary", {}
+    )
 
     console.print(
         Panel(
@@ -1577,6 +1581,8 @@ def cmd_report(args: argparse.Namespace) -> None:
             f"tracked outcomes: {kpi_dashboard.get('tracked_outcomes', {})}\n"
             f"live 연동 결과 수: {live_effectiveness.get('linked_outcome_count', 0)}\n"
             f"high-low 성공률 격차: {live_effectiveness.get('high_vs_low_success_gap', 0.0)}\n"
+            f"가중 권장 Variant: {ab_test_summary.get('weighted_recommendation', '-')}\n"
+            f"priority-rule 평균 커버리지: {priority_rule_quality.get('average_coverage_rate', 0.0)}\n"
             f"최근 학습 단계: {action_learning.get('latest_stage', '-')}\n"
             f"반복 누락 신호: {', '.join(item.get('title', '') for item in live_effectiveness.get('top_missing_titles', [])[:3]) or '-'}",
             title="Cumulative Effect Report",
@@ -1799,14 +1805,25 @@ def cmd_ab_status(args: argparse.Namespace) -> None:
         return
     
     status_text = "[green]진행 중[/green]" if test.end_date is None else "[red]종료됨[/red]"
-    recommend = ab_test.recommend_variant()
+    kpi_dashboard = read_json_if_exists(ws.analysis_dir / "kpi_dashboard.json") or {}
+    live_change_success_gap = float(
+        kpi_dashboard.get("live_change_success_gap", 0.0) or 0.0
+    )
+    weighted_summary = ab_test.get_weighted_summary(live_change_success_gap)
+    recommend = weighted_summary.get(
+        "weighted_recommendation",
+        ab_test.recommend_variant(),
+    )
     
     console.print(
         Panel(
             f"테스트 ID: {test.test_id}\n"
             f"테스트 이름: {test.test_name}\n"
             f"상태: {status_text}\n"
-            f"권장 Variant: {recommend}",
+            f"권장 Variant: {recommend}\n"
+            f"기본 권장 Variant: {weighted_summary.get('base_recommendation', '-')}\n"
+            f"live gap: {weighted_summary.get('live_change_success_gap', 0.0)}\n"
+            f"가중 보너스: {weighted_summary.get('weighting_bonus', 0.0)}",
             title=f"A/B 테스트: {test.test_name}",
             border_style="cyan",
         )
@@ -1817,6 +1834,7 @@ def cmd_ab_status(args: argparse.Namespace) -> None:
     table.add_column("전략", width=15)
     table.add_column("샘플 수", width=10)
     table.add_column("성공률", width=10)
+    table.add_column("가중 점수", width=10)
     table.add_column("p-value", width=10)
     table.add_column("유의미", width=10)
     
@@ -1834,6 +1852,7 @@ def cmd_ab_status(args: argparse.Namespace) -> None:
         test.strategy_a,
         str(test.sample_size_a),
         f"{test.success_rate_a:.1%}",
+        f"{weighted_summary.get('adjusted_success_rate_a', 0.0):.1%}",
         f"{test.p_value:.3f}" if test.p_value else "-",
         sig_a
     )
@@ -1842,6 +1861,7 @@ def cmd_ab_status(args: argparse.Namespace) -> None:
         test.strategy_b,
         str(test.sample_size_b),
         f"{test.success_rate_b:.1%}",
+        f"{weighted_summary.get('adjusted_success_rate_b', 0.0):.1%}",
         f"{test.p_value:.3f}" if test.p_value else "-",
         sig_b
     )

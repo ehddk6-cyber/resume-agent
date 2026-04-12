@@ -1415,6 +1415,32 @@ def _assess_recent_change_priority_rule_coverage(
     }
 
 
+def _build_priority_rule_quality_metric(report: Any) -> dict[str, Any]:
+    if not isinstance(report, dict):
+        return {}
+    checked_count = int(report.get("checked_count", 0) or 0)
+    covered_count = int(report.get("covered_count", 0) or 0)
+    missing_count = max(int(report.get("missing_count", 0) or 0), 0)
+    try:
+        coverage_rate = round(float(report.get("coverage_rate", 0.0) or 0.0), 2)
+    except (TypeError, ValueError):
+        coverage_rate = 0.0
+    missing_titles = _dedupe_preserve_order(
+        str(item.get("title") or "").strip()
+        for item in report.get("items", []) or []
+        if isinstance(item, dict)
+        and not item.get("covered")
+        and str(item.get("title") or "").strip()
+    )
+    return {
+        "checked_count": checked_count,
+        "covered_count": covered_count,
+        "missing_count": missing_count,
+        "coverage_rate": coverage_rate,
+        "missing_titles": missing_titles,
+    }
+
+
 def _summarize_recent_change_action_check(report: dict[str, Any] | None) -> dict[str, Any]:
     if not isinstance(report, dict):
         return {}
@@ -1554,6 +1580,85 @@ def build_live_change_effectiveness_summary(
         "pending_count": pending_count,
         "coverage_bands": coverage_bands,
         "high_vs_low_success_gap": round(high_success_rate - low_success_rate, 2),
+        "top_missing_titles": top_missing_titles,
+    }
+
+
+def build_priority_rule_quality_summary(
+    ws: Workspace,
+    artifact_type: str | None = None,
+) -> dict[str, Any]:
+    artifacts = load_artifacts(ws)
+    tracked_artifact_count = 0
+    checked_artifact_count = 0
+    low_coverage_artifact_count = 0
+    coverage_rates: list[float] = []
+    missing_title_counts: dict[str, int] = {}
+    latest_metric: dict[str, Any] = {}
+    latest_created_at: datetime | None = None
+
+    for artifact in artifacts:
+        current_type = (
+            artifact.artifact_type.value
+            if hasattr(artifact.artifact_type, "value")
+            else str(artifact.artifact_type)
+        )
+        current_type = current_type.strip().lower()
+        if artifact_type and current_type != str(artifact_type).strip().lower():
+            continue
+        tracked_artifact_count += 1
+        input_snapshot = artifact.input_snapshot or {}
+        if not isinstance(input_snapshot, dict):
+            continue
+        metric = input_snapshot.get("priority_rule_quality_metric")
+        if not isinstance(metric, dict) or not metric:
+            metric = _build_priority_rule_quality_metric(
+                input_snapshot.get("recent_change_priority_rule_check")
+            )
+        if not metric:
+            continue
+        if int(metric.get("checked_count", 0) or 0) <= 0:
+            continue
+
+        checked_artifact_count += 1
+        coverage_rate = float(metric.get("coverage_rate", 0.0) or 0.0)
+        coverage_rates.append(coverage_rate)
+        if coverage_rate < 0.67:
+            low_coverage_artifact_count += 1
+        for title in metric.get("missing_titles", []) or []:
+            normalized = str(title).strip()
+            if normalized:
+                missing_title_counts[normalized] = (
+                    missing_title_counts.get(normalized, 0) + 1
+                )
+        created_at = artifact.created_at if isinstance(artifact.created_at, datetime) else None
+        if created_at and (latest_created_at is None or created_at >= latest_created_at):
+            latest_created_at = created_at
+            latest_metric = metric
+
+    top_missing_titles = [
+        {"title": title, "count": count}
+        for title, count in sorted(
+            missing_title_counts.items(),
+            key=lambda item: (-item[1], item[0]),
+        )[:5]
+    ]
+    low_coverage_rate = (
+        round(low_coverage_artifact_count / checked_artifact_count, 3)
+        if checked_artifact_count
+        else 0.0
+    )
+    return {
+        "tracked_artifact_count": tracked_artifact_count,
+        "checked_artifact_count": checked_artifact_count,
+        "average_coverage_rate": round(sum(coverage_rates) / len(coverage_rates), 3)
+        if coverage_rates
+        else 0.0,
+        "latest_coverage_rate": float(latest_metric.get("coverage_rate", 0.0) or 0.0)
+        if latest_metric
+        else 0.0,
+        "low_coverage_artifact_count": low_coverage_artifact_count,
+        "low_coverage_rate": low_coverage_rate,
         "top_missing_titles": top_missing_titles,
     }
 
@@ -1994,6 +2099,9 @@ def build_outcome_dashboard(
     live_change_effectiveness = build_live_change_effectiveness_summary(
         ws, artifact_type=artifact_type
     )
+    priority_rule_quality_summary = build_priority_rule_quality_summary(
+        ws, artifact_type=artifact_type
+    )
     dashboard = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "artifact_type": artifact_type,
@@ -2004,6 +2112,7 @@ def build_outcome_dashboard(
         "high_risk_hotspots": top_hotspots[:5],
         "live_change_action_learning": live_change_action_learning,
         "live_change_effectiveness": live_change_effectiveness,
+        "priority_rule_quality_summary": priority_rule_quality_summary,
     }
     write_json(ws.analysis_dir / "outcome_dashboard.json", dashboard)
     return dashboard
@@ -2106,6 +2215,9 @@ def build_kpi_dashboard(
     live_change_effectiveness = build_live_change_effectiveness_summary(
         ws, artifact_type=artifact_type
     )
+    priority_rule_quality_summary = build_priority_rule_quality_summary(
+        ws, artifact_type=artifact_type
+    )
     company_signal_reuse_rate = round(
         (
             len([value for value in question_strategy.values() if value])
@@ -2177,6 +2289,16 @@ def build_kpi_dashboard(
         "company_signal_summary": company_signal_summary,
         "writer_quality_metrics": writer_quality_metrics,
         "result_quality_metrics": result_quality_metrics,
+        "priority_rule_coverage_rate": priority_rule_quality_summary.get(
+            "average_coverage_rate", 0.0
+        ),
+        "priority_rule_latest_coverage_rate": priority_rule_quality_summary.get(
+            "latest_coverage_rate", 0.0
+        ),
+        "priority_rule_low_coverage_rate": priority_rule_quality_summary.get(
+            "low_coverage_rate", 0.0
+        ),
+        "priority_rule_quality_summary": priority_rule_quality_summary,
         "tracked_outcomes": outcome_breakdown,
         "live_change_linked_outcomes": live_change_effectiveness.get(
             "linked_outcome_count", 0
@@ -2207,14 +2329,20 @@ def build_cumulative_effect_report(
     project: ApplicationProject,
     artifact_type: str = "writer",
 ) -> dict[str, Any]:
+    from .ab_testing import ABTest
+
     outcome_dashboard = build_outcome_dashboard(ws, project, artifact_type)
     kpi_dashboard = build_kpi_dashboard(ws, project, artifact_type)
+    ab_test_summary = ABTest(ws).get_weighted_summary(
+        kpi_dashboard.get("live_change_success_gap", 0.0)
+    )
 
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "artifact_type": artifact_type,
         "outcome_dashboard": outcome_dashboard,
         "kpi_dashboard": kpi_dashboard,
+        "ab_test_summary": ab_test_summary,
         "live_change_effectiveness": outcome_dashboard.get(
             "live_change_effectiveness", {}
         ),
@@ -4124,6 +4252,9 @@ def run_writer_with_codex(
             priority_live_updates=live_updates,
             research_strategy_translation=research_strategy_translation,
         )
+        priority_rule_quality_metric = _build_priority_rule_quality_metric(
+            recent_change_priority_rule_check
+        )
 
         def _rewrite_with_constraints(
             previous_output: str,
@@ -4402,6 +4533,9 @@ def run_writer_with_codex(
             priority_live_updates=live_updates,
             research_strategy_translation=research_strategy_translation,
         )
+        priority_rule_quality_metric = _build_priority_rule_quality_metric(
+            recent_change_priority_rule_check
+        )
         result_quality_status = (
             "error"
             if result_quality_evaluation_error
@@ -4553,6 +4687,7 @@ def run_writer_with_codex(
                 "quality_evaluation_error": quality_evaluation_error,
                 "result_quality_evaluation_status": result_quality_status,
                 "result_quality_evaluation_error": result_quality_evaluation_error,
+                "priority_rule_quality_metric": priority_rule_quality_metric,
                 "approved": approval_passed,
                 "writer_brief_path": relative(
                     ws.root, ws.analysis_dir / "writer_brief.json"
@@ -4579,6 +4714,7 @@ def run_writer_with_codex(
                 ws.root, writer_priority_rule_audit_path
             ),
             "recent_change_priority_rule_check": recent_change_priority_rule_check,
+            "priority_rule_quality_metric": priority_rule_quality_metric,
             "patina_max_result_path": relative(
                 ws.root, ws.analysis_dir / "patina_max_report.json"
             )
@@ -4963,6 +5099,7 @@ def run_writer_with_codex(
         "recent_change_action_check": recent_change_action_check,
         "writer_priority_rule_audit_path": str(writer_priority_rule_audit_path),
         "recent_change_priority_rule_check": recent_change_priority_rule_check,
+        "priority_rule_quality_metric": priority_rule_quality_metric,
         "rewrite_quality_report_path": str(rewrite_report_json_path)
         if rewrite_quality_report
         else None,
@@ -5289,6 +5426,9 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             priority_live_updates=live_updates,
             research_strategy_translation=research_strategy_translation,
         )
+        priority_rule_quality_metric = _build_priority_rule_quality_metric(
+            recent_change_priority_rule_check
+        )
         write_json(interview_change_action_path, recent_change_action_check)
         write_json(
             interview_priority_rule_audit_path, recent_change_priority_rule_check
@@ -5338,6 +5478,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
                 interview_priority_rule_audit_path.relative_to(ws.root)
             ),
             "recent_change_priority_rule_check": recent_change_priority_rule_check,
+            "priority_rule_quality_metric": priority_rule_quality_metric,
         },
         output_path=str(accepted_path.relative_to(ws.root)),
         raw_output_path=str(raw_output_path.relative_to(ws.root)),
@@ -5352,6 +5493,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
             "exit_code": exit_code,
             "defense_simulations": defense_simulations,
             "top001_interview_simulations": top001_interview_simulations,
+            "priority_rule_quality_metric": priority_rule_quality_metric,
         },
     )
 
@@ -5422,6 +5564,7 @@ def run_interview_with_codex(ws: Workspace, tool: str = "codex") -> dict[str, An
         "recent_change_action_check": recent_change_action_check,
         "interview_priority_rule_audit_path": str(interview_priority_rule_audit_path),
         "recent_change_priority_rule_check": recent_change_priority_rule_check,
+        "priority_rule_quality_metric": priority_rule_quality_metric,
         "application_strategy_path": str(ws.analysis_dir / "application_strategy.json"),
     }
 

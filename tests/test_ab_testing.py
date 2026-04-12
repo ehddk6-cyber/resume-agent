@@ -5,7 +5,11 @@ import tempfile
 from pathlib import Path
 
 from resume_agent.models import ABTestResult
-from resume_agent.ab_testing import chi_square_test, ABTest
+from resume_agent.ab_testing import (
+    chi_square_test,
+    ABTest,
+    build_weighted_variant_summary,
+)
 from resume_agent.state import Workspace
 
 
@@ -197,6 +201,41 @@ class TestVariantRecommendation:
         result = ab_test.recommend_variant()
         # No data yet, should return default "A"
         assert result == "A"
+
+    def test_weighted_summary_matches_base_when_gap_missing(self, ab_test):
+        for _ in range(8):
+            ab_test.record_result("A", True)
+        for _ in range(2):
+            ab_test.record_result("B", True)
+
+        summary = ab_test.get_weighted_summary(0.0)
+
+        assert summary["base_recommendation"] == "A"
+        assert summary["weighted_recommendation"] == "A"
+        assert summary["weighting_bonus"] == 0.0
+        assert summary["adjusted_success_rate_a"] == pytest.approx(1.0)
+        assert summary["adjusted_success_rate_b"] == pytest.approx(1.0)
+
+    def test_weighted_summary_applies_live_gap_bonus(self):
+        test = ABTestResult(
+            test_id="t1",
+            test_name="weighted",
+            strategy_a="default",
+            strategy_b="alt",
+            sample_size_a=10,
+            sample_size_b=10,
+            success_rate_a=0.6,
+            success_rate_b=0.55,
+        )
+
+        summary = build_weighted_variant_summary(test, live_change_success_gap=0.3)
+
+        assert summary["base_recommendation"] == "A"
+        assert summary["weighted_recommendation"] == "A"
+        assert summary["weighting_applied"] is True
+        assert summary["weighting_bonus"] > 0.0
+        assert summary["adjusted_success_rate_a"] > test.success_rate_a
+        assert summary["adjusted_success_rate_b"] == pytest.approx(test.success_rate_b)
 
 
 class TestTestManagement:

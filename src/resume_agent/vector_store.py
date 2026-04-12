@@ -19,6 +19,7 @@ from .tokenizer import tokenize_for_embedding
 # SentenceTransformer 싱글톤
 _ST_MODEL = None
 _ST_CLASS = None
+_USE_ST = True  # 기존 테스트/호출부 호환용 플래그
 
 
 def _get_st_model() -> Any:

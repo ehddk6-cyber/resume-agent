@@ -204,6 +204,16 @@ def test_build_outcome_dashboard_includes_live_change_effectiveness(tmp_path: Pa
         artifact_type=ArtifactType.WRITER,
         accepted=True,
         input_snapshot={
+            "recent_change_priority_rule_check": {
+                "checked_count": 2,
+                "covered_count": 1,
+                "missing_count": 1,
+                "coverage_rate": 0.5,
+                "items": [
+                    {"title": "채용 공고", "covered": True},
+                    {"title": "조직 소개", "covered": False},
+                ],
+            },
             "recent_change_action_check": {
                 "checked_count": 1,
                 "covered_count": 1,
@@ -245,6 +255,8 @@ def test_build_outcome_dashboard_includes_live_change_effectiveness(tmp_path: Pa
 
     assert dashboard["live_change_effectiveness"]["linked_outcome_count"] == 1
     assert dashboard["live_change_effectiveness"]["coverage_bands"]["high"]["success_rate"] == 1.0
+    assert dashboard["priority_rule_quality_summary"]["average_coverage_rate"] == 0.5
+    assert dashboard["priority_rule_quality_summary"]["top_missing_titles"][0]["title"] == "조직 소개"
 
 
 def test_build_cumulative_effect_report_writes_combined_payload(tmp_path: Path):

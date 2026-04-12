@@ -1,6 +1,6 @@
 """A/B 테스트 프레임워크 - 전략 비교 및 최적화"""
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 import json
 
 from .models import ABTestResult
@@ -39,6 +39,66 @@ def chi_square_test(
     is_significant = p_value < (1 - confidence)
     
     return p_value, is_significant
+
+
+def build_weighted_variant_summary(
+    test: Optional[ABTestResult],
+    live_change_success_gap: float = 0.0,
+) -> dict[str, Any]:
+    """live-change 결과 격차를 반영한 파생 추천 요약"""
+    if not test:
+        return {
+            "base_recommendation": "A",
+            "weighted_recommendation": "A",
+            "live_change_success_gap": 0.0,
+            "weighting_bonus": 0.0,
+            "adjusted_success_rate_a": 0.0,
+            "adjusted_success_rate_b": 0.0,
+            "raw_success_rate_gap": 0.0,
+            "weighting_applied": False,
+        }
+
+    if test.is_significant and test.winner:
+        base_recommendation = test.winner
+    elif test.sample_size_a > 0 and test.sample_size_b > 0:
+        base_recommendation = (
+            "A" if test.success_rate_a >= test.success_rate_b else "B"
+        )
+    else:
+        base_recommendation = "A"
+
+    raw_success_rate_gap = round(test.success_rate_a - test.success_rate_b, 4)
+    normalized_gap = max(0.0, min(float(live_change_success_gap or 0.0), 1.0))
+    weighting_bonus = round(min(0.15, normalized_gap * 0.2), 4)
+
+    leader = "A" if test.success_rate_a >= test.success_rate_b else "B"
+    if test.sample_size_a == 0 and test.sample_size_b == 0:
+        leader = base_recommendation
+
+    adjusted_success_rate_a = float(test.success_rate_a)
+    adjusted_success_rate_b = float(test.success_rate_b)
+    if weighting_bonus > 0:
+        if leader == "A":
+            adjusted_success_rate_a += weighting_bonus
+        else:
+            adjusted_success_rate_b += weighting_bonus
+
+    weighted_recommendation = (
+        "A" if adjusted_success_rate_a >= adjusted_success_rate_b else "B"
+    )
+    if test.is_significant and test.winner:
+        weighted_recommendation = test.winner
+
+    return {
+        "base_recommendation": base_recommendation,
+        "weighted_recommendation": weighted_recommendation,
+        "live_change_success_gap": round(float(live_change_success_gap or 0.0), 2),
+        "weighting_bonus": weighting_bonus,
+        "adjusted_success_rate_a": round(adjusted_success_rate_a, 4),
+        "adjusted_success_rate_b": round(adjusted_success_rate_b, 4),
+        "raw_success_rate_gap": raw_success_rate_gap,
+        "weighting_applied": weighting_bonus > 0,
+    }
 
 
 class ABTest:
@@ -119,6 +179,20 @@ class ABTest:
         if test.sample_size_a > 0 and test.sample_size_b > 0:
             return "A" if test.success_rate_a >= test.success_rate_b else "B"
         return "A"
+
+    def get_weighted_summary(
+        self,
+        live_change_success_gap: float = 0.0,
+    ) -> dict[str, Any]:
+        return build_weighted_variant_summary(
+            self.get_current_test(),
+            live_change_success_gap=live_change_success_gap,
+        )
+
+    def recommend_variant_weighted(self, live_change_success_gap: float = 0.0) -> str:
+        return self.get_weighted_summary(live_change_success_gap).get(
+            "weighted_recommendation", "A"
+        )
     
     def end_test(self) -> Optional[ABTestResult]:
         test = self._tests.get(self.active_test_id)
